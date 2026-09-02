@@ -164,6 +164,27 @@ export interface Area {
 
 export type Listing = Home | Area;
 
+// ===== 가구 프로필 (자격 판정용, 점수와 직교) =====
+export type HousingStatus = "none" | "own"; // 무주택 | 유주택
+/** 법적 기혼 | 예비 신혼부부 | 사실혼(동거, 미신고) */
+export type MaritalStatus = "married" | "prospective" | "de_facto";
+
+/** 미입력(undefined)은 자격 판정에서 unknown으로 처리한다. */
+export interface HouseholdProfile {
+  maritalStatus?: MaritalStatus;
+  /** 혼인 기간(개월) — maritalStatus==="married"일 때 */
+  marriedMonths?: number;
+  housingStatus?: HousingStatus;
+  /** 미성년 자녀 수(태아 포함) */
+  minorChildren?: number;
+  /** 부부합산 월평균 소득(만원) */
+  monthlyIncomeManwon?: number;
+  /** 부동산·자동차 등 자산(만원) */
+  totalAssetManwon?: number;
+  /** 청약통장 가입기간(개월) */
+  subscriptionMonths?: number;
+}
+
 // ===== 후보 관리 =====
 export interface CandidateNotes {
   pros: string[];

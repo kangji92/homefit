@@ -7,9 +7,11 @@ import { useHome, useRegions } from "@/hooks/queries";
 import { isConditionsReady } from "@/lib/conditions";
 import { useCandidatesStore } from "@/stores/candidatesStore";
 import { useConditionsStore } from "@/stores/conditionsStore";
+import { useHouseholdStore } from "@/stores/householdStore";
 import { AxisScoreList } from "./AxisScoreList";
 import { CandidateActions } from "./CandidateActions";
 import { DealbreakerAlert } from "./DealbreakerAlert";
+import { EligibilityPanel } from "./EligibilityPanel";
 import { Hero } from "./Hero";
 import { NotesEditor } from "./NotesEditor";
 import { RawInfo } from "./RawInfo";
@@ -28,6 +30,8 @@ export function ComplexDetailFeature({ id }: { id: string }) {
 
   const condHydrated = useConditionsStore((s) => s.hasHydrated);
   const candHydrated = useCandidatesStore((s) => s.hasHydrated);
+  const householdHydrated = useHouseholdStore((s) => s.hasHydrated);
+  const profile = useHouseholdStore((s) => s.profile);
   const conditions = useConditionsStore((s) => s.conditions);
   const priorities = useConditionsStore((s) => s.priorities);
   const dealbreakers = useConditionsStore((s) => s.dealbreakers);
@@ -37,7 +41,8 @@ export function ComplexDetailFeature({ id }: { id: string }) {
   );
 
   // hydration 전에는 판정 보류(후보 버튼 flicker 방지)
-  if (!condHydrated || !candHydrated) return <Center>불러오는 중…</Center>;
+  if (!condHydrated || !candHydrated || !householdHydrated)
+    return <Center>불러오는 중…</Center>;
   if (complexQuery.isLoading) return <Center>불러오는 중…</Center>;
   if (complexQuery.isError) {
     return (
@@ -80,6 +85,8 @@ export function ComplexDetailFeature({ id }: { id: string }) {
           unknown={fit.unknownDealbreakers}
         />
       )}
+
+      {complex.kind === "presale" && <EligibilityPanel profile={profile} />}
 
       {!ready && (
         <div className="border-border rounded-xl border p-4 text-center">
