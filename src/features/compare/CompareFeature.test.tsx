@@ -97,6 +97,7 @@ describe("CompareFeature", () => {
       screen.getByRole("heading", { name: "검단파라곤" }),
     ).toBeInTheDocument();
     expect(screen.getByText("항목별 적합도")).toBeInTheDocument();
+    expect(screen.getByText("절대조건")).toBeInTheDocument();
     expect(screen.getByText("세대수")).toBeInTheDocument();
     // 두 후보의 ScoreGauge
     expect(screen.getAllByRole("img", { name: /적합도 \d+점/ })).toHaveLength(2);

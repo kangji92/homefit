@@ -10,6 +10,7 @@ import {
 } from "@/domain/types";
 import { formatKoreanMoney } from "@/lib/format";
 import { PRIORITY_LABELS } from "@/lib/priorityLabels";
+import { DEALBREAKER_LABELS } from "@/lib/dealbreakerLabels";
 import { cn } from "@/lib/utils";
 
 interface Side {
@@ -89,6 +90,26 @@ function CompareRow({
   );
 }
 
+function DealbreakerCell({ fit }: { fit: FitResult }) {
+  if (fit.passesDealbreakers) {
+    return (
+      <div className="bg-fit-high/10 text-fit-high rounded-lg px-3 py-2 text-center text-sm font-medium">
+        ✓ 모두 충족
+      </div>
+    );
+  }
+  return (
+    <div className="bg-danger/10 rounded-lg px-3 py-2 text-sm">
+      <p className="text-danger font-medium">✕ 조건 미충족</p>
+      <ul className="text-danger/90 mt-1 space-y-0.5 text-xs">
+        {fit.failedDealbreakers.map((k) => (
+          <li key={k}>· {DEALBREAKER_LABELS[k]}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function ComparisonView({
   a,
   b,
@@ -109,6 +130,14 @@ export function ComparisonView({
         <SideCard side="a" data={a} overallWinner={comparison.overallWinner} />
         <SideCard side="b" data={b} overallWinner={comparison.overallWinner} />
       </div>
+
+      <section className="bg-surface border-border rounded-xl border p-4">
+        <h2 className="mb-2 font-semibold">절대조건</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <DealbreakerCell fit={a.fit} />
+          <DealbreakerCell fit={b.fit} />
+        </div>
+      </section>
 
       <section className="bg-surface border-border rounded-xl border p-4">
         <h2 className="mb-2 font-semibold">항목별 적합도</h2>

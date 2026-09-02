@@ -1,5 +1,5 @@
 import type { Dealbreakers } from "@/domain/types";
-import { DEALBREAKER_LABELS } from "./dealbreakerLabels";
+import { DEALBREAKER_LABELS } from "@/lib/dealbreakerLabels";
 
 export function DealbreakerAlert({
   failed,
