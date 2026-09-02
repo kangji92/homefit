@@ -5,11 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { computeAreaFit } from "@/domain/scoring";
+import { upcomingSubscriptions } from "@/domain/subscription";
 import { useAreas, useHomes, useRegions } from "@/hooks/queries";
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { AreaCard } from "@/features/area/AreaCard";
 import { ConditionsSummary } from "./ConditionsSummary";
 import { RecommendationCard } from "./RecommendationCard";
+import { UpcomingSubscriptions } from "./UpcomingSubscriptions";
 import { isConditionsReady, recommendComplexes } from "./recommend";
 
 function Notice({
@@ -47,6 +49,12 @@ export function HomeFeature() {
     [areasQuery.data, priorities],
   );
 
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const subscriptions = useMemo(
+    () => upcomingSubscriptions(complexesQuery.data ?? [], todayISO),
+    [complexesQuery.data, todayISO],
+  );
+
   const regionName = useMemo(
     () => new Map((regionsQuery.data ?? []).map((r) => [r.id, r.name])),
     [regionsQuery.data],
@@ -81,6 +89,7 @@ export function HomeFeature() {
   return (
     <PageContainer className="space-y-6">
       <ConditionsSummary conditions={conditions} />
+      <UpcomingSubscriptions items={subscriptions} />
       {renderContent()}
       {renderAreas()}
     </PageContainer>
