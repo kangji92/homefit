@@ -129,7 +129,7 @@ export function ComparisonView({
   const age = (c: Complex) => cfg.currentYear - c.completionYear;
   const priceText = (c: Complex) => {
     const band = priceBandFor(c.price, dealType);
-    return band ? formatKoreanMoney(band.representative) : "정보 없음";
+    return band ? formatKoreanMoney(band.representative) : "매물 정보 없음";
   };
 
   return (

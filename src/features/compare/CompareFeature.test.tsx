@@ -103,6 +103,17 @@ describe("CompareFeature", () => {
     expect(screen.getAllByRole("img", { name: /적합도 \d+점/ })).toHaveLength(2);
   });
 
+  it("후보에서 제거된(또는 직접 입력한) URL id는 무시한다", () => {
+    // a는 후보지만 b는 후보 아님 → 비교 불가 안내
+    useCandidatesStore.getState().addCandidate("misa-central");
+    useCandidatesStore.getState().addCandidate("geomdan-paragon");
+    params.current = new URLSearchParams("a=misa-central&b=gwanggyo-lakepark");
+    render(<CompareFeature />);
+    expect(
+      screen.getByText("비교할 후보 2개를 선택하세요."),
+    ).toBeInTheDocument();
+  });
+
   it("선택 변경 시 URL 쿼리를 갱신한다", async () => {
     const user = userEvent.setup();
     addTwoCandidates();

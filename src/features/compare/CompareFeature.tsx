@@ -98,8 +98,9 @@ export function CompareFeature() {
       );
     }
 
-    const complexA = byId.get(a);
-    const complexB = byId.get(b);
+    // 후보에 없는(직접 URL·제거된) id는 무시
+    const complexA = candidateIds.has(a) ? byId.get(a) : undefined;
+    const complexB = candidateIds.has(b) ? byId.get(b) : undefined;
 
     const selector = (
       <div className="grid grid-cols-2 gap-3">
@@ -115,7 +116,7 @@ export function CompareFeature() {
           >
             <option value="">선택</option>
             {candidateComplexes.map((c) => (
-              <option key={c.id} value={c.id}>
+              <option key={c.id} value={c.id} disabled={c.id === b}>
                 {c.name}
               </option>
             ))}
@@ -133,7 +134,7 @@ export function CompareFeature() {
           >
             <option value="">선택</option>
             {candidateComplexes.map((c) => (
-              <option key={c.id} value={c.id}>
+              <option key={c.id} value={c.id} disabled={c.id === a}>
                 {c.name}
               </option>
             ))}
