@@ -43,8 +43,9 @@ Homefit의 **첫 실제 UX**. 사용자가 우리 조건·우선순위·절대�
 
 ### 스텝 4 — 우선순위
 - 7개 항목 슬라이더(0~100): 가격/출퇴근/교육·육아/신축/생활 인프라/주거환경/미래가치.
+- **슬라이더는 숫자만 보여주지 않고 낮음/보통/높음 의미를 함께 표현**한다(예: 0~33 낮음 · 34~66 보통 · 67~100 높음 라벨/색). `aria-valuetext`에도 이 의미를 넣어 접근성 확보.
 - **미래가치 슬라이더 옆에 "지표는 현재 테스트용 데이터" 고지**(domain-model 참조).
-- 전부 0이어도 허용(스코어링이 균등 폴백). 기본값 각 50.
+- 사용자가 조정하지 않아도 진행 가능. 전부 0이어도 허용(스코어링이 균등 폴백). 기본값 각 50.
 
 ### 스텝 5 — 절대조건 (선택)
 - `maxPrice`, `minSizePyeong`, `maxStationDistanceM`, `maxBuildingAgeYears`, `minHouseholds`, `requireSchoolNearby`.
@@ -70,6 +71,11 @@ interface WorkArea {
 - **mock 단지의 `commuteMinutes`는 이 지역 id별로 미리 값을 가진다** → `commuteScore`가 `complex.commuteMinutes[workplace.id]`로 결정적 조회.
 - 이 방식은 **도메인 타입을 바꾸지 않는다**(`workplace.id = areaId`). 실제 지오코딩 도입 시 이 레이어만 교체.
 - 두 사람이 같은 지역을 골라도 무방(둘 다 같은 통근시간 → worst 동일).
+
+### 레이어 분리 (교체 가능성)
+- **`WorkArea`는 `data/mock` + 온보딩 UI 레이어에만 존재**한다. `domain/`·`scoring/`은 `WorkArea`를 import하지 않는다.
+- 통근 점수는 오직 `complex.commuteMinutes[workplace.id]`로만 조회 → 도메인은 "id로 통근시간을 찾는다"만 안다.
+- 향후 지도/장소검색 API로 **실제 좌표 기반 Workplace 입력**으로 교체할 때, 바뀌는 것은 (1) 온보딩의 직장 입력 UI, (2) `commuteMinutes`를 채우는 데이터 소스뿐. domain/scoring/store 스키마는 불변.
 
 ---
 
@@ -99,7 +105,10 @@ features/onboarding/
 
 - **다음 버튼**: 현재 스텝 검증 통과 → 해당 슬라이스를 `conditionsStore`에 patch → 다음 스텝.
 - **이전 버튼**: 저장된 값을 그대로 폼 기본값으로 로드.
-- 중단 후 재진입: `onboardingStep`(저장됨)에서 이어서 시작. (선택: 항상 1스텝부터 시작하되 값은 채워둠 — MVP는 저장된 step에서 재개.)
+- 중단 후 재진입: 저장된 `onboardingStep`에서 이어서 시작.
+- **보정 규칙**: 저장된 `onboardingStep`이 비정상(범위 밖)이거나, 그 앞 스텝들의 **필수값이 누락/무효**면 → 저장 step을 무시하고 **가장 앞의 미완료 스텝**으로 이동한다.
+  - 판정은 스텝별 zod 스키마로: `firstIncompleteStep = 앞에서부터 스키마 검증 실패가 처음 나는 스텝`.
+  - `resolveResumeStep(state) = clamp(min(savedStep, firstIncompleteStep), 0, lastStep)`.
 - store가 단일 소스이므로 `/conditions`(상시 편집)와 **동일 스키마·필드 컴포넌트를 재사용**한다.
 
 ---
