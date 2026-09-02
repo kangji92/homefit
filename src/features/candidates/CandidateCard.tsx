@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ScoreGauge } from "@/components/ui/ScoreGauge";
-import type { Complex, DealType, FitResult } from "@/domain/types";
+import type { DealType, FitResult, Home } from "@/domain/types";
 import { formatActivePrice } from "@/lib/format";
 import { useCandidatesStore } from "@/stores/candidatesStore";
 
@@ -10,13 +10,15 @@ export function CandidateCard({
   regionName,
   dealType,
 }: {
-  complex: Complex;
+  complex: Home;
   fit?: FitResult;
   regionName?: string;
   dealType: DealType;
 }) {
   const favorite = useCandidatesStore(
-    (s) => s.candidates.find((c) => c.id === complex.id)?.favorite ?? false,
+    (s) =>
+      s.candidates.find((c) => c.id === complex.id && c.kind === complex.kind)
+        ?.favorite ?? false,
   );
   const toggleFavorite = useCandidatesStore((s) => s.toggleFavorite);
 
@@ -44,7 +46,7 @@ export function CandidateCard({
       </Link>
       <button
         type="button"
-        onClick={() => toggleFavorite(complex.id)}
+        onClick={() => toggleFavorite(complex.id, complex.kind)}
         aria-pressed={favorite}
         aria-label="즐겨찾기"
         className="text-fit-medium shrink-0 text-xl leading-none"

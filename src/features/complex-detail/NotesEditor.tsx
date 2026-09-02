@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { CandidateNotes, ListingKind } from "@/domain/types";
 import { useCandidatesStore } from "@/stores/candidatesStore";
 
 function ListEditor({
@@ -66,11 +67,19 @@ function ListEditor({
   );
 }
 
-export function NotesEditor({ complexId }: { complexId: string }) {
+export function NotesEditor({
+  complexId,
+  kind,
+}: {
+  complexId: string;
+  kind: ListingKind;
+}) {
   const candidate = useCandidatesStore((s) =>
-    s.candidates.find((c) => c.id === complexId),
+    s.candidates.find((c) => c.id === complexId && c.kind === kind),
   );
-  const updateNotes = useCandidatesStore((s) => s.updateNotes);
+  const updateNotesRaw = useCandidatesStore((s) => s.updateNotes);
+  const updateNotes = (notes: Partial<CandidateNotes>) =>
+    updateNotesRaw(complexId, notes, kind);
 
   if (!candidate) return null;
   const { notes } = candidate;
@@ -81,9 +90,9 @@ export function NotesEditor({ complexId }: { complexId: string }) {
       <ListEditor
         label="장점"
         items={notes.pros}
-        onAdd={(t) => updateNotes(complexId, { pros: [...notes.pros, t] })}
+        onAdd={(t) => updateNotes({ pros: [...notes.pros, t] })}
         onRemove={(i) =>
-          updateNotes(complexId, {
+          updateNotes({
             pros: notes.pros.filter((_, idx) => idx !== i),
           })
         }
@@ -91,9 +100,9 @@ export function NotesEditor({ complexId }: { complexId: string }) {
       <ListEditor
         label="단점"
         items={notes.cons}
-        onAdd={(t) => updateNotes(complexId, { cons: [...notes.cons, t] })}
+        onAdd={(t) => updateNotes({ cons: [...notes.cons, t] })}
         onRemove={(i) =>
-          updateNotes(complexId, {
+          updateNotes({
             cons: notes.cons.filter((_, idx) => idx !== i),
           })
         }
@@ -106,7 +115,7 @@ export function NotesEditor({ complexId }: { complexId: string }) {
           id="visitMemo"
           rows={3}
           value={notes.visitMemo ?? ""}
-          onChange={(e) => updateNotes(complexId, { visitMemo: e.target.value })}
+          onChange={(e) => updateNotes({ visitMemo: e.target.value })}
           className="border-border bg-surface mt-1 w-full rounded-md border px-3 py-2 text-sm"
         />
       </div>

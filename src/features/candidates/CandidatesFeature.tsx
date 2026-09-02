@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { useComplexes, useRegions } from "@/hooks/queries";
+import { useHomes, useRegions } from "@/hooks/queries";
 import { isConditionsReady } from "@/lib/conditions";
 import { recommendComplexes } from "@/features/home/recommend";
 import { useCandidatesStore } from "@/stores/candidatesStore";
@@ -27,7 +27,7 @@ export function CandidatesFeature() {
   const dealbreakers = useConditionsStore((s) => s.dealbreakers);
   const candidates = useCandidatesStore((s) => s.candidates);
 
-  const complexesQuery = useComplexes();
+  const complexesQuery = useHomes();
   const regionsQuery = useRegions();
 
   const regionName = useMemo(

@@ -3,6 +3,8 @@
 // 소비 측은 이 모듈의 complexRepository/regionRepository에만 의존(무변경).
 // (docs/design/data-phase2-supabase-catalog.md §6)
 
+import { MOCK_PRESALES, getMockPresale } from "@/data/mock/presales";
+import type { ComplexListParams, HomeRepository } from "./types";
 import { mockComplexRepository, mockRegionRepository } from "./mock";
 import {
   supabaseComplexRepository,
@@ -20,3 +22,17 @@ export const complexRepository = useSupabase
 export const regionRepository = useSupabase
   ? supabaseRegionRepository
   : mockRegionRepository;
+
+// 집 통합: 기존(활성 소스) + 분양(mock). 분양 실데이터는 청약홈 adapter로 후속.
+export const homeRepository: HomeRepository = {
+  async list(params?: ComplexListParams) {
+    const existing = await complexRepository.list(params);
+    const presales = params?.regionId
+      ? MOCK_PRESALES.filter((p) => p.regionId === params.regionId)
+      : MOCK_PRESALES;
+    return [...existing, ...presales];
+  },
+  async getById(id: string) {
+    return (await complexRepository.getById(id)) ?? getMockPresale(id) ?? null;
+  },
+};

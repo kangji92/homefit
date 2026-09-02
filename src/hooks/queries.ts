@@ -4,6 +4,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   complexRepository,
+  homeRepository,
   regionRepository,
   type ComplexListParams,
 } from "@/data/repositories";
@@ -12,6 +13,12 @@ export const complexKeys = {
   all: ["complexes"] as const,
   list: (params?: ComplexListParams) => ["complexes", params ?? {}] as const,
   detail: (id: string) => ["complex", id] as const,
+};
+
+export const homeKeys = {
+  all: ["homes"] as const,
+  list: (params?: ComplexListParams) => ["homes", params ?? {}] as const,
+  detail: (id: string) => ["home", id] as const,
 };
 
 export const regionKeys = {
@@ -29,6 +36,22 @@ export function useComplex(id: string) {
   return useQuery({
     queryKey: complexKeys.detail(id),
     queryFn: () => complexRepository.getById(id),
+    enabled: id.length > 0,
+  });
+}
+
+/** 집 통합(기존+분양). HomeFit 대상 전체. */
+export function useHomes(params?: ComplexListParams) {
+  return useQuery({
+    queryKey: homeKeys.list(params),
+    queryFn: () => homeRepository.list(params),
+  });
+}
+
+export function useHome(id: string) {
+  return useQuery({
+    queryKey: homeKeys.detail(id),
+    queryFn: () => homeRepository.getById(id),
     enabled: id.length > 0,
   });
 }

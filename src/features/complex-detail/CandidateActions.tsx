@@ -1,9 +1,16 @@
 import Link from "next/link";
+import type { ListingKind } from "@/domain/types";
 import { useCandidatesStore } from "@/stores/candidatesStore";
 
-export function CandidateActions({ complexId }: { complexId: string }) {
+export function CandidateActions({
+  complexId,
+  kind,
+}: {
+  complexId: string;
+  kind: ListingKind;
+}) {
   const candidate = useCandidatesStore((s) =>
-    s.candidates.find((c) => c.id === complexId),
+    s.candidates.find((c) => c.id === complexId && c.kind === kind),
   );
   const addCandidate = useCandidatesStore((s) => s.addCandidate);
   const removeCandidate = useCandidatesStore((s) => s.removeCandidate);
@@ -13,7 +20,7 @@ export function CandidateActions({ complexId }: { complexId: string }) {
     return (
       <button
         type="button"
-        onClick={() => addCandidate(complexId)}
+        onClick={() => addCandidate(complexId, kind)}
         className="bg-primary text-primary-foreground w-full rounded-md px-4 py-2.5 text-sm font-medium"
       >
         후보에 담기
@@ -27,7 +34,7 @@ export function CandidateActions({ complexId }: { complexId: string }) {
       <div className="flex gap-2">
         <button
           type="button"
-          onClick={() => toggleFavorite(complexId)}
+          onClick={() => toggleFavorite(complexId, kind)}
           aria-pressed={candidate.favorite}
           className="border-border flex-1 rounded-md border px-3 py-2 text-sm font-medium"
         >
@@ -42,7 +49,7 @@ export function CandidateActions({ complexId }: { complexId: string }) {
       </div>
       <button
         type="button"
-        onClick={() => removeCandidate(complexId)}
+        onClick={() => removeCandidate(complexId, kind)}
         className="text-danger w-full rounded-md px-3 py-2 text-sm font-medium"
       >
         후보에서 제거

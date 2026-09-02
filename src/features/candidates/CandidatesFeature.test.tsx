@@ -13,6 +13,7 @@ const { useComplexesMock, useRegionsMock } = vi.hoisted(() => ({
 }));
 vi.mock("@/hooks/queries", () => ({
   useComplexes: () => useComplexesMock(),
+  useHomes: () => useComplexesMock(),
   useRegions: () => useRegionsMock(),
 }));
 

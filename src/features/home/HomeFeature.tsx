@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { useComplexes, useRegions } from "@/hooks/queries";
+import { useHomes, useRegions } from "@/hooks/queries";
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { ConditionsSummary } from "./ConditionsSummary";
 import { RecommendationCard } from "./RecommendationCard";
@@ -32,7 +32,7 @@ export function HomeFeature() {
   const priorities = useConditionsStore((s) => s.priorities);
   const dealbreakers = useConditionsStore((s) => s.dealbreakers);
 
-  const complexesQuery = useComplexes();
+  const complexesQuery = useHomes();
   const regionsQuery = useRegions();
 
   const regionName = useMemo(

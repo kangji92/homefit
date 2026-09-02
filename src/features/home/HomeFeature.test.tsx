@@ -19,6 +19,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("@/hooks/queries", () => ({
   useComplexes: () => useComplexesMock(),
+  useHomes: () => useComplexesMock(),
   useRegions: () => useRegionsMock(),
 }));
 

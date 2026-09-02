@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { computeFit } from "@/domain/scoring";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { useComplex, useRegions } from "@/hooks/queries";
+import { useHome, useRegions } from "@/hooks/queries";
 import { isConditionsReady } from "@/lib/conditions";
 import { useCandidatesStore } from "@/stores/candidatesStore";
 import { useConditionsStore } from "@/stores/conditionsStore";
@@ -23,7 +23,7 @@ function Center({ children }: { children: React.ReactNode }) {
 }
 
 export function ComplexDetailFeature({ id }: { id: string }) {
-  const complexQuery = useComplex(id);
+  const complexQuery = useHome(id);
   const regionsQuery = useRegions();
 
   const condHydrated = useConditionsStore((s) => s.hasHydrated);
@@ -74,8 +74,11 @@ export function ComplexDetailFeature({ id }: { id: string }) {
         dealType={conditions.dealType}
       />
 
-      {fit && !fit.passesDealbreakers && (
-        <DealbreakerAlert failed={fit.failedDealbreakers} />
+      {fit && (
+        <DealbreakerAlert
+          failed={fit.failedDealbreakers}
+          unknown={fit.unknownDealbreakers}
+        />
       )}
 
       {!ready && (
@@ -117,8 +120,8 @@ export function ComplexDetailFeature({ id }: { id: string }) {
         </div>
       </details>
 
-      <CandidateActions complexId={id} />
-      {isCandidate && <NotesEditor complexId={id} />}
+      <CandidateActions complexId={id} kind={complex.kind} />
+      {isCandidate && <NotesEditor complexId={id} kind={complex.kind} />}
     </PageContainer>
   );
 }

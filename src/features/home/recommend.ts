@@ -4,7 +4,7 @@ import { computeFit, sortByFit } from "@/domain/scoring";
 import { DEFAULT_SCORING_CONFIG, type ScoringConfig } from "@/domain/scoring/config";
 import {
   PRIORITY_KEYS,
-  type Complex,
+  type Home,
   type Dealbreakers,
   type FitResult,
   type Priorities,
@@ -17,7 +17,7 @@ export { isConditionsReady } from "@/lib/conditions";
 export const RECOMMEND_LIMIT = 5;
 
 export interface Recommendation {
-  complex: Complex;
+  complex: Home;
   fit: FitResult;
 }
 
@@ -26,7 +26,7 @@ export interface Recommendation {
  * 상위 limit개를 반환한다.
  */
 export function recommendComplexes(
-  complexes: Complex[],
+  complexes: Home[],
   conditions: UserConditions,
   priorities: Priorities,
   dealbreakers: Dealbreakers,

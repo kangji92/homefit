@@ -7,7 +7,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { computeFit } from "@/domain/scoring";
 import { compareFit } from "@/domain/scoring/compare";
 import type { Priorities } from "@/domain/types";
-import { useComplexes, useRegions } from "@/hooks/queries";
+import { useHomes, useRegions } from "@/hooks/queries";
 import { isConditionsReady } from "@/lib/conditions";
 import { useCandidatesStore } from "@/stores/candidatesStore";
 import { useConditionsStore } from "@/stores/conditionsStore";
@@ -37,7 +37,7 @@ export function CompareFeature() {
   const [savedFlash, setSavedFlash] = useState(false);
   const effectivePriorities = simPriorities ?? priorities;
 
-  const complexesQuery = useComplexes();
+  const complexesQuery = useHomes();
   const regionsQuery = useRegions();
 
   if (!condHydrated || !candHydrated) {
