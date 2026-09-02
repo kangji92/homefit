@@ -114,9 +114,13 @@ home priorities        → AreaFit
   보여준다(기존/분양 주택 → HomeFit / 개발 예정지 → AreaFit).
 - `AreaFitResult { areaId, axisScores, totalScore }`. dealbreakers는 area엔 최소만
   또는 미적용.
-- **공식은 아직 확정하지 않는다.** 이번 단계는 **축 정의 + exclude-후-재정규화 +
-  결정성 테스트**까지만. 각 축 점수는 우선 `areaMetrics` 값(0~100)을 그대로 쓰고,
-  **가중·결합 공식 튜닝은 실제 3기신도시 데이터를 한 번 넣어본 뒤** 조정한다.
+- **매핑(2B-1 실감 후 조정 완료)**: infrastructure→plannedInfra,
+  environment→environment, futurePotential→futurePotential,
+  **commute→transitPlan**(교통계획은 통근 관심의 지역판 대리 — 반응성 확보).
+  **supply·education 제외**(대응 우선순위 애매/부재 → 점수 미반영, 화면엔 표시).
+  근거: mock 3기신도시로 확인 시 (a) transitPlan/supply가 점수에서 빠져 왕숙 등
+  교통·공급 강점이 안 보이고 (b) commute 우선순위에 점수가 전혀 반응하지 않던
+  문제를 commute→transitPlan으로 해소. supply는 실데이터 후 재검토.
 
 두 함수 모두 **결정적·config 주입**(`Date.now()` 금지) 원칙 유지.
 

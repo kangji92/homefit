@@ -11,14 +11,20 @@
 import type { Area, AreaFitResult, Priorities, PriorityKey } from "../types";
 import { clamp } from "./normalize";
 
-/** Home 우선순위 → Area 지표 매핑. 여기 없는 축은 계산에서 제외된다. */
+/**
+ * Home 우선순위 → Area 지표 매핑. 여기 없는 축은 계산에서 제외된다.
+ * commute→transitPlan: 교통계획은 "실제 통근시간"이 아니라 교통 잠재력 지표라,
+ *   통근을 중시하는 사용자의 관심을 지역판으로 대리한다(반응성 확보).
+ * supply·education 제외: 대응 우선순위가 애매/부재 → 점수 미반영(화면엔 표시).
+ *   실데이터 투입 후 재검토(TODO 2B/2D).
+ */
 const AREA_AXIS_FROM_PRIORITY: Partial<
   Record<PriorityKey, keyof Area["areaMetrics"]>
 > = {
   infrastructure: "plannedInfra",
   environment: "environment",
   futurePotential: "futurePotential",
-  // TODO(2B, 실데이터 후): commute→transitPlan, education, supply 반영 검토
+  commute: "transitPlan",
 };
 
 const MAPPED_KEYS = Object.keys(AREA_AXIS_FROM_PRIORITY) as PriorityKey[];

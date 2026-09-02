@@ -80,8 +80,9 @@ export function AreaFeature({ id }: { id: string }) {
           ))}
         </dl>
         <p className="text-muted-foreground mt-2 text-xs">
-          지역 적합도는 우리 우선순위 중 지역에 대응하는 축만으로 계산해요(가격·통근
-          등은 제외). 지표는 현재 테스트용 데이터입니다.
+          지역 적합도는 우리 우선순위 중 지역에 대응하는 축만으로 계산해요(통근은
+          교통계획으로 반영, 가격·신축 등 대응 지표가 없는 축은 제외). 지표는 현재
+          테스트용 데이터입니다.
         </p>
       </section>
 
