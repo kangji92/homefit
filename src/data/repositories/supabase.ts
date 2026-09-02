@@ -49,6 +49,7 @@ export function mapRegion(row: RegionRow): Region {
 export function mapComplex(row: ComplexRow): Complex {
   return {
     id: row.id,
+    kind: "existing",
     name: row.name,
     regionId: row.region_id,
     price: row.price,

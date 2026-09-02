@@ -23,6 +23,7 @@ const fit = (
   complexId,
   passesDealbreakers: true,
   failedDealbreakers: [],
+  unknownDealbreakers: [],
   axisScores,
   totalScore,
 });

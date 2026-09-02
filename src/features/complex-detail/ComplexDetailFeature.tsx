@@ -33,7 +33,7 @@ export function ComplexDetailFeature({ id }: { id: string }) {
   const dealbreakers = useConditionsStore((s) => s.dealbreakers);
 
   const isCandidate = useCandidatesStore((s) =>
-    s.candidates.some((c) => c.complexId === id),
+    s.candidates.some((c) => c.id === id),
   );
 
   // hydration 전에는 판정 보류(후보 버튼 flicker 방지)

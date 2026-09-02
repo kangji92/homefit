@@ -99,21 +99,69 @@ export interface ComplexMetrics {
   futurePotential: number;
 }
 
-export interface Complex {
+// ===== 대상 분류 (domain-model-v2.md) =====
+// 집(지점) = existing | presale → HomeFit,  지역(면) = area → AreaFit
+export type ListingKind = "existing" | "presale" | "area";
+
+/** 집(지점) 공통 속성 */
+interface HomeBase {
   id: string;
   name: string;
   regionId: string;
   price: ComplexPrice;
   sizesPyeong: number[];
-  completionYear: number;
-  households: number;
-  stationDistanceM: number;
   /** workplaceId → 편도 분 (교통수단 반영된 값) */
   commuteMinutes: Record<string, number>;
   metrics: ComplexMetrics;
   schoolNearby?: boolean;
   images?: string[];
 }
+
+/** 기존 아파트 — 실거래가 기반 */
+export interface ExistingHome extends HomeBase {
+  kind: "existing";
+  completionYear: number;
+  households: number;
+  stationDistanceM: number;
+}
+
+/** 분양 단지 — 분양가·청약. 입주 전이라 일부 값 미확정(optional) */
+export interface PresaleHome extends HomeBase {
+  kind: "presale";
+  /** 입주 예정연도 (연식 대체) */
+  moveInYear: number;
+  households?: number;
+  stationDistanceM?: number;
+  subscription?: { announcementDate?: string; scheduleNote?: string };
+}
+
+export type Home = ExistingHome | PresaleHome;
+
+/** v1 명칭 — ExistingHome 별칭(하위호환). */
+export type Complex = ExistingHome;
+
+/** 지역 수준 지표 (0~100) */
+export interface AreaMetrics {
+  plannedInfra: number;
+  transitPlan: number;
+  supply: number;
+  futurePotential: number;
+  environment: number;
+}
+
+/** 개발 예정지 (3기신도시 등) — AreaFit 대상 */
+export interface Area {
+  kind: "area";
+  id: string;
+  name: string;
+  regionId: string;
+  areaMetrics: AreaMetrics;
+  targetMoveInYear?: number;
+  /** 지역 중심 기준(선택) */
+  commuteMinutes?: Record<string, number>;
+}
+
+export type Listing = Home | Area;
 
 // ===== 후보 관리 =====
 export interface CandidateNotes {
@@ -122,8 +170,15 @@ export interface CandidateNotes {
   visitMemo?: string;
 }
 
+/** 후보 참조 — kind로 대상 종류 구분 (persist v3) */
+export type CandidateRef =
+  | { kind: "existing"; id: string }
+  | { kind: "presale"; id: string }
+  | { kind: "area"; id: string };
+
 export interface Candidate {
-  complexId: string;
+  kind: ListingKind;
+  id: string;
   favorite: boolean;
   notes: CandidateNotes;
   /** ISO 문자열 (정렬용) */
@@ -136,13 +191,25 @@ export interface RegionInterest {
 }
 
 // ===== 적합도 =====
+export type DealbreakerStatus = "pass" | "fail" | "unknown";
+
 export interface FitResult {
   complexId: string;
   passesDealbreakers: boolean;
   failedDealbreakers: (keyof Dealbreakers)[];
+  /** 미확정(주로 presale) — 탈락 조건 아님, 별도 표시 */
+  unknownDealbreakers: (keyof Dealbreakers)[];
   /** 각 항목 0~100 (표시용 정수) */
   axisScores: Record<PriorityKey, number>;
   /** 가중합 0~100 (정수) */
+  totalScore: number;
+}
+
+/** AreaFit 결과 — HomeFit과 직접 점수 비교 금지 (성격이 다른 척도) */
+export interface AreaFitResult {
+  areaId: string;
+  /** 반영된 축만 (제외 축은 키 없음) */
+  axisScores: Partial<Record<PriorityKey | "plannedInfra" | "transitPlan" | "supply", number>>;
   totalScore: number;
 }
 

@@ -50,6 +50,7 @@ describe("mapComplex", () => {
   it("snake_case 행을 camelCase Complex로 매핑한다", () => {
     expect(mapComplex(row)).toEqual({
       id: "misa-central",
+      kind: "existing",
       name: "미사강변센트럴",
       regionId: "misa",
       price: row.price,

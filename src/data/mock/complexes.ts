@@ -47,6 +47,7 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
     id: "dongtan-lake-xi",
     name: "동탄레이크자이",
     regionId: "dongtan",
+    kind: "existing",
     price: {
       sale: { representative: 78000, min: 72000, max: 88000 },
       jeonse: { representative: 48000, min: 45000, max: 54000 },
@@ -63,6 +64,7 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
     id: "dongtan-thesharp-central",
     name: "동탄더샵센트럴",
     regionId: "dongtan",
+    kind: "existing",
     price: {
       sale: { representative: 92000, min: 86000, max: 105000 },
       jeonse: { representative: 57000, min: 53000, max: 65000 },
@@ -79,6 +81,7 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
     id: "dongtan-woonam",
     name: "동탄우남퍼스트빌",
     regionId: "dongtan",
+    kind: "existing",
     price: {
       sale: { representative: 62000, min: 58000, max: 70000 },
       jeonse: { representative: 39000, min: 36000, max: 44000 },
@@ -96,6 +99,7 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
     id: "misa-central",
     name: "미사강변센트럴",
     regionId: "misa",
+    kind: "existing",
     price: {
       sale: { representative: 85000, min: 80000, max: 95000 },
       jeonse: { representative: 53000, min: 50000, max: 59000 },
@@ -112,6 +116,7 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
     id: "misa-riverview",
     name: "미사한강리버뷰",
     regionId: "misa",
+    kind: "existing",
     price: {
       sale: { representative: 99000, min: 92000, max: 115000 },
       jeonse: { representative: 62000, min: 57000, max: 71000 },
@@ -128,6 +133,7 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
     id: "misa-thesharp",
     name: "미사더샵",
     regionId: "misa",
+    kind: "existing",
     price: {
       sale: { representative: 70000, min: 66000, max: 78000 },
       jeonse: { representative: 44000, min: 41000, max: 48000 },
@@ -145,6 +151,7 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
     id: "gwanggyo-natureN-hills",
     name: "광교자연앤힐스",
     regionId: "gwanggyo",
+    kind: "existing",
     price: {
       sale: { representative: 110000, min: 102000, max: 128000 },
       jeonse: { representative: 68000, min: 63000, max: 79000 },
@@ -161,6 +168,7 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
     id: "gwanggyo-lakepark",
     name: "광교레이크파크",
     regionId: "gwanggyo",
+    kind: "existing",
     price: {
       sale: { representative: 95000, min: 89000, max: 108000 },
       jeonse: { representative: 59000, min: 55000, max: 67000 },
@@ -178,6 +186,7 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
     id: "geomdan-paragon",
     name: "검단파라곤",
     regionId: "geomdan",
+    kind: "existing",
     price: {
       sale: { representative: 55000, min: 51000, max: 62000 },
       jeonse: { representative: 34000, min: 32000, max: 38000 },
@@ -194,6 +203,7 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
     id: "geomdan-prugio",
     name: "검단신도시푸르지오",
     regionId: "geomdan",
+    kind: "existing",
     price: {
       sale: { representative: 60000, min: 56000, max: 67000 },
       jeonse: { representative: 37000, min: 35000, max: 42000 },

@@ -3,9 +3,9 @@
 import { evaluateDealbreakers } from "../dealbreakers";
 import {
   PRIORITY_KEYS,
-  type Complex,
   type Dealbreakers,
   type FitResult,
+  type Home,
   type Priorities,
   type PriorityKey,
   type UserConditions,
@@ -25,21 +25,21 @@ export function normalizeWeights(
   return Object.fromEntries(entries) as Record<PriorityKey, number>;
 }
 
-/** 한 단지의 적합도. 점수는 통과/탈락과 무관하게 계산한다. */
-export function computeFit(
+/** 한 집(existing/presale)의 적합도. 점수는 통과/탈락과 무관하게 계산한다. */
+export function computeHomeFit(
   conditions: UserConditions,
   priorities: Priorities,
   dealbreakers: Dealbreakers,
-  complex: Complex,
+  home: Home,
   config: ScoringConfig = DEFAULT_SCORING_CONFIG,
 ): FitResult {
-  const failed = evaluateDealbreakers(
+  const { failed, unknown } = evaluateDealbreakers(
     dealbreakers,
-    complex,
+    home,
     config,
     conditions.dealType,
   );
-  const raw = computeAxisScores(complex, conditions, config);
+  const raw = computeAxisScores(home, conditions, config);
   const w = normalizeWeights(priorities);
 
   // 총점은 반올림 전 원시 점수로 계산
@@ -50,13 +50,18 @@ export function computeFit(
   ) as Record<PriorityKey, number>;
 
   return {
-    complexId: complex.id,
+    complexId: home.id,
+    // unknown은 탈락 아님 — failed만으로 통과 판정
     passesDealbreakers: failed.length === 0,
     failedDealbreakers: failed,
+    unknownDealbreakers: unknown,
     axisScores,
     totalScore: Math.round(total),
   };
 }
+
+/** v1 명칭 — computeHomeFit 별칭(하위호환). */
+export const computeFit = computeHomeFit;
 
 /**
  * 랭킹 규칙 (docs/design/domain-model.md §6.4):

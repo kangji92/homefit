@@ -3,7 +3,7 @@ import { useCandidatesStore } from "@/stores/candidatesStore";
 
 export function CandidateActions({ complexId }: { complexId: string }) {
   const candidate = useCandidatesStore((s) =>
-    s.candidates.find((c) => c.complexId === complexId),
+    s.candidates.find((c) => c.id === complexId),
   );
   const addCandidate = useCandidatesStore((s) => s.addCandidate);
   const removeCandidate = useCandidatesStore((s) => s.removeCandidate);

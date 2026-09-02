@@ -78,6 +78,7 @@ describe("sortByFit", () => {
     complexId,
     passesDealbreakers,
     failedDealbreakers: passesDealbreakers ? [] : ["maxPrice"],
+    unknownDealbreakers: [],
     axisScores: {
       price: 0,
       commute: 0,

@@ -13,7 +13,7 @@ export function DiscoverList({
 }) {
   const candidates = useCandidatesStore((s) => s.candidates);
   const addCandidate = useCandidatesStore((s) => s.addCandidate);
-  const ids = new Set(candidates.map((c) => c.complexId));
+  const ids = new Set(candidates.map((c) => c.id));
 
   return (
     <ul className="divide-border divide-y">

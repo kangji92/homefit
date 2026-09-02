@@ -16,7 +16,7 @@ export function CandidateCard({
   dealType: DealType;
 }) {
   const favorite = useCandidatesStore(
-    (s) => s.candidates.find((c) => c.complexId === complex.id)?.favorite ?? false,
+    (s) => s.candidates.find((c) => c.id === complex.id)?.favorite ?? false,
   );
   const toggleFavorite = useCandidatesStore((s) => s.toggleFavorite);
 

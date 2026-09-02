@@ -108,8 +108,8 @@ describe("CandidatesFeature", () => {
     const user = userEvent.setup();
     useCandidatesStore.setState({
       candidates: [
-        { complexId: "misa-central", favorite: true, notes: { pros: [], cons: [] }, addedAt: "2026-01-01T00:00:00.000Z" },
-        { complexId: "geomdan-paragon", favorite: false, notes: { pros: [], cons: [] }, addedAt: "2026-01-02T00:00:00.000Z" },
+        { kind: "existing", id: "misa-central", favorite: true, notes: { pros: [], cons: [] }, addedAt: "2026-01-01T00:00:00.000Z" },
+        { kind: "existing", id: "geomdan-paragon", favorite: false, notes: { pros: [], cons: [] }, addedAt: "2026-01-02T00:00:00.000Z" },
       ],
     });
     render(<CandidatesFeature />);
@@ -126,8 +126,8 @@ describe("CandidatesFeature", () => {
     const user = userEvent.setup();
     useCandidatesStore.setState({
       candidates: [
-        { complexId: "misa-central", favorite: false, notes: { pros: [], cons: [] }, addedAt: "2026-01-01T00:00:00.000Z" },
-        { complexId: "geomdan-paragon", favorite: false, notes: { pros: [], cons: [] }, addedAt: "2026-02-01T00:00:00.000Z" },
+        { kind: "existing", id: "misa-central", favorite: false, notes: { pros: [], cons: [] }, addedAt: "2026-01-01T00:00:00.000Z" },
+        { kind: "existing", id: "geomdan-paragon", favorite: false, notes: { pros: [], cons: [] }, addedAt: "2026-02-01T00:00:00.000Z" },
       ],
     });
     render(<CandidatesFeature />);

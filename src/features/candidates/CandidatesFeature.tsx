@@ -36,7 +36,7 @@ export function CandidatesFeature() {
   );
 
   const allComplexes = complexesQuery.data ?? [];
-  const candidateIds = new Set(candidates.map((c) => c.complexId));
+  const candidateIds = new Set(candidates.map((c) => c.id));
   const candidateComplexes = allComplexes.filter((c) => candidateIds.has(c.id));
   const ready = isConditionsReady(conditions);
 
@@ -108,7 +108,7 @@ export function CandidatesFeature() {
 
     const fitById = new Map(recommendations.map((r) => [r.complex.id, r.fit]));
     const rankIndex = new Map(recommendations.map((r, i) => [r.complex.id, i]));
-    const candById = new Map(candidates.map((c) => [c.complexId, c]));
+    const candById = new Map(candidates.map((c) => [c.id, c]));
 
     let items = candidateComplexes.map((c) => ({
       complex: c,

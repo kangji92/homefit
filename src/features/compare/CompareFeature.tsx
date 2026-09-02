@@ -51,7 +51,7 @@ export function CompareFeature() {
   const allComplexes = complexesQuery.data ?? [];
   const byId = new Map(allComplexes.map((c) => [c.id, c]));
   const regionName = new Map((regionsQuery.data ?? []).map((r) => [r.id, r.name]));
-  const candidateIds = new Set(candidates.map((c) => c.complexId));
+  const candidateIds = new Set(candidates.map((c) => c.id));
   const candidateComplexes = allComplexes.filter((c) => candidateIds.has(c.id));
 
   const a = searchParams.get("a") ?? "";

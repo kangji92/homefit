@@ -68,7 +68,7 @@ function ListEditor({
 
 export function NotesEditor({ complexId }: { complexId: string }) {
   const candidate = useCandidatesStore((s) =>
-    s.candidates.find((c) => c.complexId === complexId),
+    s.candidates.find((c) => c.id === complexId),
   );
   const updateNotes = useCandidatesStore((s) => s.updateNotes);
 
