@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "gen:seed": "node --experimental-strip-types scripts/gen-seed.ts",
-    "poc:tx": "node --experimental-strip-types scripts/poc-transactions.ts"
+    "poc:tx": "node --experimental-strip-types scripts/poc-transactions.ts",
+    "ingest:prices": "node --experimental-strip-types scripts/ingest-prices.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
