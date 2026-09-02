@@ -86,11 +86,8 @@ export const STEP_TITLES = [
 ] as const;
 
 // ===== 슬라이더 레벨 표현 =====
-export function priorityLevel(v: number): "낮음" | "보통" | "높음" {
-  if (v <= 33) return "낮음";
-  if (v <= 66) return "보통";
-  return "높음";
-}
+// lib으로 이동(온보딩·시뮬레이션 공유). 기존 import 경로 유지를 위해 재노출.
+export { priorityLevel } from "@/lib/priorityLevel";
 
 // ===== 스텝별 zod 스키마 =====
 const transport = z.enum(["transit", "car", "either"]);

@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MOCK_COMPLEXES } from "@/data/mock/complexes";
 import { MOCK_REGIONS } from "@/data/mock/regions";
@@ -109,5 +109,52 @@ describe("CompareFeature", () => {
     render(<CompareFeature />);
     await user.selectOptions(screen.getByLabelText("비교 후보 A"), "misa-central");
     expect(replaceMock).toHaveBeenCalledWith("/compare?a=misa-central");
+  });
+
+  describe("우선순위 시뮬레이션", () => {
+    function renderWithPair() {
+      addTwoCandidates();
+      params.current = new URLSearchParams("a=misa-central&b=geomdan-paragon");
+      render(<CompareFeature />);
+    }
+
+    it("변경 전에는 저장/초기화 버튼이 없다", () => {
+      renderWithPair();
+      expect(
+        screen.queryByRole("button", { name: "이 우선순위로 저장" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "초기화" }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("슬라이더를 조정해 저장하면 우선순위가 갱신되고 변경 상태가 해제된다", async () => {
+      const user = userEvent.setup();
+      renderWithPair();
+
+      fireEvent.change(screen.getByLabelText("가격"), { target: { value: "100" } });
+      const saveBtn = screen.getByRole("button", { name: "이 우선순위로 저장" });
+      await user.click(saveBtn);
+
+      expect(useConditionsStore.getState().priorities.price).toBe(100);
+      expect(
+        screen.queryByRole("button", { name: "이 우선순위로 저장" }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText("우선순위를 저장했어요.")).toBeInTheDocument();
+    });
+
+    it("초기화는 저장값으로 되돌리고 스토어는 건드리지 않는다", () => {
+      renderWithPair();
+      const before = useConditionsStore.getState().priorities.price;
+
+      fireEvent.change(screen.getByLabelText("가격"), { target: { value: "13" } });
+      expect(screen.getByLabelText("가격")).toHaveValue("13");
+
+      fireEvent.click(screen.getByRole("button", { name: "초기화" }));
+      expect(
+        screen.queryByRole("button", { name: "초기화" }),
+      ).not.toBeInTheDocument();
+      expect(useConditionsStore.getState().priorities.price).toBe(before);
+    });
   });
 });

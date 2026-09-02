@@ -1,15 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { computeFit } from "@/domain/scoring";
 import { compareFit } from "@/domain/scoring/compare";
+import type { Priorities } from "@/domain/types";
 import { useComplexes, useRegions } from "@/hooks/queries";
 import { isConditionsReady } from "@/lib/conditions";
 import { useCandidatesStore } from "@/stores/candidatesStore";
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { ComparisonView } from "./ComparisonView";
+import { SimulationPanel } from "./SimulationPanel";
 
 function Notice({ children }: { children: React.ReactNode }) {
   return (
@@ -28,6 +31,11 @@ export function CompareFeature() {
   const priorities = useConditionsStore((s) => s.priorities);
   const dealbreakers = useConditionsStore((s) => s.dealbreakers);
   const candidates = useCandidatesStore((s) => s.candidates);
+
+  // 시뮬레이션: null이면 저장된 우선순위를 그대로 사용(휘발성 실험)
+  const [simPriorities, setSimPriorities] = useState<Priorities | null>(null);
+  const [savedFlash, setSavedFlash] = useState(false);
+  const effectivePriorities = simPriorities ?? priorities;
 
   const complexesQuery = useComplexes();
   const regionsQuery = useRegions();
@@ -143,9 +151,24 @@ export function CompareFeature() {
       );
     }
 
-    const fitA = computeFit(conditions, priorities, dealbreakers, complexA);
-    const fitB = computeFit(conditions, priorities, dealbreakers, complexB);
+    // 시뮬레이션 중이면 조정된 우선순위로 계산 (절대조건은 가중치와 무관)
+    const fitA = computeFit(conditions, effectivePriorities, dealbreakers, complexA);
+    const fitB = computeFit(conditions, effectivePriorities, dealbreakers, complexB);
     const comparison = compareFit(fitA, fitB);
+
+    const handleSimChange = (next: Priorities) => {
+      setSavedFlash(false);
+      setSimPriorities(next);
+    };
+    const handleSimReset = () => {
+      setSavedFlash(false);
+      setSimPriorities(null);
+    };
+    const handleSimSave = () => {
+      useConditionsStore.getState().setPriorities(effectivePriorities);
+      setSimPriorities(effectivePriorities); // 저장값과 동일 → "변경됨" 해제
+      setSavedFlash(true);
+    };
 
     return (
       <div className="space-y-4">
@@ -156,6 +179,14 @@ export function CompareFeature() {
           comparison={comparison}
           workplaces={conditions.workplaces}
           dealType={conditions.dealType}
+        />
+        <SimulationPanel
+          value={effectivePriorities}
+          saved={priorities}
+          onChange={handleSimChange}
+          onReset={handleSimReset}
+          onSave={handleSimSave}
+          savedFlash={savedFlash}
         />
       </div>
     );
