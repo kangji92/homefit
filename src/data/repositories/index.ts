@@ -3,8 +3,9 @@
 // 소비 측은 이 모듈의 complexRepository/regionRepository에만 의존(무변경).
 // (docs/design/data-phase2-supabase-catalog.md §6)
 
+import { MOCK_AREAS, getMockArea } from "@/data/mock/areas";
 import { MOCK_PRESALES, getMockPresale } from "@/data/mock/presales";
-import type { ComplexListParams, HomeRepository } from "./types";
+import type { AreaRepository, ComplexListParams, HomeRepository } from "./types";
 import { mockComplexRepository, mockRegionRepository } from "./mock";
 import {
   supabaseComplexRepository,
@@ -34,5 +35,15 @@ export const homeRepository: HomeRepository = {
   },
   async getById(id: string) {
     return (await complexRepository.getById(id)) ?? getMockPresale(id) ?? null;
+  },
+};
+
+// 개발 예정지 — mock(실데이터는 개발계획 adapter로 후속).
+export const areaRepository: AreaRepository = {
+  async list() {
+    return [...MOCK_AREAS];
+  },
+  async getById(id: string) {
+    return getMockArea(id) ?? null;
   },
 };

@@ -155,6 +155,7 @@ export interface Area {
   id: string;
   name: string;
   regionId: string;
+  summary?: string;
   areaMetrics: AreaMetrics;
   targetMoveInYear?: number;
   /** 지역 중심 기준(선택) */

@@ -2,7 +2,7 @@
 // UI·features는 구현체가 아닌 이 인터페이스에만 의존한다.
 // MVP는 mock 구현, 이후 Supabase 구현으로 교체.
 
-import type { Complex, Home, Region } from "@/domain/types";
+import type { Area, Complex, Home, Region } from "@/domain/types";
 
 export interface ComplexListParams {
   regionId?: string;
@@ -17,6 +17,12 @@ export interface ComplexRepository {
 export interface HomeRepository {
   list(params?: ComplexListParams): Promise<Home[]>;
   getById(id: string): Promise<Home | null>;
+}
+
+/** 개발 예정지(area) 조회 — AreaFit 대상. */
+export interface AreaRepository {
+  list(): Promise<Area[]>;
+  getById(id: string): Promise<Area | null>;
 }
 
 export interface RegionRepository {

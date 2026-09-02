@@ -24,5 +24,5 @@ test("온보딩을 완료하면 홈으로 이동하고 추천이 보인다", asy
   // 홈
   await expect(page).toHaveURL("/");
   await expect(page.getByRole("heading", { name: "우리 조건" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "추천 후보" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "추천 주택" })).toBeVisible();
 });

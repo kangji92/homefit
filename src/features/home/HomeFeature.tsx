@@ -4,8 +4,10 @@ import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { useHomes, useRegions } from "@/hooks/queries";
+import { computeAreaFit } from "@/domain/scoring";
+import { useAreas, useHomes, useRegions } from "@/hooks/queries";
 import { useConditionsStore } from "@/stores/conditionsStore";
+import { AreaCard } from "@/features/area/AreaCard";
 import { ConditionsSummary } from "./ConditionsSummary";
 import { RecommendationCard } from "./RecommendationCard";
 import { isConditionsReady, recommendComplexes } from "./recommend";
@@ -34,6 +36,16 @@ export function HomeFeature() {
 
   const complexesQuery = useHomes();
   const regionsQuery = useRegions();
+  const areasQuery = useAreas();
+
+  const areaFits = useMemo(
+    () =>
+      (areasQuery.data ?? []).map((area) => ({
+        area,
+        fit: computeAreaFit(priorities, area),
+      })),
+    [areasQuery.data, priorities],
+  );
 
   const regionName = useMemo(
     () => new Map((regionsQuery.data ?? []).map((r) => [r.id, r.name])),
@@ -67,11 +79,29 @@ export function HomeFeature() {
   }
 
   return (
-    <PageContainer className="space-y-4">
+    <PageContainer className="space-y-6">
       <ConditionsSummary conditions={conditions} />
       {renderContent()}
+      {renderAreas()}
     </PageContainer>
   );
+
+  function renderAreas() {
+    if (areaFits.length === 0) return null;
+    return (
+      <section aria-label="개발 예정지" className="space-y-3">
+        <div>
+          <h2 className="text-lg font-bold">개발 예정지</h2>
+          <p className="text-muted-foreground text-xs">
+            3기신도시 등 · 지역 적합도(AreaFit)
+          </p>
+        </div>
+        {areaFits.map(({ area, fit }) => (
+          <AreaCard key={area.id} area={area} fit={fit} />
+        ))}
+      </section>
+    );
+  }
 
   function renderContent() {
     if (!isConditionsReady(conditions)) {
@@ -99,8 +129,8 @@ export function HomeFeature() {
       return <Notice>표시할 단지가 없어요.</Notice>;
     }
     return (
-      <section aria-label="추천 후보" className="space-y-3">
-        <h2 className="text-lg font-bold">추천 후보</h2>
+      <section aria-label="추천 주택" className="space-y-3">
+        <h2 className="text-lg font-bold">추천 주택</h2>
         {recommendations.map((r) => (
           <RecommendationCard
             key={r.complex.id}

@@ -21,6 +21,7 @@ vi.mock("@/hooks/queries", () => ({
   useComplexes: () => useComplexesMock(),
   useHomes: () => useComplexesMock(),
   useRegions: () => useRegionsMock(),
+  useAreas: () => ({ data: [], isLoading: false, isError: false }),
 }));
 
 const READY_CONDITIONS = {
