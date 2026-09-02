@@ -104,6 +104,39 @@ describe("CandidatesFeature", () => {
     ).toBe(true);
   });
 
+  it("즐겨찾기 필터는 favorite 후보만 남긴다", async () => {
+    const user = userEvent.setup();
+    useCandidatesStore.setState({
+      candidates: [
+        { complexId: "misa-central", favorite: true, notes: { pros: [], cons: [] }, addedAt: "2026-01-01T00:00:00.000Z" },
+        { complexId: "geomdan-paragon", favorite: false, notes: { pros: [], cons: [] }, addedAt: "2026-01-02T00:00:00.000Z" },
+      ],
+    });
+    render(<CandidatesFeature />);
+
+    expect(screen.getByRole("heading", { name: "미사강변센트럴" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "검단파라곤" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "★ 즐겨찾기만" }));
+    expect(screen.getByRole("heading", { name: "미사강변센트럴" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "검단파라곤" })).not.toBeInTheDocument();
+  });
+
+  it("최근 추가순은 addedAt 내림차순으로 정렬한다", async () => {
+    const user = userEvent.setup();
+    useCandidatesStore.setState({
+      candidates: [
+        { complexId: "misa-central", favorite: false, notes: { pros: [], cons: [] }, addedAt: "2026-01-01T00:00:00.000Z" },
+        { complexId: "geomdan-paragon", favorite: false, notes: { pros: [], cons: [] }, addedAt: "2026-02-01T00:00:00.000Z" },
+      ],
+    });
+    render(<CandidatesFeature />);
+    await user.click(screen.getByRole("button", { name: "최근 추가순" }));
+
+    const headings = screen.getAllByRole("heading", { level: 3 });
+    expect(headings[0]).toHaveTextContent("검단파라곤");
+  });
+
   it("관심 지역 탭에서 지역을 등록/해제한다", async () => {
     const user = userEvent.setup();
     render(<CandidatesFeature />);

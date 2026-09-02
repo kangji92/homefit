@@ -13,9 +13,12 @@ import { DiscoverList } from "./DiscoverList";
 import { RegionInterestList } from "./RegionInterestList";
 
 type Tab = "complexes" | "regions";
+type SortBy = "fit" | "recent";
 
 export function CandidatesFeature() {
   const [tab, setTab] = useState<Tab>("complexes");
+  const [sortBy, setSortBy] = useState<SortBy>("fit");
+  const [favOnly, setFavOnly] = useState(false);
 
   const condHydrated = useConditionsStore((s) => s.hasHydrated);
   const candHydrated = useCandidatesStore((s) => s.hasHydrated);
@@ -99,25 +102,73 @@ export function CandidatesFeature() {
       );
     }
 
-    const cards = ready
-      ? recommendations.map((r) => (
+    const fitById = new Map(recommendations.map((r) => [r.complex.id, r.fit]));
+    const rankIndex = new Map(recommendations.map((r, i) => [r.complex.id, i]));
+    const candById = new Map(candidates.map((c) => [c.complexId, c]));
+
+    let items = candidateComplexes.map((c) => ({
+      complex: c,
+      fit: fitById.get(c.id),
+      cand: candById.get(c.id),
+    }));
+    if (favOnly) items = items.filter((i) => i.cand?.favorite);
+    items = items.slice().sort((x, y) => {
+      if (sortBy === "recent") {
+        return (y.cand?.addedAt ?? "").localeCompare(x.cand?.addedAt ?? "");
+      }
+      // 적합도순: 추천 랭킹(탈락 우선 → 총점 내림차순)을 그대로 따른다
+      return (
+        (rankIndex.get(x.complex.id) ?? Number.MAX_SAFE_INTEGER) -
+        (rankIndex.get(y.complex.id) ?? Number.MAX_SAFE_INTEGER)
+      );
+    });
+
+    const controls = (
+      <div className="flex items-center justify-between gap-2 text-sm">
+        <div className="bg-surface-muted flex rounded-lg p-0.5">
+          <SortButton active={sortBy === "fit"} onClick={() => setSortBy("fit")}>
+            적합도순
+          </SortButton>
+          <SortButton
+            active={sortBy === "recent"}
+            onClick={() => setSortBy("recent")}
+          >
+            최근 추가순
+          </SortButton>
+        </div>
+        <button
+          type="button"
+          onClick={() => setFavOnly((v) => !v)}
+          aria-pressed={favOnly}
+          className={cn(
+            "shrink-0 rounded-md px-2.5 py-1 font-medium",
+            favOnly
+              ? "bg-fit-medium/15 text-fit-medium"
+              : "text-muted-foreground border-border border",
+          )}
+        >
+          ★ 즐겨찾기만
+        </button>
+      </div>
+    );
+
+    const cards =
+      items.length === 0 ? (
+        <Notice>즐겨찾기한 후보가 없어요.</Notice>
+      ) : (
+        items.map((i) => (
           <CandidateCard
-            key={r.complex.id}
-            complex={r.complex}
-            fit={r.fit}
-            regionName={regionName.get(r.complex.regionId)}
+            key={i.complex.id}
+            complex={i.complex}
+            fit={ready ? i.fit : undefined}
+            regionName={regionName.get(i.complex.regionId)}
           />
         ))
-      : candidateComplexes.map((c) => (
-          <CandidateCard
-            key={c.id}
-            complex={c}
-            regionName={regionName.get(c.regionId)}
-          />
-        ));
+      );
 
     return (
       <div className="space-y-4">
+        {controls}
         <div className="space-y-3">{cards}</div>
         <details className="bg-surface border-border rounded-xl border p-4">
           <summary className="cursor-pointer font-semibold">단지 둘러보기</summary>
@@ -146,6 +197,30 @@ function TabButton({
       aria-pressed={active}
       className={cn(
         "flex-1 rounded-md py-1.5 font-medium",
+        active ? "bg-surface text-foreground shadow-sm" : "text-muted-foreground",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SortButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "rounded-md px-2.5 py-1 font-medium",
         active ? "bg-surface text-foreground shadow-sm" : "text-muted-foreground",
       )}
     >
