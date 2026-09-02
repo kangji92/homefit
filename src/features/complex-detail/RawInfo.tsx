@@ -2,6 +2,7 @@ import { DEAL_TYPE_LABEL, priceBandFor } from "@/domain/price";
 import { DEFAULT_SCORING_CONFIG } from "@/domain/scoring/config";
 import type { Complex, DealType, Workplace } from "@/domain/types";
 import { formatKoreanMoney } from "@/lib/format";
+import { metersToWalkMinutes } from "@/lib/walk";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -43,7 +44,7 @@ export function RawInfo({
       />
       <Row
         label="역 거리"
-        value={`${complex.stationDistanceM.toLocaleString("ko-KR")}m`}
+        value={`${complex.stationDistanceM.toLocaleString("ko-KR")}m · 도보 약 ${metersToWalkMinutes(complex.stationDistanceM)}분`}
       />
       {workplaces
         .filter((w) => w.id.length > 0)

@@ -53,6 +53,7 @@ Homefit의 **첫 실제 UX**. 사용자가 우리 조건·우선순위·절대�
 ### 스텝 5 — 절대조건 (선택)
 - `maxPrice`, `minSizePyeong`, `maxStationDistanceM`, `maxBuildingAgeYears`, `minHouseholds`, `requireSchoolNearby`.
 - 전부 비워도 완료 가능(스킵 버튼). 입력한 값만 검증(양수).
+- `maxStationDistanceM`는 **m 또는 성인 도보 분**으로 입력할 수 있다(단위 토글). 저장값은 항상 m이며, 도보 분 입력은 **1분 = 80m**(부동산 표시광고 표준, `lib/walk.ts`)으로 환산한다. 도메인·스코어링은 m 기준 그대로다.
 - 안내: "여기 넣은 조건을 못 지키는 단지는 '조건 미충족'으로 표시돼요."
 
 ---
