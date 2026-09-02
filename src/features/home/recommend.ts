@@ -12,6 +12,8 @@ import {
   type UserConditions,
 } from "@/domain/types";
 
+export { isConditionsReady } from "@/lib/conditions";
+
 export const RECOMMEND_LIMIT = 5;
 
 export interface Recommendation {
@@ -41,18 +43,6 @@ export function recommendComplexes(
     .map((f) => byId.get(f.complexId))
     .filter((p): p is Recommendation => p !== undefined)
     .slice(0, limit);
-}
-
-/** 스코어링에 필요한 조건이 채워졌는지 (조건 미완성 상태 판정). */
-export function isConditionsReady(c: UserConditions): boolean {
-  return (
-    c.maxBudget > 0 &&
-    c.maxCommuteMinutes > 0 &&
-    c.workplaces.length >= 2 &&
-    c.workplaces.every((w) => w.id.length > 0) &&
-    c.desiredSize.min > 0 &&
-    c.desiredSize.max >= c.desiredSize.min
-  );
 }
 
 /** 카드에 노출할 상위 axis n개 (점수 내림차순). */
