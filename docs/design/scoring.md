@@ -16,6 +16,7 @@
 interface ScoringConfig {
   currentYear: number;         // 연식 기준연도
   priceFloorRatio: number;     // 가격 만점 기준 (예산 대비 비율)
+  fundsCoverageWeight: number; // 가격 점수 중 보유 자금 커버율 반영 비중
   commuteFullRatio: number;    // 통근 만점 기준 (허용시간 대비 비율)
   commuteScoreAtLimit: number; // 허용시간 정확히에서의 점수
   commuteHardCapRatio: number; // 통근 0점 기준 (허용시간 배수)
@@ -25,6 +26,7 @@ interface ScoringConfig {
 const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   currentYear: 2026,
   priceFloorRatio: 0.5,
+  fundsCoverageWeight: 0.3,
   commuteFullRatio: 0.5,
   commuteScoreAtLimit: 60,
   commuteHardCapRatio: 2,
@@ -45,13 +47,22 @@ const lerp = (x: number, x0: number, x1: number, y0: number, y1: number) =>
 
 ## 2. 축별 정규화식
 
-### 2.1 price (가격) — 예산 대비 저렴할수록 ↑
+### 2.1 price (가격) — 활성 거래유형 예산 대비 저렴 + 보유 자금 커버율
+거래 유형(매매/전세)에 맞는 밴드와 예산을 고른다.
 ```
-p = complex.price.representative
-floor = maxBudget * priceFloorRatio
-score = clamp( 100 * (maxBudget - p) / (maxBudget - floor) )
+band   = priceBandFor(complex.price, dealType)   // sale | jeonse
+budget = maxBudgetFor(conditions)                // maxSalePrice | maxJeonseDeposit
+if band === undefined → score = 0                // 해당 유형 매물 없음
+
+p        = band.representative
+floor    = budget * priceFloorRatio
+headroom = clamp( 100 * (budget - p) / (budget - floor) )
+coverage = clamp( min(availableFunds / p, 1), 0, 1 )   // 0~1
+score    = headroom * ( (1 - fundsCoverageWeight) + fundsCoverageWeight * coverage )
 ```
-- `p <= floor` → 100, `p >= maxBudget` → 0. 그 사이 선형.
+- `p >= budget` → `headroom=0` → **0점**(예산 초과는 자금과 무관하게 0 유지).
+- `p <= floor` 이고 보유 자금이 가격 전액을 덮으면(`coverage=1`) → **100**.
+- 보유 자금 커버가 낮을수록 `(1-w)` 배까지 감산(w=`fundsCoverageWeight`). 대출·이자는 모델링하지 않고 "내 돈으로 얼마나 감당되나"만 결정적으로 반영한다.
 
 ### 2.2 commute (출퇴근) — 3구간 선형
 모든 사람 중 **가장 긴 통근**이 기준(둘 다 만족해야 좋은 집).
@@ -156,7 +167,7 @@ overallWinner   = 총점 차이에 같은 규칙 (tieThreshold 기본 2)
 ## 7. 워크드 예시 (검증용 — 테스트 기대값)
 
 입력:
-- `maxBudget=100000`(만원), `price.representative=80000`
+- `dealType="sale"`, `maxSalePrice=100000`(만원), `availableFunds=50000`, `price.sale.representative=80000`
 - `maxCommuteMinutes=45`, `worst=40`
 - `completionYear=2018` (currentYear 2026 → age 8)
 - metrics: education 80, infrastructure 70, environment 65, futurePotential 60
@@ -165,7 +176,7 @@ overallWinner   = 총점 차이에 같은 규칙 (tieThreshold 기본 2)
 축 점수:
 | 축 | 계산 | 값 |
 |---|---|---|
-| price | 100*(100000-80000)/(100000-50000) | 40.0 |
+| price | headroom 40.0 × (0.7 + 0.3×coverage 0.625) = 40 × 0.8875 | 35.5 |
 | commute | lerp(40, 22.5, 45, 100, 60) | ≈68.9 |
 | newness | 100*(1-8/30) | ≈73.3 |
 | education | 80 | 80 |
@@ -173,10 +184,12 @@ overallWinner   = 총점 차이에 같은 규칙 (tieThreshold 기본 2)
 | environment | 65 | 65 |
 | futurePotential | 60 | 60 |
 
+- price 상세: headroom = 100×(100000-80000)/(100000-50000) = 40.0, coverage = min(50000/80000, 1) = 0.625.
+
 가중합:
 ```
-0.30*40 + 0.25*68.9 + 0.20*80 + 0.10*73.3 + 0.05*70 + 0.05*65 + 0.05*60
-= 12 + 17.22 + 16 + 7.33 + 3.5 + 3.25 + 3 ≈ 62.3  → totalScore = 62
+0.30*35.5 + 0.25*68.9 + 0.20*80 + 0.10*73.3 + 0.05*70 + 0.05*65 + 0.05*60
+= 10.65 + 17.22 + 16 + 7.33 + 3.5 + 3.25 + 3 ≈ 60.96  → totalScore = 61
 ```
 
-> 이 예시는 `scoring` 단위 테스트의 기대값 기준으로 사용한다.
+> 이 예시는 `scoring` 단위 테스트의 기대값 기준으로 사용한다(price 축 36, 총점 61).

@@ -29,9 +29,13 @@ type ChildPlan = "yes" | "no" | "undecided";
 
 type MoveInTiming = "asap" | "within1y" | "within2y" | "flexible";
 
+type DealType = "sale" | "jeonse";   // 매매 | 전세
+
 interface UserConditions {
-  maxBudget: number;                 // 최대 구매 예산 (만원)
-  availableFunds: number;            // 보유 자금 (만원)
+  dealType: DealType;                // 거래 유형 (매매/전세)
+  maxSalePrice: number;              // 최대 매매 예산 (만원) — dealType==="sale"일 때 사용
+  maxJeonseDeposit: number;          // 최대 전세보증금 (만원) — dealType==="jeonse"일 때 사용
+  availableFunds: number;            // 보유 자금 (만원) — 매매·전세 공통
   workplaces: Workplace[];           // 통근/교통수단은 각 Workplace가 보유
   maxCommuteMinutes: number;         // 허용 가능한 출퇴근 시간 (편도, 분)
   desiredSize: { min: number; max: number }; // 희망 평형 범위
@@ -44,6 +48,8 @@ interface UserConditions {
 - `workplaces`는 배열이다. **MVP validation은 `length === 2`(커플)만 강제**한다(zod). 데이터 모델을 2명으로 고정하지 않아 외벌이·재택·1인 출근을 나중에 자연스럽게 수용한다.
 - 교통수단은 **사람(Workplace)별**로 둔다. 통근 점수는 각자의 교통수단이 반영된 `Complex.commuteMinutes[workplaceId]`를 사용한다(§6.2).
 - `desiredSize.min <= desiredSize.max` 검증. 평형은 단일값이 아니라 **범위**로 다룬다(예: 30평 희망 → 29~34 허용).
+- **거래 유형은 매매/전세를 분리 저장**한다. 예산 필드를 하나로 합치지 않고 `maxSalePrice`·`maxJeonseDeposit`를 각각 두어, 유형을 토글해도 반대쪽 입력이 보존된다. 스코어링·검증은 `dealType`에 맞는 필드만 사용한다(활성 예산 = `maxBudgetFor(conditions)`).
+- 보유 자금(`availableFunds`)은 두 유형 공통이며, **가격 점수 계산에 반영**된다(§6.2 price). 대출·이자는 모델링하지 않고 "보유 자금으로 얼마나 감당되나"(커버율)만 결정적으로 쓴다.
 
 ---
 
@@ -97,11 +103,17 @@ interface Region {
   summary?: string;    // 한 줄 소개
 }
 
-// 단지는 하나의 가격이 아니다. 단일 number로 고정하지 않고 대표가 + 범위로 둔다.
-interface ComplexPrice {
-  representative: number; // 대표 매매가 (만원) — 스코어링·비교의 기준값
+// 단지는 하나의 가격이 아니다. 대표가 + 범위를 거래 유형(매매/전세)별로 둔다.
+interface PriceBand {
+  representative: number; // 대표가 (만원) — 스코어링·비교의 기준값
   min?: number;           // 단지 내 최저가 (평형/동에 따라)
   max?: number;           // 단지 내 최고가
+}
+
+// 매매·전세를 모두 담는다. 한쪽만 있는 단지도 가능(그 유형 매물이 없으면 undefined).
+interface ComplexPrice {
+  sale?: PriceBand;       // 매매
+  jeonse?: PriceBand;     // 전세 보증금
 }
 
 interface Complex {
@@ -110,7 +122,7 @@ interface Complex {
   regionId: string;
 
   // --- 정량 원시 속성 ---
-  price: ComplexPrice;                    // 단지 매매가 (만원)
+  price: ComplexPrice;                    // 단지 가격 (매매·전세, 만원)
   sizesPyeong: number[];                  // 제공 평형 목록
   completionYear: number;                 // 준공연도 (연식 계산용)
   households: number;                     // 세대수
@@ -181,6 +193,7 @@ interface FitResult {
 interface ScoringConfig {
   currentYear: number;        // 연식 계산 기준연도 (예: 2026). 결정성 위해 주입.
   priceFloorRatio: number;    // 가격 만점 기준 (예: 0.5 → 예산의 50% 이하면 만점)
+  fundsCoverageWeight: number;// 가격 점수 중 보유 자금 커버율 반영 비중 (예: 0.3)
   commuteFullRatio: number;   // 이 비율 이하 통근은 만점 (예: 0.5 → 허용시간의 50%)
   commuteScoreAtLimit: number;// 허용시간 정확히에서의 점수 (예: 60)
   commuteHardCapRatio: number;// 이 배수에서 0점 (예: 2 → 허용시간의 2배)
@@ -194,7 +207,7 @@ interface ScoringConfig {
 
 | Dealbreaker | 통과 조건 |
 |---|---|
-| `maxPrice` | `complex.price.representative <= maxPrice` (min이 있으면 "적어도 한 평형이 예산 내"인 `price.min <= maxPrice`로 완화 가능) |
+| `maxPrice` | 활성 거래유형 대표가 `priceBandFor(price, dealType).representative <= maxPrice`. 해당 유형 매물이 없으면(밴드 undefined) 판정에서 제외(탈락 아님) |
 | `minSizePyeong` | `sizesPyeong.some(p => p >= minSizePyeong)` |
 | `maxStationDistanceM` | `stationDistanceM <= maxStationDistanceM` |
 | `maxBuildingAgeYears` | `currentYear - completionYear <= maxBuildingAgeYears` |
@@ -205,10 +218,13 @@ interface ScoringConfig {
 
 각 항목을 **높을수록 좋음(0~100)**으로 정규화. 모든 함수는 `clamp(0, 100)`.
 
-- **price** (예산 대비 저렴할수록↑, `price.representative` 사용):
-  `p = complex.price.representative`
-  `100 * (maxBudget - p) / (maxBudget - maxBudget * priceFloorRatio)`
-  → 예산의 `priceFloorRatio` 이하면 100, 예산 초과면 0.
+- **price** (활성 거래유형 예산 대비 저렴할수록↑ + 보유 자금 커버율 반영):
+  활성 밴드 `band = priceBandFor(price, dealType)`. **밴드가 없으면 0점**(해당 유형 매물 없음).
+  `p = band.representative`, `budget = maxBudgetFor(conditions)`
+  - 여유도 `headroom = clamp( 100 * (budget - p) / (budget - budget * priceFloorRatio) )`
+  - 커버율 `coverage = clamp( min(availableFunds / p, 1) )` (0~1)
+  - `price = headroom * ( (1 - fundsCoverageWeight) + fundsCoverageWeight * coverage )`
+  → 예산 초과면 `headroom=0`이라 **0점 유지**. 예산 여유가 크고 보유 자금으로 전액 감당되면 **100**. 자금 커버가 낮으면 그만큼 감산(대출·이자는 모델링하지 않음).
 - **commute** (허용시간 대비 짧을수록↑, **모든 사람 중 가장 긴 통근** 기준 — 둘 다 만족해야 좋은 집):
   `worst = max( workplaces.map(w => commuteMinutes[w.id]) )`, `L = maxCommuteMinutes`
   3구간 선형 (허용시간 안이면 넉넉히 높은 점수):
