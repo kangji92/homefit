@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+  <header><resultCode>000</resultCode><resultMsg>OK</resultMsg></header>
+  <body>
+    <items>
+      <item>
+        <aptNm>미사강변센트럴자이</aptNm>
+        <dealAmount> 90,000</dealAmount>
+        <excluUseAr>84.97</excluUseAr>
+        <dealYear>2024</dealYear>
+        <dealMonth>3</dealMonth>
+        <dealDay>12</dealDay>
+        <umdNm>망월동</umdNm>
+        <buildYear>2016</buildYear>
+      </item>
+      <item>
+        <aptNm>미사강변센트럴자이</aptNm>
+        <dealAmount> 100,000</dealAmount>
+        <excluUseAr>84.97</excluUseAr>
+        <dealYear>2024</dealYear>
+        <dealMonth>5</dealMonth>
+        <dealDay>3</dealDay>
+        <umdNm>망월동</umdNm>
+        <buildYear>2016</buildYear>
+      </item>
+      <item>
+        <aptNm>미사강변센트럴자이</aptNm>
+        <dealAmount> 95,000</dealAmount>
+        <excluUseAr>101.98</excluUseAr>
+        <dealYear>2024</dealYear>
+        <dealMonth>6</dealMonth>
+        <dealDay>21</dealDay>
+        <umdNm>망월동</umdNm>
+        <buildYear>2016</buildYear>
+      </item>
+      <item>
+        <aptNm>미사강변리버뷰자이</aptNm>
+        <dealAmount> 120,000</dealAmount>
+        <excluUseAr>99.87</excluUseAr>
+        <dealYear>2024</dealYear>
+        <dealMonth>6</dealMonth>
+        <dealDay>9</dealDay>
+        <umdNm>망월동</umdNm>
+        <buildYear>2018</buildYear>
+      </item>
+    </items>
+  </body>
+</response>
