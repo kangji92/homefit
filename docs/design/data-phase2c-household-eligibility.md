@@ -118,10 +118,18 @@ evaluatePrograms(profile, target?, policy): ProgramResult[]
 const SCENARIOS = [
   { key:"register",  label:"혼인신고하면",          apply:p=>({...p,maritalStatus:"married",marriedMonths:0}) },
   { key:"sell",      label:"유주택 배우자가 집을 팔면", apply:p=>({...p,housingStatus:"none"}) },
+  { key:"newborn",   label:"임신·출산하면",          apply:p=>({...p,minorChildren:(p.minorChildren??0)+1, hasNewborn:true}) },
   { key:"sell_register", label:"집 팔고 혼인신고하면",  apply:p=>({...p,housingStatus:"none",maritalStatus:"married",marriedMonths:0}) },
 ];
 // unlocked = 시나리오에선 eligible이지만 현재는 not인 프로그램
 whatIf(profile, policy): { scenario; unlocked: ProgramResult[] }[]
+```
+- 임신·출산 시나리오는 **신생아 특례대출**(2년내 출산·소득 대폭 완화)·**신생아
+  특별공급**·**다자녀 특공**을 여는 핵심. 프로필에 `hasNewborn`(2년내 출산 여부)
+  ·`minorChildren`를 반영한다.
+```ts
+// 프로필 확장
+interface HouseholdProfile { /* … */ minorChildren?: number; hasNewborn?: boolean }
 ```
 - **현재 가능** 목록 + **"이렇게 하면 열림"** 목록으로 화면 구성.
 
