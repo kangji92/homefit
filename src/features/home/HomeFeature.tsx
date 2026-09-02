@@ -87,7 +87,7 @@ export function HomeFeature() {
   }
 
   return (
-    <PageContainer className="space-y-6">
+    <PageContainer className="max-w-2xl space-y-6">
       <ConditionsSummary conditions={conditions} />
       <UpcomingSubscriptions items={subscriptions} />
       {renderContent()}

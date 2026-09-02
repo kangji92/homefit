@@ -2,18 +2,21 @@ import { beforeEach, describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MOCK_COMPLEXES } from "@/data/mock/complexes";
+import { MOCK_AREAS } from "@/data/mock/areas";
 import { MOCK_REGIONS } from "@/data/mock/regions";
 import { DEFAULT_CONDITIONS, useConditionsStore } from "@/stores/conditionsStore";
 import { useCandidatesStore } from "@/stores/candidatesStore";
 import { CandidatesFeature } from "./CandidatesFeature";
 
-const { useComplexesMock, useRegionsMock } = vi.hoisted(() => ({
+const { useComplexesMock, useRegionsMock, useAreasMock } = vi.hoisted(() => ({
   useComplexesMock: vi.fn(),
   useRegionsMock: vi.fn(),
+  useAreasMock: vi.fn(),
 }));
 vi.mock("@/hooks/queries", () => ({
   useComplexes: () => useComplexesMock(),
   useHomes: () => useComplexesMock(),
+  useAreas: () => useAreasMock(),
   useRegions: () => useRegionsMock(),
 }));
 
@@ -45,6 +48,11 @@ beforeEach(() => {
   });
   useRegionsMock.mockReturnValue({
     data: MOCK_REGIONS,
+    isLoading: false,
+    isError: false,
+  });
+  useAreasMock.mockReturnValue({
+    data: MOCK_AREAS,
     isLoading: false,
     isError: false,
   });
@@ -136,6 +144,31 @@ describe("CandidatesFeature", () => {
 
     const headings = screen.getAllByRole("heading", { level: 3 });
     expect(headings[0]).toHaveTextContent("검단파라곤");
+  });
+
+  it("관심 지역 탭에 담긴 개발예정지(area 후보)가 보인다", async () => {
+    const user = userEvent.setup();
+    useCandidatesStore.setState({
+      candidates: [
+        {
+          kind: "area",
+          id: MOCK_AREAS[0].id,
+          favorite: false,
+          notes: { pros: [], cons: [] },
+          addedAt: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+    });
+    render(<CandidatesFeature />);
+    await user.click(screen.getByRole("button", { name: "관심 지역" }));
+    expect(
+      screen.getByRole("heading", { name: MOCK_AREAS[0].name }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "관심 해제" }));
+    expect(
+      useCandidatesStore.getState().isCandidate(MOCK_AREAS[0].id, "area"),
+    ).toBe(false);
   });
 
   it("관심 지역 탭에서 지역을 등록/해제한다", async () => {
