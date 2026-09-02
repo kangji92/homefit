@@ -33,7 +33,7 @@ export function ProfileFeature() {
   const num = (
     key: keyof HouseholdProfile,
     label: string,
-    placeholder?: string,
+    note?: string,
   ) => (
     <div>
       <label htmlFor={key} className={labelCls}>
@@ -43,13 +43,13 @@ export function ProfileFeature() {
         id={key}
         type="number"
         inputMode="numeric"
-        placeholder={placeholder}
         className={inputCls}
         value={
           profile[key] === undefined ? "" : String(profile[key] as number)
         }
         onChange={(e) => setProfile({ [key]: strToNum(e.target.value) })}
       />
+      {note && <p className="text-muted-foreground mt-1 text-xs">{note}</p>}
     </div>
   );
 
@@ -118,9 +118,21 @@ export function ProfileFeature() {
       </div>
 
       {num("minorChildren", "미성년 자녀 수 (태아 포함)")}
-      {num("monthlyIncomeManwon", "부부합산 월평균 소득 (만원)")}
-      {num("totalAssetManwon", "자산 (부동산·자동차, 만원)")}
-      {num("subscriptionMonths", "청약통장 가입기간 (개월)")}
+      {num(
+        "monthlyIncomeManwon",
+        "부부합산 월평균 소득 (만원)",
+        "세전 기준, 부부 합산.",
+      )}
+      {num(
+        "totalAssetManwon",
+        "부부합산 자산 (부동산·자동차, 만원)",
+        "세대 구성원 자산 합산.",
+      )}
+      {num(
+        "subscriptionMonths",
+        "청약통장 가입기간 (개월)",
+        "합산 아님 — 실제 청약을 넣을 사람(둘 중 조건이 나은 사람) 기준.",
+      )}
 
       <Link href="/" className="text-primary block text-center text-sm font-medium">
         홈으로

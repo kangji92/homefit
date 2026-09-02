@@ -31,9 +31,10 @@ interface HouseholdProfile {
   isProspectiveCouple: boolean;  // 예비 신혼부부
   housingStatus: HousingStatus;  // 무주택 여부
   minorChildren: number;         // 미성년 자녀 수(태아 포함 입력)
-  monthlyIncomeManwon: number;   // 부부합산 월평균 소득(만원)
-  totalAssetManwon: number;      // 부동산+자동차 등 자산(만원)
-  subscriptionMonths: number;    // 청약통장 가입기간(개월)
+  monthlyIncomeManwon: number;   // 부부합산 월평균 소득(만원, 세전)
+  totalAssetManwon: number;      // 부부합산(세대) 자산: 부동산+자동차 등(만원)
+  subscriptionMonths: number;    // 청약통장 가입기간(개월) — 합산 아님,
+                                 //   신청자(둘 중 조건 나은 사람) 기준
   regionResidingMonths: number;  // 해당지역 거주기간(개월)
 }
 ```
