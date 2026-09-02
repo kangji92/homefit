@@ -75,12 +75,70 @@ evaluateLoans(profile, priceManwon, policy): LoanProgram[]
 - (2C-2) **대출 패널**: 집 상세에 감당가능성/대출 프로그램.
 - **점수와 결합**: 나란히 표기하되 **하나의 숫자로 합치지 않는다**.
 
+## 4.5 확장 — 프로그램 카탈로그 + 시나리오 what-if
+
+단일 "신혼부부 판정"을 넘어, **여러 청약·대출 프로그램을 카탈로그로 두고** 각각을
+프로필에 대해 평가한다. 나아가 **상태를 바꾸면 열리는 것**을 함께 보여준다.
+(예: 사실혼·한쪽 유주택 커플에게 "집 팔고 혼인신고하면 신혼부부 특공+신혼 대출이
+열려요".)
+
+### 청약 프로그램 카탈로그 (mock·근사)
+| 프로그램 | 핵심 요건(mock) | 유주택 가능? |
+|---|---|---|
+| 신혼부부 특별공급 | 법적 혼인/예비 7년내 · 무주택 · 소득·자산 | ✕ |
+| 생애최초 특별공급 | 무주택(세대) · 생애 최초 · 소득·자산 · 청약통장 | ✕ |
+| 다자녀 특별공급 | 미성년 자녀 2~3+ · 무주택 · 소득·자산 | ✕ |
+| 일반공급(추첨제) | 청약통장 · 지역 — 일부 추첨은 유주택도 | △(추첨 일부) |
+| 무순위(줍줍) | 지역 거주 등 — 유주택도 신청 가능 케이스 | ○ |
+
+### 대출 프로그램 카탈로그 (mock·근사)
+| 프로그램 | 핵심 요건(mock) |
+|---|---|
+| 디딤돌(일반) | 무주택 · 부부합산 소득 상한 · 주택가격/전용 상한 · LTV |
+| 디딤돌(신혼) | +혼인 요건, 소득 상한 완화 |
+| 신생아 특례 | 2년내 출산 자녀 · 소득 대폭 완화 · 가격 상한 |
+| 보금자리론 | 소득·주택가격 상한 · LTV |
+
+### 평가 결과(프로그램별)
+```ts
+type ProgramFit = "eligible" | "not_eligible";
+interface ProgramResult {
+  key; name; kind: "subscription" | "loan";
+  fit: ProgramFit; requirements: Requirement[];
+  maxLoanManwon?: number;   // 대출만
+}
+evaluatePrograms(profile, target?, policy): ProgramResult[]
+```
+- 각 프로그램 = 순수 함수(요건 pass/fail/unknown → eligible/not). 정책 주입.
+- 대출은 대상 집 가격(existing/presale 활성가) 참조.
+
+### 시나리오 what-if
+프로필 변형을 적용해 **새로 열리는 프로그램**을 계산한다.
+```ts
+const SCENARIOS = [
+  { key:"register",  label:"혼인신고하면",          apply:p=>({...p,maritalStatus:"married",marriedMonths:0}) },
+  { key:"sell",      label:"유주택 배우자가 집을 팔면", apply:p=>({...p,housingStatus:"none"}) },
+  { key:"sell_register", label:"집 팔고 혼인신고하면",  apply:p=>({...p,housingStatus:"none",maritalStatus:"married",marriedMonths:0}) },
+];
+// unlocked = 시나리오에선 eligible이지만 현재는 not인 프로그램
+whatIf(profile, policy): { scenario; unlocked: ProgramResult[] }[]
+```
+- **현재 가능** 목록 + **"이렇게 하면 열림"** 목록으로 화면 구성.
+
+### 정직성·한계 (필수 고지)
+- 전부 **mock 근사 + 기준일·정책버전** 표기. "실제는 청약 공고·금융기관 상담으로
+  확인" 문구 상시 노출.
+- **세대·사실혼 판정은 단순화**(무주택은 세대 기준 자기신고). 사실혼 배우자
+  주택의 세대 분리·개별 판정은 다루지 않는다(고지). 절세/편법 조장이 아니라
+  "상태 변화에 따른 제도상 가능성" 정보 제공.
+
 ## 5. 서브 단계
 
-1. **2C-1**: HouseholdProfile 스토어·입력 + 신혼부부 청약 자격 엔진 + 분양 상세
-   자격 패널. (이번)
-2. **2C-2**: 정부지원 대출 엔진 + 집 상세 대출/감당가능성 패널.
-3. 실데이터(청약홈·정책자료) adapter 교체.
+1. **2C-1** ✅: HouseholdProfile + 신혼부부 청약 자격 + 분양 상세 패널.
+2. **2C-1b**: 청약 프로그램 카탈로그(생애최초·일반/추첨·무순위) + **시나리오
+   what-if**("현재 가능 / 이렇게 하면 열림"). `/profile`에 "내 청약 가능성" 뷰.
+3. **2C-2**: 대출 카탈로그(디딤돌 신혼/신생아·보금자리) + 집 상세 대출 패널.
+4. 실데이터(청약홈·정책자료) adapter 교체.
 
 ## 6. 테스트·완료
 
