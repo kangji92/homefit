@@ -19,8 +19,10 @@ async function fetchXml(path: string, params: Record<string, string>): Promise<s
   return res.text();
 }
 
-/** 아파트 매매 실거래 (LAWD_CD 시군구 5자리, DEAL_YMD YYYYMM) */
+/** 아파트 매매 실거래 상세 (LAWD_CD 시군구 5자리, DEAL_YMD YYYYMM) */
 export function fetchTradeXml(lawdCd: string, dealYmd: string): Promise<string> {
+  // 상세 매매 API(getRTMSDataSvcAptTradeDev). 기본(getRTMSDataSvcAptTrade)과
+  // 별도 활용신청 대상이며 core 필드(aptNm/dealAmount/dealYear·Month/excluUseAr)는 동일.
   return fetchXml("RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev", {
     LAWD_CD: lawdCd,
     DEAL_YMD: dealYmd,

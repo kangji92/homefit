@@ -5,7 +5,7 @@ import type { ComplexPrice } from "@/domain/types";
 // (docs/design/data-phase2-1-transactions-poc.md §6)
 export const POC_PRICE_OVERRIDE: Record<string, ComplexPrice> = {
   "misa-central": {
-    sale: { representative: 95000, min: 90000, max: 100000 },
-    jeonse: { representative: 52500, min: 50000, max: 55000 },
+    sale: { representative: 136500, min: 125000, max: 147000 },
+    jeonse: { representative: 78000, min: 60900, max: 83000 },
   },
 };

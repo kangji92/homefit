@@ -33,20 +33,20 @@ describe("toSalePriceBand", () => {
   const items = parseTradeItems(saleXml);
 
   it("대표가=중앙값, min/max=범위, 다른 단지는 제외", () => {
-    // 대상: 90000,100000,95000 → median 95000. 리버뷰(120000)는 제외.
-    expect(toSalePriceBand(items, { asOfYm: 202406, aptName: APT })).toEqual({
-      representative: 95000,
-      min: 90000,
-      max: 100000,
+    // 실거래(2025-06) 22건 중앙값 13.65억. 디코이 단지는 제외.
+    expect(toSalePriceBand(items, { asOfYm: 202506, aptName: APT })).toEqual({
+      representative: 136500,
+      min: 125000,
+      max: 147000,
     });
   });
 
   it("최근 창이 비면 12개월로 확장한다", () => {
-    // 202412 기준 최근 6개월(202407~202412)엔 거래 없음 → 12개월 폴백
-    expect(toSalePriceBand(items, { asOfYm: 202412, aptName: APT })).toEqual({
-      representative: 95000,
-      min: 90000,
-      max: 100000,
+    // 202512 기준 최근 6개월(202507~202512)엔 거래 없음 → 12개월 폴백(202506 포함)
+    expect(toSalePriceBand(items, { asOfYm: 202512, aptName: APT })).toEqual({
+      representative: 136500,
+      min: 125000,
+      max: 147000,
     });
   });
 
@@ -61,11 +61,11 @@ describe("toJeonsePriceBand", () => {
   const items = parseRentItems(rentXml);
 
   it("순수 전세(월세0)만, 대표=중앙값", () => {
-    // 전세 55000,50000 → median 52500. 월세건(30000/80)·리버뷰 제외.
-    expect(toJeonsePriceBand(items, { asOfYm: 202406, aptName: APT })).toEqual({
-      representative: 52500,
-      min: 50000,
-      max: 55000,
+    // 실거래(2025-06) 순수 전세 9건 중앙값 7.8억. 월세건·디코이 제외.
+    expect(toJeonsePriceBand(items, { asOfYm: 202506, aptName: APT })).toEqual({
+      representative: 78000,
+      min: 60900,
+      max: 83000,
     });
   });
 });

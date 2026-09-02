@@ -9,9 +9,9 @@ export interface MolitSource {
 }
 
 export const MOLIT_SOURCES: MolitSource[] = [
-  // PoC 대상 — 하남 미사강변도시
+  // PoC 대상 — 하남 미사강변도시 (라이브 조회로 검증됨: 매매/전월세 실거래 확인)
   { complexId: "misa-central", lawdCd: "41450", aptName: "미사강변센트럴자이" },
-  // 확대 대상(fixture/검증 후속) — 화성 동탄2
+  // 확대 대상(실아파트·검증 후속) — 화성 동탄2
   { complexId: "dongtan-lake-xi", lawdCd: "41590", aptName: "동탄역시범한화꿈에그린" },
 ];
 

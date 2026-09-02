@@ -26,16 +26,16 @@ describe("실거래가 → scoring 영향", () => {
   it("실거래 대표가가 mock보다 비싸면 가격 점수가 내려간다", () => {
     const conditions = makeConditions(); // dealType sale, 예산 100000, 보유 50000
     const complex = MOCK_COMPLEXES.find((c) => c.id === "misa-central")!;
-    const opts = { asOfYm: 202406, aptName: "미사강변센트럴자이" };
+    const opts = { asOfYm: 202506, aptName: "미사강변센트럴자이" };
 
     const sale = toSalePriceBand(parseTradeItems(saleXml), opts);
     const jeonse = toJeonsePriceBand(parseRentItems(rentXml), opts);
-    expect(sale?.representative).toBe(95000); // adapter 산출 확인
+    expect(sale?.representative).toBe(136500); // adapter 산출 확인(실거래 13.65억)
 
     const real = { ...complex, price: { sale, jeonse } };
 
     const before = computeFit(conditions, PRIORITIES, {}, complex); // mock 85000
-    const after = computeFit(conditions, PRIORITIES, {}, real); // real 95000
+    const after = computeFit(conditions, PRIORITIES, {}, real); // real 136500(예산 초과)
 
     // 실거래가↑ → 가격 축·총점 하락 (스코어링이 실데이터에 반응)
     expect(after.axisScores.price).toBeLessThan(before.axisScores.price);

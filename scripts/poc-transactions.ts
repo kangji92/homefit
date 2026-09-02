@@ -11,7 +11,7 @@ import { MOLIT_SOURCES } from "../src/data/adapters/molit/sources.ts";
 
 // PoC 단지별 fixture + 기준월 (실서비스에선 client.ts 라이브 조회로 대체)
 const FIXTURES: Record<string, { sale: string; rent: string; asOfYm: number }> = {
-  "misa-central": { sale: "misa_sale.xml", rent: "misa_rent.xml", asOfYm: 202406 },
+  "misa-central": { sale: "misa_sale.xml", rent: "misa_rent.xml", asOfYm: 202506 },
 };
 
 const FIX_DIR = "../src/data/adapters/molit/__fixtures__/";

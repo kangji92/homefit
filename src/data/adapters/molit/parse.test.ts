@@ -10,9 +10,10 @@ const saleXml = readFileSync(
 describe("parseItems", () => {
   it("<item> 블록을 태그 맵으로 추출한다", () => {
     const items = parseTradeItems(saleXml);
-    expect(items).toHaveLength(4);
+    // 실데이터 fixture: 대상 22건 + 디코이 2건
+    expect(items).toHaveLength(24);
     expect(items[0].aptNm).toBe("미사강변센트럴자이");
-    expect(items[0].dealAmount).toBe("90,000"); // trim으로 앞 공백 제거
-    expect(items[0].dealYear).toBe("2024");
+    expect(items[0].dealYear).toBe("2025");
+    expect(items[0].dealAmount).toMatch(/^[\d,]+$/); // "134,800" 형태
   });
 });
