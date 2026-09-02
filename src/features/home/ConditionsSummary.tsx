@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DEAL_TYPE_LABEL, maxBudgetFor } from "@/domain/price";
 import type { UserConditions } from "@/domain/types";
 import { formatKoreanMoney } from "@/lib/format";
 
@@ -14,9 +15,9 @@ export function ConditionsSummary({ conditions }: { conditions: UserConditions }
       </div>
       <dl className="text-muted-foreground mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
         <div>
-          예산{" "}
+          {DEAL_TYPE_LABEL[conditions.dealType]}{" "}
           <span className="text-foreground font-medium">
-            {formatKoreanMoney(conditions.maxBudget)}
+            {formatKoreanMoney(maxBudgetFor(conditions))}
           </span>
         </div>
         <div>

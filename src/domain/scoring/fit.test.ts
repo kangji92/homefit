@@ -33,13 +33,13 @@ describe("computeFit — 워크드 예시 (scoring.md §7)", () => {
     makeComplex(),
   );
 
-  it("총점은 62", () => {
-    expect(result.totalScore).toBe(62);
+  it("총점은 61", () => {
+    expect(result.totalScore).toBe(61);
   });
 
   it("축별 점수가 기대값과 일치한다", () => {
     expect(result.axisScores).toEqual({
-      price: 40,
+      price: 36,
       commute: 69,
       newness: 73,
       education: 80,
@@ -65,7 +65,7 @@ describe("computeFit — 절대조건 탈락", () => {
     );
     expect(result.passesDealbreakers).toBe(false);
     expect(result.failedDealbreakers).toContain("maxPrice");
-    expect(result.totalScore).toBe(62); // 점수는 그대로
+    expect(result.totalScore).toBe(61); // 점수는 그대로
   });
 });
 

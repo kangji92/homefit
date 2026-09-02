@@ -29,7 +29,7 @@ describe("OnboardingFeature", () => {
     useConditionsStore.setState({
       conditions: {
         ...DEFAULT_CONDITIONS,
-        maxBudget: 100000,
+        maxSalePrice: 100000,
         availableFunds: 50000,
         workplaces: completeWorkplaces,
       },
@@ -52,18 +52,18 @@ describe("OnboardingFeature", () => {
     render(<OnboardingFeature />); // 기본 maxBudget 0
     await user.click(screen.getByRole("button", { name: "다음" }));
     expect(
-      await screen.findByText("예산은 0보다 커야 해요"),
+      await screen.findByText("매매 예산은 0보다 커야 해요"),
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "예산" })).toBeInTheDocument();
   });
 
   it("persist된 값으로 입력을 복원한다", () => {
     useConditionsStore.setState({
-      conditions: { ...DEFAULT_CONDITIONS, maxBudget: 123456 },
+      conditions: { ...DEFAULT_CONDITIONS, maxSalePrice: 123456 },
       hasHydrated: true,
     });
     render(<OnboardingFeature />);
-    expect(screen.getByLabelText("최대 구매 예산 (만원)")).toHaveValue(123456);
+    expect(screen.getByLabelText("최대 매매 예산 (만원)")).toHaveValue(123456);
   });
 
   it("모든 스텝을 완료하면 onboardingCompleted 설정 후 / 로 이동한다", async () => {
@@ -71,7 +71,7 @@ describe("OnboardingFeature", () => {
     render(<OnboardingFeature />);
 
     // step0 예산
-    const budget = screen.getByLabelText("최대 구매 예산 (만원)");
+    const budget = screen.getByLabelText("최대 매매 예산 (만원)");
     await user.clear(budget);
     await user.type(budget, "100000");
     await user.click(screen.getByRole("button", { name: "다음" }));

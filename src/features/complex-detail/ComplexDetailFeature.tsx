@@ -67,7 +67,12 @@ export function ComplexDetailFeature({ id }: { id: string }) {
 
   return (
     <PageContainer className="max-w-2xl space-y-4">
-      <Hero complex={complex} regionName={regionName} fit={fit} />
+      <Hero
+        complex={complex}
+        regionName={regionName}
+        fit={fit}
+        dealType={conditions.dealType}
+      />
 
       {fit && !fit.passesDealbreakers && (
         <DealbreakerAlert failed={fit.failedDealbreakers} />
@@ -104,7 +109,11 @@ export function ComplexDetailFeature({ id }: { id: string }) {
       <details className="bg-surface border-border rounded-xl border p-4">
         <summary className="cursor-pointer font-semibold">자세한 정보</summary>
         <div className="mt-3">
-          <RawInfo complex={complex} workplaces={conditions.workplaces} />
+          <RawInfo
+            complex={complex}
+            workplaces={conditions.workplaces}
+            dealType={conditions.dealType}
+          />
         </div>
       </details>
 

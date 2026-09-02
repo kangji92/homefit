@@ -5,6 +5,7 @@ import { z } from "zod";
 import { WORK_AREA_IDS, getWorkArea } from "@/data/workAreas";
 import type {
   ChildPlan,
+  DealType,
   Dealbreakers,
   MoveInTiming,
   Priorities,
@@ -16,7 +17,9 @@ import type {
 
 // ===== 폼 값 타입 (스토어 스키마를 폼에 맞게 평탄화) =====
 export interface OnboardingFormValues {
-  maxBudget: number;
+  dealType: DealType;
+  maxSalePrice: number;
+  maxJeonseDeposit: number;
   availableFunds: number;
   workplaceAId: string;
   workplaceBId: string;
@@ -49,6 +52,11 @@ export const CHILD_PLAN_OPTIONS: { value: ChildPlan; label: string }[] = [
   { value: "yes", label: "있음" },
   { value: "no", label: "없음" },
   { value: "undecided", label: "미정" },
+];
+
+export const DEAL_TYPE_OPTIONS: { value: DealType; label: string }[] = [
+  { value: "sale", label: "매매" },
+  { value: "jeonse", label: "전세" },
 ];
 
 export const MOVE_IN_OPTIONS: { value: MoveInTiming; label: string }[] = [
@@ -94,10 +102,30 @@ const areaId = z
 const priority = z.number().min(0).max(100);
 const positiveOptional = z.number().positive("0보다 커야 해요").optional();
 
-export const budgetSchema = z.object({
-  maxBudget: z.number().positive("예산은 0보다 커야 해요"),
-  availableFunds: z.number().min(0, "0 이상이어야 해요"),
-});
+export const budgetSchema = z
+  .object({
+    dealType: z.enum(["sale", "jeonse"]),
+    maxSalePrice: z.number().min(0),
+    maxJeonseDeposit: z.number().min(0),
+    availableFunds: z.number().min(0, "0 이상이어야 해요"),
+  })
+  .superRefine((v, ctx) => {
+    // 활성 거래유형의 예산만 > 0 을 요구한다
+    if (v.dealType === "sale" && !(v.maxSalePrice > 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["maxSalePrice"],
+        message: "매매 예산은 0보다 커야 해요",
+      });
+    }
+    if (v.dealType === "jeonse" && !(v.maxJeonseDeposit > 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["maxJeonseDeposit"],
+        message: "전세 보증금은 0보다 커야 해요",
+      });
+    }
+  });
 
 export const commuteSchema = z.object({
   workplaceAId: areaId,
@@ -216,7 +244,9 @@ export function buildWorkplaces(v: OnboardingFormValues): Workplace[] {
 
 export function formToConditions(v: OnboardingFormValues): UserConditions {
   return {
-    maxBudget: v.maxBudget,
+    dealType: v.dealType,
+    maxSalePrice: v.maxSalePrice,
+    maxJeonseDeposit: v.maxJeonseDeposit,
     availableFunds: v.availableFunds,
     workplaces: buildWorkplaces(v),
     maxCommuteMinutes: v.maxCommuteMinutes,
@@ -252,7 +282,9 @@ export function storeToFormValues(
 ): OnboardingFormValues {
   const [a, b] = conditions.workplaces;
   return {
-    maxBudget: conditions.maxBudget,
+    dealType: conditions.dealType,
+    maxSalePrice: conditions.maxSalePrice,
+    maxJeonseDeposit: conditions.maxJeonseDeposit,
     availableFunds: conditions.availableFunds,
     workplaceAId: a?.id ?? "",
     workplaceBId: b?.id ?? "",

@@ -7,7 +7,9 @@ export function makeConditions(
   overrides: Partial<UserConditions> = {},
 ): UserConditions {
   return {
-    maxBudget: 100000,
+    dealType: "sale",
+    maxSalePrice: 100000,
+    maxJeonseDeposit: 60000,
     availableFunds: 50000,
     workplaces: [
       { id: "a", label: "A 직장", lat: 0, lng: 0, transport: "transit" },
@@ -26,7 +28,7 @@ export function makeComplex(overrides: Partial<Complex> = {}): Complex {
     id: "c1",
     name: "테스트 단지",
     regionId: "r1",
-    price: { representative: 80000 },
+    price: { sale: { representative: 80000 }, jeonse: { representative: 50000 } },
     sizesPyeong: [25, 32],
     completionYear: 2018,
     households: 500,

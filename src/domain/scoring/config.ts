@@ -6,6 +6,8 @@ export interface ScoringConfig {
   currentYear: number;
   /** 가격 만점 기준 (예산 대비 비율) */
   priceFloorRatio: number;
+  /** 가격 점수 중 보유 자금 커버율 반영 비중 (0~1) */
+  fundsCoverageWeight: number;
   /** 통근 만점 기준 (허용시간 대비 비율) */
   commuteFullRatio: number;
   /** 허용시간 정확히에서의 통근 점수 */
@@ -19,6 +21,7 @@ export interface ScoringConfig {
 export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   currentYear: 2026,
   priceFloorRatio: 0.5,
+  fundsCoverageWeight: 0.3,
   commuteFullRatio: 0.5,
   commuteScoreAtLimit: 60,
   commuteHardCapRatio: 2,

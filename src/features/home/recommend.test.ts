@@ -19,17 +19,17 @@ const lowMetrics = {
 
 const passHigh: Complex = makeComplex({
   id: "pass-high",
-  price: { representative: 60000 },
+  price: { sale: { representative: 60000 } },
   metrics: highMetrics,
 });
 const passLow: Complex = makeComplex({
   id: "pass-low",
-  price: { representative: 80000 },
+  price: { sale: { representative: 80000 } },
   metrics: lowMetrics,
 });
 const failHigh: Complex = makeComplex({
   id: "fail-high",
-  price: { representative: 99000 },
+  price: { sale: { representative: 99000 } },
   metrics: highMetrics,
 });
 
@@ -76,7 +76,7 @@ describe("isConditionsReady", () => {
     expect(isConditionsReady(conditions)).toBe(true);
   });
   it("예산이 0이면 false", () => {
-    expect(isConditionsReady({ ...conditions, maxBudget: 0 })).toBe(false);
+    expect(isConditionsReady({ ...conditions, maxSalePrice: 0 })).toBe(false);
   });
   it("직장 id가 비면 false", () => {
     expect(

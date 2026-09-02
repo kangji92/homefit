@@ -27,7 +27,9 @@ describe("mock 단지 데이터 무결성", () => {
 
   it("실제 조건으로 통근 점수가 계산된다 (Infinity·0 폴백 아님)", () => {
     const conditions: UserConditions = {
-      maxBudget: 100000,
+      dealType: "sale",
+      maxSalePrice: 100000,
+      maxJeonseDeposit: 60000,
       availableFunds: 50000,
       workplaces: [
         { id: "gangnam", label: "강남", lat: 0, lng: 0, transport: "transit" },

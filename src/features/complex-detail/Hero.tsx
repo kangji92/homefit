@@ -1,16 +1,19 @@
 import { ScoreGauge } from "@/components/ui/ScoreGauge";
-import type { Complex, FitResult } from "@/domain/types";
-import { formatKoreanMoney } from "@/lib/format";
+import { DEAL_TYPE_LABEL } from "@/domain/price";
+import type { Complex, DealType, FitResult } from "@/domain/types";
+import { formatActivePrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export function Hero({
   complex,
   regionName,
   fit,
+  dealType,
 }: {
   complex: Complex;
   regionName?: string;
   fit: FitResult | null;
+  dealType: DealType;
 }) {
   return (
     <section className="bg-surface border-border rounded-xl border p-5 md:grid md:grid-cols-2 md:items-center md:gap-6">
@@ -41,7 +44,10 @@ export function Hero({
           <p className="text-muted-foreground mt-1 text-sm">{regionName}</p>
         )}
         <p className="mt-3 text-lg font-semibold">
-          {formatKoreanMoney(complex.price.representative)}
+          <span className="text-muted-foreground mr-1 text-sm font-normal">
+            {DEAL_TYPE_LABEL[dealType]}
+          </span>
+          {formatActivePrice(complex, dealType)}
         </p>
         <p className="text-muted-foreground text-sm">
           {complex.sizesPyeong.join(", ")}평

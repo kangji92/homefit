@@ -15,11 +15,17 @@ export interface Workplace {
 
 export type ChildPlan = "yes" | "no" | "undecided";
 export type MoveInTiming = "asap" | "within1y" | "within2y" | "flexible";
+/** 거래 유형: 매매 | 전세 */
+export type DealType = "sale" | "jeonse";
 
 export interface UserConditions {
-  /** 최대 구매 예산 (만원) */
-  maxBudget: number;
-  /** 보유 자금 (만원) */
+  /** 거래 유형 (매매/전세) */
+  dealType: DealType;
+  /** 최대 매매 예산 (만원) — dealType==="sale"일 때 사용 */
+  maxSalePrice: number;
+  /** 최대 전세보증금 (만원) — dealType==="jeonse"일 때 사용 */
+  maxJeonseDeposit: number;
+  /** 보유 자금 (만원) — 매매·전세 공통 */
   availableFunds: number;
   /** 통근/교통수단은 각 Workplace가 보유. MVP validation은 length===2 */
   workplaces: Workplace[];
@@ -71,11 +77,17 @@ export interface Region {
   summary?: string;
 }
 
-/** 단지는 하나의 가격이 아니다. 대표가 + 범위. */
-export interface ComplexPrice {
+/** 한 거래 유형의 대표가 + 범위. */
+export interface PriceBand {
   representative: number;
   min?: number;
   max?: number;
+}
+
+/** 매매·전세를 모두 담는다. 한쪽만 있는 단지도 가능. */
+export interface ComplexPrice {
+  sale?: PriceBand;
+  jeonse?: PriceBand;
 }
 
 /** 0~100 정성 지표 (측정 가능한 seed. AI 생성 아님) */

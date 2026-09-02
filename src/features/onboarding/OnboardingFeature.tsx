@@ -75,7 +75,9 @@ function OnboardingFlow() {
     const store = useConditionsStore.getState();
     if (s === 0) {
       store.patchConditions({
-        maxBudget: v.maxBudget,
+        dealType: v.dealType,
+        maxSalePrice: v.maxSalePrice,
+        maxJeonseDeposit: v.maxJeonseDeposit,
         availableFunds: v.availableFunds,
       });
     } else if (s === 1) {

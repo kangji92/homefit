@@ -106,6 +106,7 @@ export function HomeFeature() {
             key={r.complex.id}
             recommendation={r}
             regionName={regionName.get(r.complex.regionId)}
+            dealType={conditions.dealType}
           />
         ))}
       </section>

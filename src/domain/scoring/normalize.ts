@@ -1,6 +1,7 @@
 // 축별 0~100 정규화 (docs/design/scoring.md §2). 모두 "높을수록 좋음".
 
 import type { Complex, PriorityKey, UserConditions } from "../types";
+import { maxBudgetFor, priceBandFor } from "../price";
 import type { ScoringConfig } from "./config";
 
 export const clamp = (x: number, lo = 0, hi = 100): number =>
@@ -15,17 +16,28 @@ export const lerp = (
   y1: number,
 ): number => y0 + ((y1 - y0) * (x - x0)) / (x1 - x0);
 
-/** 가격: 예산 대비 저렴할수록 ↑ (price.representative 사용) */
+/**
+ * 가격: 활성 거래유형 예산 대비 저렴할수록 ↑, 보유 자금 커버율로 보정.
+ * 해당 유형 매물이 없으면 0. (docs/design/scoring.md §2.1)
+ */
 export function priceScore(
   complex: Complex,
   conditions: UserConditions,
   config: ScoringConfig,
 ): number {
-  const p = complex.price.representative;
-  const floor = conditions.maxBudget * config.priceFloorRatio;
-  const denom = conditions.maxBudget - floor;
+  const band = priceBandFor(complex.price, conditions.dealType);
+  if (!band) return 0; // 해당 거래유형 매물 없음
+  const budget = maxBudgetFor(conditions);
+  const p = band.representative;
+
+  const floor = budget * config.priceFloorRatio;
+  const denom = budget - floor;
   if (denom <= 0) return 0;
-  return clamp((100 * (conditions.maxBudget - p)) / denom);
+  const headroom = clamp((100 * (budget - p)) / denom);
+
+  const coverage = p > 0 ? clamp(conditions.availableFunds / p, 0, 1) : 0;
+  const w = config.fundsCoverageWeight;
+  return clamp(headroom * (1 - w + w * coverage));
 }
 
 /** 통근: 모든 사람 중 가장 긴 통근 기준, 3구간 선형 */

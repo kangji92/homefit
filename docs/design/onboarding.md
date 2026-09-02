@@ -17,7 +17,7 @@ Homefit의 **첫 실제 UX**. 사용자가 우리 조건·우선순위·절대�
 
 | 스텝 | 주제 | 필드 | 대상 |
 |---|---|---|---|
-| 1 | 예산 | `maxBudget`, `availableFunds` | UserConditions |
+| 1 | 예산 | `dealType`(매매/전세), `maxSalePrice` \| `maxJeonseDeposit`, `availableFunds` | UserConditions |
 | 2 | 직장·통근 | `workplaces[2]`(지역+교통수단), `maxCommuteMinutes` | UserConditions |
 | 3 | 평형·가족 | `desiredSize{min,max}`, `childPlan`, `moveInTiming` | UserConditions |
 | 4 | 우선순위 | 7개 `Priorities`(0~100) | Priorities |
@@ -26,8 +26,11 @@ Homefit의 **첫 실제 UX**. 사용자가 우리 조건·우선순위·절대�
 완료 시 `onboardingCompleted=true` 설정 후 `/`로 이동.
 
 ### 스텝 1 — 예산
-- `maxBudget` (만원): 숫자 입력. **> 0**. 표시용 억/만원 포맷 보조.
-- `availableFunds` (만원): 숫자 입력. **>= 0**. `maxBudget` 초과 시 하드 에러 아님(대출 가정) — 안내 문구만.
+- `dealType`: **매매/전세** 토글. 선택에 따라 예산 필드 라벨·검증 대상이 바뀐다.
+- 매매 선택 → `maxSalePrice` (만원): 숫자 입력. **> 0**.
+- 전세 선택 → `maxJeonseDeposit` (만원): 숫자 입력. **> 0**.
+- `availableFunds` (만원): 공통. 숫자 입력. **>= 0**. 예산 초과 시 하드 에러 아님 — 가격 점수의 커버율로만 반영.
+- 매매·전세 예산은 **각각 저장**한다(토글해도 반대쪽 값 보존). 검증은 활성 `dealType` 필드만 **> 0**을 요구한다.
 
 ### 스텝 2 — 직장·통근
 - `workplaces`: **정확히 2개**(MVP). 각 항목:
@@ -139,7 +142,9 @@ interface ConditionsState {
 기본값:
 ```ts
 const DEFAULT_CONDITIONS: UserConditions = {
-  maxBudget: 0,
+  dealType: "sale",
+  maxSalePrice: 0,
+  maxJeonseDeposit: 0,
   availableFunds: 0,
   workplaces: [
     { id: "", label: "", lat: 0, lng: 0, transport: "transit" },
@@ -187,7 +192,8 @@ const DEFAULT_PRIORITIES: Priorities = {
 
 | 필드 | 규칙 |
 |---|---|
-| maxBudget | number, > 0 |
+| dealType | "sale" \| "jeonse" |
+| maxSalePrice / maxJeonseDeposit | number, 활성 유형만 > 0 |
 | availableFunds | number, >= 0 |
 | workplaces | length === 2, 각 id는 프리셋에 존재, transport enum |
 | maxCommuteMinutes | int, 10~180 |

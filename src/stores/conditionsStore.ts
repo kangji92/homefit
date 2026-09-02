@@ -6,7 +6,9 @@ import { persist } from "zustand/middleware";
 import type { Dealbreakers, Priorities, UserConditions } from "@/domain/types";
 
 export const DEFAULT_CONDITIONS: UserConditions = {
-  maxBudget: 0,
+  dealType: "sale",
+  maxSalePrice: 0,
+  maxJeonseDeposit: 0,
   availableFunds: 0,
   workplaces: [
     { id: "", label: "", lat: 0, lng: 0, transport: "transit" },
@@ -27,6 +29,16 @@ export const DEFAULT_PRIORITIES: Priorities = {
   environment: 50,
   futurePotential: 50,
 };
+
+/** persist에 저장되는 슬라이스 (partialize 결과와 동일 형태) */
+type PersistedConditions = Pick<
+  ConditionsState,
+  | "conditions"
+  | "priorities"
+  | "dealbreakers"
+  | "onboardingStep"
+  | "onboardingCompleted"
+>;
 
 export interface ConditionsState {
   conditions: UserConditions;
@@ -75,7 +87,25 @@ export const useConditionsStore = create<ConditionsState>()(
     }),
     {
       name: "homefit-conditions",
-      version: 1,
+      version: 2,
+      // v1(maxBudget 단일 예산) → v2(dealType + 매매/전세 분리) 마이그레이션
+      migrate: (persisted, version) => {
+        const state = persisted as PersistedConditions;
+        const c = state?.conditions as unknown as
+          | Record<string, unknown>
+          | undefined;
+        if (version < 2 && c) {
+          state.conditions = {
+            ...DEFAULT_CONDITIONS,
+            ...(c as Partial<UserConditions>),
+            dealType: (c.dealType as UserConditions["dealType"]) ?? "sale",
+            maxSalePrice:
+              (c.maxSalePrice as number) ?? (c.maxBudget as number) ?? 0,
+            maxJeonseDeposit: (c.maxJeonseDeposit as number) ?? 0,
+          };
+        }
+        return state;
+      },
       // hasHydrated는 세션 전용이라 저장하지 않는다
       partialize: (s) => ({
         conditions: s.conditions,

@@ -10,10 +10,18 @@ describe("evaluateDealbreakers", () => {
     expect(evaluateDealbreakers({}, makeComplex(), cfg)).toEqual([]);
   });
 
-  it("maxPrice: 대표가가 초과하면 탈락", () => {
-    const c = makeComplex({ price: { representative: 90000 } });
+  it("maxPrice: 활성 거래유형 대표가가 초과하면 탈락", () => {
+    const c = makeComplex({ price: { sale: { representative: 90000 } } });
     expect(evaluateDealbreakers({ maxPrice: 80000 }, c, cfg)).toContain("maxPrice");
     expect(evaluateDealbreakers({ maxPrice: 90000 }, c, cfg)).toEqual([]);
+  });
+
+  it("maxPrice: 해당 거래유형 매물이 없으면 판정 제외(탈락 아님)", () => {
+    const c = makeComplex({ price: { sale: { representative: 90000 } } });
+    // 전세로 판정 → 전세 밴드 없음 → maxPrice 미적용
+    expect(
+      evaluateDealbreakers({ maxPrice: 10000 }, c, cfg, "jeonse"),
+    ).toEqual([]);
   });
 
   it("minSizePyeong: 해당 이상 평형이 하나도 없으면 탈락", () => {
@@ -65,7 +73,7 @@ describe("evaluateDealbreakers", () => {
 
   it("여러 조건이 동시에 실패하면 모두 담는다", () => {
     const c = makeComplex({
-      price: { representative: 99999 },
+      price: { sale: { representative: 99999 } },
       households: 100,
     });
     const failed = evaluateDealbreakers(

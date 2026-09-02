@@ -19,24 +19,37 @@ describe("clamp", () => {
 });
 
 describe("priceScore", () => {
-  const conditions = makeConditions({ maxBudget: 100000 });
-  it("예산의 floor(50%) 이하면 100", () => {
-    expect(
-      priceScore(makeComplex({ price: { representative: 50000 } }), conditions, cfg),
-    ).toBe(100);
+  // 기본: dealType "sale", maxSalePrice 100000, availableFunds 50000
+  const conditions = makeConditions();
+  const sale = (rep: number) => makeComplex({ price: { sale: { representative: rep } } });
+
+  it("예산의 floor(50%) 이하 + 자금 전액 커버면 100", () => {
+    // price 50000, funds 50000 → coverage 1 → 100
+    expect(priceScore(sale(50000), conditions, cfg)).toBe(100);
   });
-  it("예산 이상이면 0", () => {
-    expect(
-      priceScore(makeComplex({ price: { representative: 100000 } }), conditions, cfg),
-    ).toBe(0);
-    expect(
-      priceScore(makeComplex({ price: { representative: 120000 } }), conditions, cfg),
-    ).toBe(0);
+  it("예산 이상이면 자금과 무관하게 0", () => {
+    expect(priceScore(sale(100000), conditions, cfg)).toBe(0);
+    expect(priceScore(sale(120000), conditions, cfg)).toBe(0);
   });
-  it("중간값은 선형 (80000 → 40)", () => {
-    expect(
-      priceScore(makeComplex({ price: { representative: 80000 } }), conditions, cfg),
-    ).toBeCloseTo(40, 5);
+  it("중간값은 여유도×커버율 보정 (80000 → 35.5)", () => {
+    // headroom 40, coverage min(50000/80000,1)=0.625 → 40*(0.7+0.3*0.625)=35.5
+    expect(priceScore(sale(80000), conditions, cfg)).toBeCloseTo(35.5, 5);
+  });
+  it("보유 자금이 적으면 커버율이 낮아 감산된다", () => {
+    // funds 20000, price 80000 → coverage 0.25 → 40*(0.7+0.3*0.25)=31
+    const poor = makeConditions({ availableFunds: 20000 });
+    expect(priceScore(sale(80000), poor, cfg)).toBeCloseTo(31, 5);
+  });
+  it("전세 선택 시 전세 밴드/예산을 사용한다", () => {
+    const jeonse = makeConditions({ dealType: "jeonse", availableFunds: 60000 });
+    // maxJeonseDeposit 60000, floor 30000, price 45000 → headroom 50, coverage 1 → 50
+    const c = makeComplex({ price: { jeonse: { representative: 45000 } } });
+    expect(priceScore(c, jeonse, cfg)).toBeCloseTo(50, 5);
+  });
+  it("해당 거래유형 매물이 없으면 0", () => {
+    const jeonse = makeConditions({ dealType: "jeonse" });
+    const saleOnly = makeComplex({ price: { sale: { representative: 50000 } } });
+    expect(priceScore(saleOnly, jeonse, cfg)).toBe(0);
   });
 });
 

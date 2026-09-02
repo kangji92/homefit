@@ -28,7 +28,7 @@ vi.mock("@/hooks/queries", () => ({
 
 const READY = {
   ...DEFAULT_CONDITIONS,
-  maxBudget: 100000,
+  maxSalePrice: 100000,
   availableFunds: 50000,
   maxCommuteMinutes: 60,
   workplaces: [

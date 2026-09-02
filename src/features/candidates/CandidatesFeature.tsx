@@ -96,7 +96,11 @@ export function CandidatesFeature() {
           <Notice>담은 후보가 없어요. 아래에서 둘러보고 담아보세요.</Notice>
           <section>
             <h2 className="mb-2 font-semibold">단지 둘러보기</h2>
-            <DiscoverList complexes={allComplexes} regionName={regionName} />
+            <DiscoverList
+              complexes={allComplexes}
+              regionName={regionName}
+              dealType={conditions.dealType}
+            />
           </section>
         </div>
       );
@@ -162,6 +166,7 @@ export function CandidatesFeature() {
             complex={i.complex}
             fit={ready ? i.fit : undefined}
             regionName={regionName.get(i.complex.regionId)}
+            dealType={conditions.dealType}
           />
         ))
       );
@@ -173,7 +178,11 @@ export function CandidatesFeature() {
         <details className="bg-surface border-border rounded-xl border p-4">
           <summary className="cursor-pointer font-semibold">단지 둘러보기</summary>
           <div className="mt-2">
-            <DiscoverList complexes={allComplexes} regionName={regionName} />
+            <DiscoverList
+              complexes={allComplexes}
+              regionName={regionName}
+              dealType={conditions.dealType}
+            />
           </div>
         </details>
       </div>

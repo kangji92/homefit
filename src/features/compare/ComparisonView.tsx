@@ -1,9 +1,11 @@
 import { ScoreGauge } from "@/components/ui/ScoreGauge";
+import { DEAL_TYPE_LABEL, priceBandFor } from "@/domain/price";
 import { DEFAULT_SCORING_CONFIG } from "@/domain/scoring/config";
 import {
   PRIORITY_KEYS,
   type Comparison,
   type Complex,
+  type DealType,
   type FitResult,
   type Winner,
   type Workplace,
@@ -115,14 +117,20 @@ export function ComparisonView({
   b,
   comparison,
   workplaces,
+  dealType,
 }: {
   a: Side;
   b: Side;
   comparison: Comparison;
   workplaces: Workplace[];
+  dealType: DealType;
 }) {
   const cfg = DEFAULT_SCORING_CONFIG;
   const age = (c: Complex) => cfg.currentYear - c.completionYear;
+  const priceText = (c: Complex) => {
+    const band = priceBandFor(c.price, dealType);
+    return band ? formatKoreanMoney(band.representative) : "정보 없음";
+  };
 
   return (
     <div className="space-y-5">
@@ -158,9 +166,9 @@ export function ComparisonView({
       <section className="bg-surface border-border rounded-xl border p-4">
         <h2 className="mb-2 font-semibold">원시 정보</h2>
         <CompareRow
-          a={formatKoreanMoney(a.complex.price.representative)}
-          label="대표 가격"
-          b={formatKoreanMoney(b.complex.price.representative)}
+          a={priceText(a.complex)}
+          label={`대표 가격 (${DEAL_TYPE_LABEL[dealType]})`}
+          b={priceText(b.complex)}
         />
         <CompareRow
           a={`${a.complex.sizesPyeong.join(", ")}평`}

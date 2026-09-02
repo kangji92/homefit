@@ -15,7 +15,9 @@ import {
 } from "./schema";
 
 const completeValues: OnboardingFormValues = {
-  maxBudget: 100000,
+  dealType: "sale",
+  maxSalePrice: 100000,
+  maxJeonseDeposit: 60000,
   availableFunds: 50000,
   workplaceAId: "gangnam",
   workplaceBId: "pangyo",
@@ -31,11 +33,20 @@ const completeValues: OnboardingFormValues = {
 };
 
 describe("스텝 스키마", () => {
-  it("budget: 예산은 0보다 커야 한다", () => {
+  it("budget: 활성 거래유형 예산은 0보다 커야 한다", () => {
     expect(budgetSchema.safeParse(completeValues).success).toBe(true);
+    // 매매 선택인데 매매 예산 0 → 실패
     expect(
-      budgetSchema.safeParse({ ...completeValues, maxBudget: 0 }).success,
+      budgetSchema.safeParse({ ...completeValues, maxSalePrice: 0 }).success,
     ).toBe(false);
+    // 전세 선택 시 전세 보증금만 검증 (매매 0이어도 통과)
+    expect(
+      budgetSchema.safeParse({
+        ...completeValues,
+        dealType: "jeonse",
+        maxSalePrice: 0,
+      }).success,
+    ).toBe(true);
   });
 
   it("commute: 근무지역 미선택은 실패", () => {
@@ -84,7 +95,7 @@ describe("resolveResumeStep", () => {
   });
 
   it("이전 스텝 필수값 누락 시 가장 앞 미완료 스텝으로 보정", () => {
-    const missingBudget = { ...completeValues, maxBudget: 0 };
+    const missingBudget = { ...completeValues, maxSalePrice: 0 };
     expect(resolveResumeStep(4, missingBudget)).toBe(0);
 
     const missingArea = { ...completeValues, workplaceAId: "" };

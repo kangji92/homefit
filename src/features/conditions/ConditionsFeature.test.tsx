@@ -6,7 +6,7 @@ import { ConditionsFeature } from "./ConditionsFeature";
 
 const READY = {
   ...DEFAULT_CONDITIONS,
-  maxBudget: 100000,
+  maxSalePrice: 100000,
   availableFunds: 50000,
   maxCommuteMinutes: 60,
   workplaces: [
@@ -34,19 +34,19 @@ describe("ConditionsFeature", () => {
 
   it("현재 조건을 폼에 채워 표시한다", () => {
     render(<ConditionsFeature />);
-    expect(screen.getByLabelText("최대 구매 예산 (만원)")).toHaveValue(100000);
+    expect(screen.getByLabelText("최대 매매 예산 (만원)")).toHaveValue(100000);
   });
 
   it("유효한 값으로 저장하면 store에 반영된다", async () => {
     const user = userEvent.setup();
     render(<ConditionsFeature />);
 
-    const budget = screen.getByLabelText("최대 구매 예산 (만원)");
+    const budget = screen.getByLabelText("최대 매매 예산 (만원)");
     await user.clear(budget);
     await user.type(budget, "90000");
     await user.click(screen.getByRole("button", { name: "저장" }));
 
-    expect(useConditionsStore.getState().conditions.maxBudget).toBe(90000);
+    expect(useConditionsStore.getState().conditions.maxSalePrice).toBe(90000);
     expect(screen.getByText("저장했어요.")).toBeInTheDocument();
   });
 
@@ -54,13 +54,13 @@ describe("ConditionsFeature", () => {
     const user = userEvent.setup();
     render(<ConditionsFeature />);
 
-    const budget = screen.getByLabelText("최대 구매 예산 (만원)");
+    const budget = screen.getByLabelText("최대 매매 예산 (만원)");
     await user.clear(budget);
     await user.type(budget, "0");
     await user.click(screen.getByRole("button", { name: "저장" }));
 
-    expect(screen.getByText("예산은 0보다 커야 해요")).toBeInTheDocument();
+    expect(screen.getByText("매매 예산은 0보다 커야 해요")).toBeInTheDocument();
     // 저장되지 않아 기존 값 유지
-    expect(useConditionsStore.getState().conditions.maxBudget).toBe(100000);
+    expect(useConditionsStore.getState().conditions.maxSalePrice).toBe(100000);
   });
 });

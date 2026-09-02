@@ -155,6 +155,7 @@ export function CompareFeature() {
           b={{ complex: complexB, fit: fitB, regionName: regionName.get(complexB.regionId) }}
           comparison={comparison}
           workplaces={conditions.workplaces}
+          dealType={conditions.dealType}
         />
       </div>
     );

@@ -33,7 +33,12 @@ export function computeFit(
   complex: Complex,
   config: ScoringConfig = DEFAULT_SCORING_CONFIG,
 ): FitResult {
-  const failed = evaluateDealbreakers(dealbreakers, complex, config);
+  const failed = evaluateDealbreakers(
+    dealbreakers,
+    complex,
+    config,
+    conditions.dealType,
+  );
   const raw = computeAxisScores(complex, conditions, config);
   const w = normalizeWeights(priorities);
 

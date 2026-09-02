@@ -1,17 +1,19 @@
 import Link from "next/link";
 import { ScoreGauge } from "@/components/ui/ScoreGauge";
-import type { Complex, FitResult } from "@/domain/types";
-import { formatKoreanMoney } from "@/lib/format";
+import type { Complex, DealType, FitResult } from "@/domain/types";
+import { formatActivePrice } from "@/lib/format";
 import { useCandidatesStore } from "@/stores/candidatesStore";
 
 export function CandidateCard({
   complex,
   fit,
   regionName,
+  dealType,
 }: {
   complex: Complex;
   fit?: FitResult;
   regionName?: string;
+  dealType: DealType;
 }) {
   const favorite = useCandidatesStore(
     (s) => s.candidates.find((c) => c.complexId === complex.id)?.favorite ?? false,
@@ -36,7 +38,7 @@ export function CandidateCard({
           </div>
           <p className="text-muted-foreground mt-0.5 text-sm">
             {regionName ? `${regionName} · ` : ""}
-            {formatKoreanMoney(complex.price.representative)}
+            {formatActivePrice(complex, dealType)}
           </p>
         </div>
       </Link>

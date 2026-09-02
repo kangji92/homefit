@@ -1,5 +1,6 @@
+import { DEAL_TYPE_LABEL, priceBandFor } from "@/domain/price";
 import { DEFAULT_SCORING_CONFIG } from "@/domain/scoring/config";
-import type { Complex, Workplace } from "@/domain/types";
+import type { Complex, DealType, Workplace } from "@/domain/types";
 import { formatKoreanMoney } from "@/lib/format";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
@@ -14,19 +15,25 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 export function RawInfo({
   complex,
   workplaces,
+  dealType,
 }: {
   complex: Complex;
   workplaces: Workplace[];
+  dealType: DealType;
 }) {
   const age = DEFAULT_SCORING_CONFIG.currentYear - complex.completionYear;
+  const band = priceBandFor(complex.price, dealType);
   const priceRange =
-    complex.price.min != null && complex.price.max != null
-      ? `${formatKoreanMoney(complex.price.min)} ~ ${formatKoreanMoney(complex.price.max)}`
+    band?.min != null && band.max != null
+      ? `${formatKoreanMoney(band.min)} ~ ${formatKoreanMoney(band.max)}`
       : "-";
 
   return (
     <dl className="divide-border divide-y">
-      <Row label="대표 가격" value={formatKoreanMoney(complex.price.representative)} />
+      <Row
+        label={`대표 가격 (${DEAL_TYPE_LABEL[dealType]})`}
+        value={band ? formatKoreanMoney(band.representative) : "매물 정보 없음"}
+      />
       <Row label="가격 범위" value={priceRange} />
       <Row label="평형" value={`${complex.sizesPyeong.join(", ")}평`} />
       <Row label="준공연도" value={`${complex.completionYear}년 (${age}년차)`} />

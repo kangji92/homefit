@@ -1,15 +1,18 @@
 import Link from "next/link";
 import { ScoreGauge } from "@/components/ui/ScoreGauge";
-import { formatKoreanMoney } from "@/lib/format";
+import type { DealType } from "@/domain/types";
+import { formatActivePrice } from "@/lib/format";
 import { PRIORITY_LABELS } from "@/lib/priorityLabels";
 import { topAxes, type Recommendation } from "./recommend";
 
 export function RecommendationCard({
   recommendation,
   regionName,
+  dealType,
 }: {
   recommendation: Recommendation;
   regionName?: string;
+  dealType: DealType;
 }) {
   const { complex, fit } = recommendation;
   const axes = topAxes(fit, 3);
@@ -32,7 +35,7 @@ export function RecommendationCard({
           </div>
           <p className="text-muted-foreground mt-0.5 text-sm">
             {regionName ? `${regionName} · ` : ""}
-            {formatKoreanMoney(complex.price.representative)}
+            {formatActivePrice(complex, dealType)}
           </p>
           <ul className="mt-2 flex flex-wrap gap-1.5">
             {axes.map((a) => (

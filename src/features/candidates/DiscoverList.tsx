@@ -1,13 +1,15 @@
-import type { Complex } from "@/domain/types";
-import { formatKoreanMoney } from "@/lib/format";
+import type { Complex, DealType } from "@/domain/types";
+import { formatActivePrice } from "@/lib/format";
 import { useCandidatesStore } from "@/stores/candidatesStore";
 
 export function DiscoverList({
   complexes,
   regionName,
+  dealType,
 }: {
   complexes: Complex[];
   regionName: Map<string, string>;
+  dealType: DealType;
 }) {
   const candidates = useCandidatesStore((s) => s.candidates);
   const addCandidate = useCandidatesStore((s) => s.addCandidate);
@@ -23,7 +25,7 @@ export function DiscoverList({
               <p className="truncate text-sm font-medium">{c.name}</p>
               <p className="text-muted-foreground text-xs">
                 {regionName.get(c.regionId) ?? ""} ·{" "}
-                {formatKoreanMoney(c.price.representative)}
+                {formatActivePrice(c, dealType)}
               </p>
             </div>
             <button
