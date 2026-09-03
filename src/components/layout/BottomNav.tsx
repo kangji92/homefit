@@ -2,11 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, Home, Scale, SlidersHorizontal } from "lucide-react";
+import { Building2, Home, Scale, Search, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/", label: "홈", icon: Home, match: (p: string) => p === "/" },
+  {
+    href: "/explore",
+    label: "탐색",
+    icon: Search,
+    match: (p: string) => p.startsWith("/explore"),
+  },
   {
     href: "/candidates",
     label: "후보",
@@ -29,8 +35,8 @@ const NAV_ITEMS = [
 ] as const;
 
 /**
- * 하단 고정 내비게이션 (홈 / 후보 / 비교 / 우리 조건).
- * (docs/design/screens-and-routing.md §2)
+ * 하단 고정 내비게이션 (홈 / 탐색 / 후보 / 비교 / 우리 조건).
+ * (docs/design/screens-and-routing.md §2, explore-search.md §2)
  */
 export function BottomNav() {
   const pathname = usePathname();
