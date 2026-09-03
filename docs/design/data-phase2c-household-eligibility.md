@@ -144,8 +144,10 @@ interface HouseholdProfile { /* … */ minorChildren?: number; hasNewborn?: bool
 ## 5. 서브 단계
 
 1. **2C-1** ✅: HouseholdProfile + 신혼부부 청약 자격 + 분양 상세 패널.
-2. **2C-1b**: 청약 프로그램 카탈로그(생애최초·일반/추첨·무순위) + **시나리오
-   what-if**("현재 가능 / 이렇게 하면 열림"). `/profile`에 "내 청약 가능성" 뷰.
+2. **2C-1b** ✅: 청약 프로그램 카탈로그(신혼부부·생애최초·다자녀·신생아·일반/추첨
+   ·무순위) `evaluatePrograms` + **시나리오 what-if** `whatIf`(혼인신고·매도·임신출산
+   ·복합) + `hasNewborn` 필드 + `/profile` "내 청약 가능성" 뷰(현재 가능 / 이렇게 하면
+   열림). computeFit 불변.
 3. **2C-2**: 대출 카탈로그(디딤돌 신혼/신생아·보금자리) + 집 상세 대출 패널.
 4. 실데이터(청약홈·정책자료) adapter 교체.
 

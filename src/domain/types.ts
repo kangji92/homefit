@@ -183,6 +183,8 @@ export interface HouseholdProfile {
   totalAssetManwon?: number;
   /** 청약통장 가입기간(개월) */
   subscriptionMonths?: number;
+  /** 최근 2년내 출산(임신 포함) 여부 — 신생아 특공·특례대출 요건 */
+  hasNewborn?: boolean;
 }
 
 // ===== 후보 관리 =====

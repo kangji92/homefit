@@ -8,6 +8,8 @@ export interface SubscriptionPolicy {
   minSubscriptionMonths: number; // 청약통장 최소 가입기간(개월)
   incomeLimitManwon: number; // 부부합산 월평균 소득 상한(만원)
   assetLimitManwon: number; // 자산 상한(만원)
+  multiChildMinChildren: number; // 다자녀 특공 최소 미성년 자녀 수
+  newbornIncomeLimitManwon: number; // 신생아 특공 소득 상한(완화, 만원)
 }
 
 export const DEFAULT_SUBSCRIPTION_POLICY: SubscriptionPolicy = {
@@ -17,4 +19,6 @@ export const DEFAULT_SUBSCRIPTION_POLICY: SubscriptionPolicy = {
   minSubscriptionMonths: 6,
   incomeLimitManwon: 800, // 월 800만원(mock)
   assetLimitManwon: 34500, // 3.45억(mock)
+  multiChildMinChildren: 2, // 미성년 자녀 2명 이상(mock)
+  newbornIncomeLimitManwon: 1300, // 신생아 소득 완화(mock)
 };

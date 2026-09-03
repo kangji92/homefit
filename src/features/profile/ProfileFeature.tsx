@@ -8,6 +8,7 @@ import type {
   MaritalStatus,
 } from "@/domain/types";
 import { useHouseholdStore } from "@/stores/householdStore";
+import { EligibilityOverview } from "./EligibilityOverview";
 
 const labelCls = "text-sm font-medium";
 const inputCls =
@@ -118,6 +119,25 @@ export function ProfileFeature() {
       </div>
 
       {num("minorChildren", "미성년 자녀 수 (태아 포함)")}
+
+      <div className="flex items-start gap-2">
+        <input
+          id="hasNewborn"
+          type="checkbox"
+          className="mt-1"
+          checked={profile.hasNewborn ?? false}
+          onChange={(e) => setProfile({ hasNewborn: e.target.checked })}
+        />
+        <div>
+          <label htmlFor="hasNewborn" className={labelCls}>
+            최근 2년내 출산 (임신 포함)
+          </label>
+          <p className="text-muted-foreground mt-1 text-xs">
+            신생아 특별공급·특례대출 요건. 소득 상한이 완화돼요.
+          </p>
+        </div>
+      </div>
+
       {num(
         "monthlyIncomeManwon",
         "부부합산 월평균 소득 (만원)",
@@ -133,6 +153,8 @@ export function ProfileFeature() {
         "청약통장 가입기간 (개월)",
         "합산 아님 — 실제 청약을 넣을 사람(둘 중 조건이 나은 사람) 기준.",
       )}
+
+      <EligibilityOverview profile={profile} />
 
       <Link href="/" className="text-primary block text-center text-sm font-medium">
         홈으로
