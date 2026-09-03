@@ -5,6 +5,7 @@ import { MOCK_COMPLEXES } from "@/data/mock/complexes";
 import { MOCK_AREAS } from "@/data/mock/areas";
 import { MOCK_REGIONS } from "@/data/mock/regions";
 import { DEFAULT_CONDITIONS, useConditionsStore } from "@/stores/conditionsStore";
+import { useCandidatesStore } from "@/stores/candidatesStore";
 import { ExploreFeature } from "./ExploreFeature";
 
 const { useHomesMock, useRegionsMock, useAreasMock } = vi.hoisted(() => ({
@@ -37,6 +38,8 @@ beforeEach(() => {
     onboardingCompleted: true,
     conditions: READY,
   });
+  useCandidatesStore.getState().reset();
+  useCandidatesStore.setState({ hasHydrated: true });
   useHomesMock.mockReturnValue({
     data: MOCK_COMPLEXES,
     isLoading: false,
@@ -79,5 +82,17 @@ describe("ExploreFeature", () => {
     const firstName = MOCK_COMPLEXES[0].name;
     await user.type(screen.getByLabelText("이름 검색"), firstName);
     expect(screen.getByText(firstName)).toBeInTheDocument();
+  });
+
+  it("결과 카드에서 바로 관심 담기가 스토어에 반영된다", async () => {
+    const user = userEvent.setup();
+    render(<ExploreFeature />);
+    const [firstAdd] = screen.getAllByRole("button", { name: "관심 담기" });
+    await user.click(firstAdd);
+    expect(useCandidatesStore.getState().candidates.length).toBe(1);
+    // 토글 후 라벨이 '관심에서 빼기'로 바뀐다
+    expect(
+      screen.getAllByRole("button", { name: "관심에서 빼기" }).length,
+    ).toBeGreaterThan(0);
   });
 });

@@ -10,6 +10,7 @@ import { useConditionsStore } from "@/stores/conditionsStore";
 import { isConditionsReady } from "@/lib/conditions";
 import { AreaCard } from "@/features/area/AreaCard";
 import { RecommendationCard } from "@/features/home/RecommendationCard";
+import { CandidateToggleButton } from "@/features/candidates/CandidateToggleButton";
 import {
   searchListings,
   type ListingKindFilter,
@@ -281,6 +282,9 @@ export function ExploreFeature() {
                   recommendation={r}
                   regionName={regionName.get(r.complex.regionId)}
                   dealType={dealType}
+                  action={
+                    <CandidateToggleButton id={r.complex.id} kind={r.complex.kind} />
+                  }
                 />
               ))}
             </section>
@@ -296,7 +300,12 @@ export function ExploreFeature() {
                 </p>
               </div>
               {results.areas.map(({ area, fit }) => (
-                <AreaCard key={area.id} area={area} fit={fit} />
+                <AreaCard
+                  key={area.id}
+                  area={area}
+                  fit={fit}
+                  action={<CandidateToggleButton id={area.id} kind="area" />}
+                />
               ))}
             </section>
           )}
