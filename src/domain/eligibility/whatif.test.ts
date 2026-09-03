@@ -7,8 +7,11 @@ const DE_FACTO_OWNER: HouseholdProfile = {
   maritalStatus: "de_facto",
   housingStatus: "own",
   minorChildren: 0,
+  householdSize: 3,
+  dualIncome: true,
   monthlyIncomeManwon: 600,
-  totalAssetManwon: 20000,
+  realEstateAssetManwon: 20000,
+  carValueManwon: 2000,
   subscriptionMonths: 12,
 };
 
@@ -37,14 +40,18 @@ describe("whatIf", () => {
   });
 
   it("임신·출산 시나리오는 신생아 특공을 연다", () => {
-    // 무주택·혼인·소득이 신생아 완화 이내인 커플
+    // 무주택·혼인·소득이 신생아 완화 이내인 커플. hasNewborn 미설정이라
+    // 현재는 신생아 특공 불가 → 출산 시나리오로 열린다.
     const profile: HouseholdProfile = {
       maritalStatus: "married",
       marriedMonths: 24,
       housingStatus: "none",
       minorChildren: 0,
-      monthlyIncomeManwon: 1000, // 일반 상한(800) 초과 → 신혼/생애최초는 이미 not
-      totalAssetManwon: 20000,
+      householdSize: 3,
+      dualIncome: true,
+      monthlyIncomeManwon: 1000,
+      realEstateAssetManwon: 20000,
+      carValueManwon: 2000,
       subscriptionMonths: 12,
     };
     expect(unlockedKeys(whatIf(profile), "newborn")).toContain("newborn");
@@ -56,8 +63,11 @@ describe("whatIf", () => {
       marriedMonths: 24,
       housingStatus: "none",
       minorChildren: 0,
+      householdSize: 3,
+      dualIncome: true,
       monthlyIncomeManwon: 600,
-      totalAssetManwon: 20000,
+      realEstateAssetManwon: 20000,
+      carValueManwon: 2000,
       subscriptionMonths: 12,
     };
     // register 시나리오로도 newlywed는 이미 가능하므로 새로 열리지 않는다

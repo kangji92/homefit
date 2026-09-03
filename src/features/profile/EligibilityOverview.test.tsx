@@ -10,8 +10,11 @@ describe("EligibilityOverview", () => {
       marriedMonths: 24,
       housingStatus: "none",
       minorChildren: 0,
+      householdSize: 3,
+      dualIncome: true,
       monthlyIncomeManwon: 600,
-      totalAssetManwon: 20000,
+      realEstateAssetManwon: 20000,
+      carValueManwon: 2000,
       subscriptionMonths: 12,
     };
     render(<EligibilityOverview profile={profile} />);
@@ -23,8 +26,11 @@ describe("EligibilityOverview", () => {
       maritalStatus: "de_facto",
       housingStatus: "own",
       minorChildren: 0,
+      householdSize: 3,
+      dualIncome: true,
       monthlyIncomeManwon: 600,
-      totalAssetManwon: 20000,
+      realEstateAssetManwon: 20000,
+      carValueManwon: 2000,
       subscriptionMonths: 12,
     };
     render(<EligibilityOverview profile={profile} />);
@@ -32,8 +38,8 @@ describe("EligibilityOverview", () => {
     expect(screen.getByText("집 팔고 혼인신고하면")).toBeInTheDocument();
   });
 
-  it("기준일·정책 버전 고지를 노출한다", () => {
+  it("출처·기준일 고지를 노출한다", () => {
     render(<EligibilityOverview profile={{}} />);
-    expect(screen.getByText(/참고용 테스트 데이터/)).toBeInTheDocument();
+    expect(screen.getByText(/청약 공고로 확인/)).toBeInTheDocument();
   });
 });

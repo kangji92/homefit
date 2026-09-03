@@ -2,6 +2,7 @@
 
 import type { HouseholdProfile } from "@/domain/types";
 import { evaluatePrograms } from "@/domain/eligibility/programs";
+import { DEFAULT_SUBSCRIPTION_POLICY } from "@/domain/eligibility/policy";
 import { whatIf } from "@/domain/eligibility/whatif";
 
 interface Props {
@@ -68,9 +69,10 @@ export function EligibilityOverview({ profile }: Props) {
       )}
 
       <p className="text-muted-foreground text-xs leading-relaxed">
-        모두 참고용 테스트 데이터예요(기준일 {asOf} · 정책 {policyVersion}). 실제
-        신청 자격·순위는 청약 공고와 금융기관 상담으로 확인하세요. 세대·사실혼
-        판정은 단순화돼 있어요.
+        {DEFAULT_SUBSCRIPTION_POLICY.source} 기준(적용 {asOf} · 정책{" "}
+        {policyVersion}). 소득요건은 도시근로자 월평균소득 × 비율로 계산해요.
+        일부 가구원수 소득값·세대/사실혼 판정은 단순화돼 있으니, 실제 자격·순위는
+        청약 공고로 확인하세요.
       </p>
     </section>
   );

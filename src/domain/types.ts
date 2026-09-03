@@ -177,14 +177,20 @@ export interface HouseholdProfile {
   housingStatus?: HousingStatus;
   /** 미성년 자녀 수(태아 포함) */
   minorChildren?: number;
-  /** 부부합산 월평균 소득(만원) */
-  monthlyIncomeManwon?: number;
-  /** 부동산·자동차 등 자산(만원) */
-  totalAssetManwon?: number;
-  /** 청약통장 가입기간(개월) */
-  subscriptionMonths?: number;
   /** 최근 2년내 출산(임신 포함) 여부 — 신생아 특공·특례대출 요건 */
   hasNewborn?: boolean;
+  /** 가구원수 — 도시근로자 소득기준 표 조회 키 */
+  householdSize?: number;
+  /** 맞벌이 여부 — 소득 상한 비율 선택 */
+  dualIncome?: boolean;
+  /** 부부합산 월평균 소득(만원, 세전) */
+  monthlyIncomeManwon?: number;
+  /** 부동산가액(세대 합산, 만원) */
+  realEstateAssetManwon?: number;
+  /** 자동차가액(세대 합산, 만원) */
+  carValueManwon?: number;
+  /** 청약통장 가입기간(개월) — 신청자 기준(합산 아님) */
+  subscriptionMonths?: number;
 }
 
 // ===== 후보 관리 =====

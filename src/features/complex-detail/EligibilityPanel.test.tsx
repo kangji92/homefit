@@ -18,8 +18,11 @@ describe("EligibilityPanel", () => {
           maritalStatus: "married",
           marriedMonths: 24,
           housingStatus: "none",
+          householdSize: 3,
+          dualIncome: true,
           monthlyIncomeManwon: 600,
-          totalAssetManwon: 20000,
+          realEstateAssetManwon: 20000,
+          carValueManwon: 2000,
           subscriptionMonths: 12,
         }}
       />,
@@ -33,8 +36,11 @@ describe("EligibilityPanel", () => {
         profile={{
           maritalStatus: "de_facto",
           housingStatus: "none",
+          householdSize: 3,
+          dualIncome: true,
           monthlyIncomeManwon: 600,
-          totalAssetManwon: 20000,
+          realEstateAssetManwon: 20000,
+          carValueManwon: 2000,
           subscriptionMonths: 12,
         }}
       />,

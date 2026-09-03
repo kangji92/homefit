@@ -8,8 +8,11 @@ const NEWLYWED_OK: HouseholdProfile = {
   marriedMonths: 24,
   housingStatus: "none",
   minorChildren: 0,
+  householdSize: 3,
+  dualIncome: true,
   monthlyIncomeManwon: 600,
-  totalAssetManwon: 20000,
+  realEstateAssetManwon: 20000,
+  carValueManwon: 2000,
   subscriptionMonths: 12,
 };
 
@@ -41,8 +44,9 @@ describe("evaluatePrograms", () => {
   });
 
   it("신생아(2년내 출산)면 신생아 특공 eligible, 소득 완화 반영", () => {
-    // 소득 900은 일반 상한(800) 초과지만 신생아 완화(1300) 이내
-    const m = byKey({ ...NEWLYWED_OK, hasNewborn: true, monthlyIncomeManwon: 900 });
+    // 3인·맞벌이: 신혼 상한 약 1144만, 신생아 완화 상한 약 1634만.
+    // 소득 1200은 신혼 초과지만 신생아 완화 이내.
+    const m = byKey({ ...NEWLYWED_OK, hasNewborn: true, monthlyIncomeManwon: 1200 });
     expect(m.newborn.eligible).toBe(true);
     expect(m.newlywed.eligible).toBe(false); // 신혼 소득 상한 초과
   });

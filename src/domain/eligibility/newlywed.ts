@@ -1,17 +1,18 @@
-// 신혼부부 특별공급 자격 판정 (순수·결정적). 정책은 주입(버전드).
+// 신혼부부 특별공급 자격 판정 (순수·결정적). 정책은 주입(버전드·실수치).
 // 미입력 값은 fail이 아니라 unknown. (docs/design/data-phase2c-household-eligibility.md §3.1)
 
 import type { HouseholdProfile } from "../types";
 import { DEFAULT_SUBSCRIPTION_POLICY, type SubscriptionPolicy } from "./policy";
+import {
+  assetRequirements,
+  check,
+  housingRequirement,
+  incomeRequirement,
+  subscriptionRequirement,
+  type Requirement,
+} from "./shared";
 
-export type RequirementStatus = "pass" | "fail" | "unknown";
-
-export interface Requirement {
-  key: string;
-  label: string;
-  status: RequirementStatus;
-  detail?: string;
-}
+export type { Requirement, RequirementStatus } from "./shared";
 
 export interface Eligibility {
   program: string;
@@ -21,15 +22,6 @@ export interface Eligibility {
   requirements: Requirement[];
   asOf: string;
   policyVersion: string;
-}
-
-/** 값이 undefined면 unknown, 아니면 조건 통과 여부로 pass/fail */
-function check(
-  value: number | undefined,
-  ok: (v: number) => boolean,
-): RequirementStatus {
-  if (value === undefined) return "unknown";
-  return ok(value) ? "pass" : "fail";
 }
 
 export function evaluateNewlywedSpecial(
@@ -64,41 +56,10 @@ export function evaluateNewlywedSpecial(
     }
   })();
   requirements.push(marriage);
-
-  requirements.push({
-    key: "housing",
-    label: "무주택",
-    status:
-      profile.housingStatus === undefined
-        ? "unknown"
-        : profile.housingStatus === "none"
-          ? "pass"
-          : "fail",
-  });
-
-  requirements.push({
-    key: "subscription",
-    label: `청약통장 ${policy.minSubscriptionMonths}개월 이상`,
-    status: check(
-      profile.subscriptionMonths,
-      (m) => m >= policy.minSubscriptionMonths,
-    ),
-  });
-
-  requirements.push({
-    key: "income",
-    label: `월소득 ${policy.incomeLimitManwon}만원 이하`,
-    status: check(
-      profile.monthlyIncomeManwon,
-      (v) => v <= policy.incomeLimitManwon,
-    ),
-  });
-
-  requirements.push({
-    key: "asset",
-    label: `자산 ${(policy.assetLimitManwon / 10000).toFixed(2)}억 이하`,
-    status: check(profile.totalAssetManwon, (v) => v <= policy.assetLimitManwon),
-  });
+  requirements.push(housingRequirement(profile.housingStatus));
+  requirements.push(subscriptionRequirement(profile, policy));
+  requirements.push(incomeRequirement(profile, policy, policy.incomeRatio.newlywed));
+  requirements.push(...assetRequirements(profile, policy));
 
   const hasUnknown = requirements.some((r) => r.status === "unknown");
   const eligible = requirements.every((r) => r.status === "pass");

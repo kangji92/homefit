@@ -27,7 +27,17 @@ export const useHouseholdStore = create<HouseholdState>()(
     }),
     {
       name: "homefit-household",
-      version: 1,
+      version: 2,
+      // v1({totalAssetManwon}) → v2: 부동산·자동차 분리로 스키마 변경.
+      //   기존 자산값은 성격이 모호해 부동산가액으로 이관(최선 추정).
+      migrate: (persisted, version) => {
+        const state = persisted as { profile?: Record<string, unknown> } | null;
+        if (state?.profile && version < 2 && "totalAssetManwon" in state.profile) {
+          const { totalAssetManwon, ...rest } = state.profile;
+          state.profile = { ...rest, realEstateAssetManwon: totalAssetManwon };
+        }
+        return state as unknown as { profile: HouseholdProfile };
+      },
       partialize: (s) => ({ profile: s.profile }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);

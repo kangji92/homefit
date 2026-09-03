@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { evaluateNewlywedSpecial } from "@/domain/eligibility";
+import { DEFAULT_SUBSCRIPTION_POLICY } from "@/domain/eligibility/policy";
 import type { HouseholdProfile } from "@/domain/types";
 import { cn } from "@/lib/utils";
 
 const STATUS_MARK = { pass: "✓", fail: "✕", unknown: "⚠️" } as const;
 
-// 청약 자격 — 적합도 점수와 분리된 패널(직교). 정책 버전드·mock 고지.
+// 청약 자격 — 적합도 점수와 분리된 패널(직교). 정책 버전드·출처 고지.
 export function EligibilityPanel({ profile }: { profile: HouseholdProfile }) {
   const e = evaluateNewlywedSpecial(profile);
 
@@ -53,8 +54,8 @@ export function EligibilityPanel({ profile }: { profile: HouseholdProfile }) {
       )}
 
       <p className="text-muted-foreground mt-3 text-xs">
-        기준일 {e.asOf} · 정책 {e.policyVersion} · 참고용 테스트 데이터예요(실제
-        자격은 청약 공고 기준으로 확인하세요).
+        {DEFAULT_SUBSCRIPTION_POLICY.source} 기준(적용 {e.asOf} · 정책{" "}
+        {e.policyVersion}). 실제 자격·순위는 청약 공고 기준으로 확인하세요.
       </p>
     </section>
   );

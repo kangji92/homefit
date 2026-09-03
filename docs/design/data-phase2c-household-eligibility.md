@@ -27,37 +27,63 @@
 ```ts
 type HousingStatus = "none" | "own";      // 무주택 | 유주택
 interface HouseholdProfile {
-  marriedMonths: number;         // 혼인 기간(개월). 예비신혼=0
-  isProspectiveCouple: boolean;  // 예비 신혼부부
-  housingStatus: HousingStatus;  // 무주택 여부
-  minorChildren: number;         // 미성년 자녀 수(태아 포함 입력)
-  monthlyIncomeManwon: number;   // 부부합산 월평균 소득(만원, 세전)
-  totalAssetManwon: number;      // 부부합산(세대) 자산: 부동산+자동차 등(만원)
-  subscriptionMonths: number;    // 청약통장 가입기간(개월) — 합산 아님,
-                                 //   신청자(둘 중 조건 나은 사람) 기준
-  regionResidingMonths: number;  // 해당지역 거주기간(개월)
+  maritalStatus?: "married" | "prospective" | "de_facto";
+  marriedMonths?: number;          // married일 때 혼인 기간(개월)
+  housingStatus?: HousingStatus;
+  minorChildren?: number;          // 미성년 자녀 수(태아 포함)
+  hasNewborn?: boolean;            // 최근 2년내 출산(임신 포함)
+  householdSize?: number;          // 가구원수 — 소득기준 표 조회 키
+  dualIncome?: boolean;            // 맞벌이 여부 — 소득 비율 선택
+  monthlyIncomeManwon?: number;    // 부부합산 월평균 소득(만원, 세전)
+  realEstateAssetManwon?: number;  // 부동산가액(세대 합산, 만원)
+  carValueManwon?: number;         // 자동차가액(세대 합산, 만원)
+  subscriptionMonths?: number;     // 청약통장 가입기간(개월) — 합산 아님,
+                                   //   신청자(둘 중 조건 나은 사람) 기준
 }
 ```
-- zustand `useHouseholdStore`(persist v1). 우리 조건(선호)과 **분리**(가구 재무·자격).
+- 소득·자산은 **부부/세대 합산**, 청약통장은 **신청자 기준**(합산 아님).
+- zustand `useHouseholdStore`(persist v2 — v1의 `totalAssetManwon`을
+  `realEstateAssetManwon`으로 이관). 우리 조건(선호)과 **분리**.
 
-## 3. 자격 엔진 (순수·버전드)
+## 3. 자격 엔진 (순수·버전드·실수치)
 
-### 3.1 청약 — 신혼부부 특별공급 (2C-1)
+미입력 값은 fail이 아니라 `unknown`. 정책은 **실제 공식 수치**를 버전드 데이터로
+주입하고 **출처·기준일**을 함께 노출한다(“mock”이 아니라 “[출처] 기준 · 최종은
+공고 확인”). 소득요건은 flat cap이 아니라 **도시근로자 월평균소득 × 비율**이며,
+비율은 가구원수·맞벌이/외벌이·프로그램별로 다르다.
+
+### 3.0 정책 데이터 (SubscriptionPolicy)
 ```ts
-type Requirement = { key: string; label: string; status: "pass"|"fail"|"unknown" };
-interface Eligibility {
-  program: string;               // "신혼부부 특별공급"
-  eligible: boolean;             // 모든 필수 pass
-  requirements: Requirement[];
-  asOf: string; policyVersion: string;
+interface IncomeRatio { single: number; dual: number }  // % (자격 상한 = 일반공급)
+interface SubscriptionPolicy {
+  version; asOf; source;                 // 기준일·출처(청약홈/국토부/통계청)
+  marriageMaxMonths: 84;                 // 혼인 7년
+  minSubscriptionMonths: 6;
+  urbanIncome100Manwon: Record<number, number>;  // 도시근로자 월평균소득 100%(만원)
+  incomeRatio: { newlywed; firstTime; multiChild; newborn };
+  realEstateLimitManwon; carLimitManwon; // 부동산·자동차 상한
+  multiChildMinChildren: 2;
 }
+// 소득 상한(만원) = urbanIncome100Manwon[householdSize] × ratio(dual?single) / 100
+```
+
+**실수치 (기준일 2025-03, 적용 2025.2.29 공고~2026.2):**
+- 도시근로자 월평균소득 100%(원): 3인 8,168,429 · 4인 8,802,202 · 5인 9,326,985
+  (✅ 확인). 1·2·6·7인은 근사값으로 채우고 `// TODO 공고 대조` 표기.
+- 소득 비율(공공분양 일반공급 상한, 외벌이/맞벌이): 신혼 130/140 · 생애최초
+  140/160 · 다자녀 120/120 · **신생아 140/200**(완화 큼).
+- 자산(공공분양·민영 특공 기준): 부동산 ≤ **21,550만** · 자동차 ≤ **3,708만**.
+  (뉴:홈 공공분양은 순자산 3.45억 기준이 별도 — 화면에 고지.)
+- 출처: 국토부 「신혼부부 주택 특별공급 운용지침」(law.go.kr), 청약홈, 통계청
+  도시근로자 가구원수별 월평균소득.
+
+### 3.1 신혼부부 특별공급 (2C-1)
+```ts
+type Requirement = { key; label; status: "pass"|"fail"|"unknown"; detail? };
 evaluateNewlywedSpecial(profile, policy): Eligibility
 ```
-규칙(mock 정책, 근사):
-- 혼인 7년 이내(예비 포함) · 무주택 · 청약통장 가입 6개월+ · 소득요건(도시근로자
-  월평균소득 대비 %) · 자산요건(부동산·자동차 상한). 값 미입력이면 `unknown`.
-- `SUBSCRIPTION_POLICY = { version, asOf, marriageMaxMonths:84, minSubscriptionMonths:6,
-  incomeLimitManwon, assetLimitManwon }` 주입.
+- 혼인 7년 이내(예비 pass·사실혼 fail) · 무주택 · 청약통장 6개월+ · 소득요건
+  (`incomeRatio.newlywed`) · 자산요건(부동산·자동차 각각).
 
 ### 3.2 정부지원 대출 (2C-2, 후속)
 ```ts

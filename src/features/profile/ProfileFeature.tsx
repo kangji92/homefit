@@ -139,14 +139,43 @@ export function ProfileFeature() {
       </div>
 
       {num(
+        "householdSize",
+        "가구원수 (명)",
+        "본인·배우자·자녀 등 세대 구성원 수. 소득 상한 기준 표에 쓰여요.",
+      )}
+
+      <div className="flex items-start gap-2">
+        <input
+          id="dualIncome"
+          type="checkbox"
+          className="mt-1"
+          checked={profile.dualIncome ?? false}
+          onChange={(e) => setProfile({ dualIncome: e.target.checked })}
+        />
+        <div>
+          <label htmlFor="dualIncome" className={labelCls}>
+            맞벌이
+          </label>
+          <p className="text-muted-foreground mt-1 text-xs">
+            맞벌이는 소득 상한이 완화돼요(외벌이보다 높은 % 적용).
+          </p>
+        </div>
+      </div>
+
+      {num(
         "monthlyIncomeManwon",
         "부부합산 월평균 소득 (만원)",
-        "세전 기준, 부부 합산.",
+        "세전 기준, 부부 합산. 도시근로자 소득 기준과 비교돼요.",
       )}
       {num(
-        "totalAssetManwon",
-        "부부합산 자산 (부동산·자동차, 만원)",
-        "세대 구성원 자산 합산.",
+        "realEstateAssetManwon",
+        "부동산가액 (만원)",
+        "세대 구성원 부동산 합산. 공공분양 상한 약 2.15억.",
+      )}
+      {num(
+        "carValueManwon",
+        "자동차가액 (만원)",
+        "세대 구성원 자동차 합산. 상한 약 3,708만원.",
       )}
       {num(
         "subscriptionMonths",

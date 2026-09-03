@@ -8,8 +8,11 @@ const FULL: HouseholdProfile = {
   marriedMonths: 24,
   housingStatus: "none",
   minorChildren: 1,
+  householdSize: 3,
+  dualIncome: true,
   monthlyIncomeManwon: 600,
-  totalAssetManwon: 20000,
+  realEstateAssetManwon: 20000,
+  carValueManwon: 2000,
   subscriptionMonths: 12,
 };
 
@@ -26,12 +29,12 @@ describe("evaluateNewlywedSpecial", () => {
       ...FULL,
       marriedMonths: 100, // > 84
       housingStatus: "own",
-      monthlyIncomeManwon: 900, // > 800
-      totalAssetManwon: 40000, // > 34500
+      monthlyIncomeManwon: 1500, // 도시근로자소득×140%(맞벌이·3인=약 1144) 초과
+      realEstateAssetManwon: 40000, // > 21550
     });
     const fail = r.requirements.filter((x) => x.status === "fail").map((x) => x.key);
     expect(fail).toEqual(
-      expect.arrayContaining(["marriage", "housing", "income", "asset"]),
+      expect.arrayContaining(["marriage", "housing", "income", "realEstate"]),
     );
     expect(r.eligible).toBe(false);
   });

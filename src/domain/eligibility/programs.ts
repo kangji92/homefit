@@ -1,15 +1,19 @@
-// 청약 프로그램 카탈로그 평가 (순수·결정적·버전드).
+// 청약 프로그램 카탈로그 평가 (순수·결정적·버전드·실수치).
 // 각 프로그램 = 요건 pass/fail/unknown → eligible/not. 정책 주입.
 // 미입력 값은 fail이 아니라 unknown.
 // (docs/design/data-phase2c-household-eligibility.md §4.5)
 
-import type { HouseholdProfile, HousingStatus } from "../types";
+import type { HouseholdProfile } from "../types";
 import { DEFAULT_SUBSCRIPTION_POLICY, type SubscriptionPolicy } from "./policy";
+import { evaluateNewlywedSpecial } from "./newlywed";
 import {
-  evaluateNewlywedSpecial,
+  assetRequirements,
+  check,
+  housingRequirement,
+  incomeRequirement,
+  subscriptionRequirement,
   type Requirement,
-  type RequirementStatus,
-} from "./newlywed";
+} from "./shared";
 
 export type ProgramKind = "subscription"; // 대출은 2C-2에서 추가
 
@@ -37,54 +41,6 @@ export const PROGRAM_KEYS = [
   "unranked",
 ] as const;
 
-// ── 요건 헬퍼 ────────────────────────────────────────────
-function check(
-  value: number | undefined,
-  ok: (v: number) => boolean,
-): RequirementStatus {
-  if (value === undefined) return "unknown";
-  return ok(value) ? "pass" : "fail";
-}
-
-function housingReq(status: HousingStatus | undefined): Requirement {
-  return {
-    key: "housing",
-    label: "무주택(세대)",
-    status:
-      status === undefined ? "unknown" : status === "none" ? "pass" : "fail",
-  };
-}
-
-function incomeReq(
-  p: HouseholdProfile,
-  limit: number,
-): Requirement {
-  return {
-    key: "income",
-    label: `월소득 ${limit}만원 이하`,
-    status: check(p.monthlyIncomeManwon, (v) => v <= limit),
-  };
-}
-
-function assetReq(p: HouseholdProfile, policy: SubscriptionPolicy): Requirement {
-  return {
-    key: "asset",
-    label: `자산 ${(policy.assetLimitManwon / 10000).toFixed(2)}억 이하`,
-    status: check(p.totalAssetManwon, (v) => v <= policy.assetLimitManwon),
-  };
-}
-
-function subscriptionReq(
-  p: HouseholdProfile,
-  policy: SubscriptionPolicy,
-): Requirement {
-  return {
-    key: "subscription",
-    label: `청약통장 ${policy.minSubscriptionMonths}개월 이상`,
-    status: check(p.subscriptionMonths, (m) => m >= policy.minSubscriptionMonths),
-  };
-}
-
 function build(
   key: string,
   name: string,
@@ -108,7 +64,6 @@ function build(
   };
 }
 
-// ── 카탈로그 ─────────────────────────────────────────────
 export function evaluatePrograms(
   profile: HouseholdProfile,
   policy: SubscriptionPolicy = DEFAULT_SUBSCRIPTION_POLICY,
@@ -131,10 +86,10 @@ export function evaluatePrograms(
     "firstTime",
     "생애최초 특별공급",
     [
-      housingReq(profile.housingStatus),
-      subscriptionReq(profile, policy),
-      incomeReq(profile, policy.incomeLimitManwon),
-      assetReq(profile, policy),
+      housingRequirement(profile.housingStatus),
+      subscriptionRequirement(profile, policy),
+      incomeRequirement(profile, policy, policy.incomeRatio.firstTime),
+      ...assetRequirements(profile, policy),
     ],
     { note: "세대 구성원 전원 과거 주택 소유 이력이 없어야 해요(자기신고)." },
     policy,
@@ -152,9 +107,9 @@ export function evaluatePrograms(
           (n) => n >= policy.multiChildMinChildren,
         ),
       },
-      housingReq(profile.housingStatus),
-      incomeReq(profile, policy.incomeLimitManwon),
-      assetReq(profile, policy),
+      housingRequirement(profile.housingStatus),
+      incomeRequirement(profile, policy, policy.incomeRatio.multiChild),
+      ...assetRequirements(profile, policy),
     ],
     { note: "태아·입양 자녀 포함(공고별 상이)." },
     policy,
@@ -174,9 +129,9 @@ export function evaluatePrograms(
               ? "pass"
               : "fail",
       },
-      housingReq(profile.housingStatus),
-      incomeReq(profile, policy.newbornIncomeLimitManwon),
-      assetReq(profile, policy),
+      housingRequirement(profile.housingStatus),
+      incomeRequirement(profile, policy, policy.incomeRatio.newborn),
+      ...assetRequirements(profile, policy),
     ],
     { note: "소득 요건이 완화돼요(신생아 우선·특별공급)." },
     policy,
@@ -185,7 +140,7 @@ export function evaluatePrograms(
   const general = build(
     "general",
     "일반공급(추첨제)",
-    [subscriptionReq(profile, policy)],
+    [subscriptionRequirement(profile, policy)],
     {
       allowsOwnHome: true,
       note: "추첨제 물량은 유주택 세대도 신청 가능한 경우가 있어요.",
