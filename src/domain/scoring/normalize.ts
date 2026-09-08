@@ -1,7 +1,8 @@
 // 축별 0~100 정규화 (docs/design/scoring.md §2). 모두 "높을수록 좋음".
 
-import type { Complex, PriorityKey, UserConditions } from "../types";
+import type { Home, PriorityKey, UserConditions } from "../types";
 import { maxBudgetFor, priceBandFor } from "../price";
+import { effectiveAcquisitionPriceManwon } from "../presale/price";
 import type { ScoringConfig } from "./config";
 
 export const clamp = (x: number, lo = 0, hi = 100): number =>
@@ -21,14 +22,27 @@ export const lerp = (
  * 해당 유형 매물이 없으면 0. (docs/design/scoring.md §2.1)
  */
 export function priceScore(
-  complex: Complex,
+  home: Home,
   conditions: UserConditions,
   config: ScoringConfig,
 ): number {
-  const band = priceBandFor(complex.price, conditions.dealType);
-  if (!band) return 0; // 해당 거래유형 매물 없음
+  // 분양권/청약: offering이 있으면 유효 취득가(총 취득금액/분양가)를 우선 사용.
+  //   매매(sale) 기준. 값 미확정이면 매물 정보 없음과 동일하게 0.
+  let p: number;
+  if (
+    home.kind === "presale" &&
+    home.offering &&
+    conditions.dealType === "sale"
+  ) {
+    const eff = effectiveAcquisitionPriceManwon(home);
+    if (eff === undefined) return 0;
+    p = eff;
+  } else {
+    const band = priceBandFor(home.price, conditions.dealType);
+    if (!band) return 0; // 해당 거래유형 매물 없음
+    p = band.representative;
+  }
   const budget = maxBudgetFor(conditions);
-  const p = band.representative;
 
   const floor = budget * config.priceFloorRatio;
   const denom = budget - floor;
@@ -42,14 +56,14 @@ export function priceScore(
 
 /** 통근: 모든 사람 중 가장 긴 통근 기준, 3구간 선형 */
 export function commuteScore(
-  complex: Complex,
+  home: Home,
   conditions: UserConditions,
   config: ScoringConfig,
 ): number {
   const L = conditions.maxCommuteMinutes;
   if (L <= 0) return 0;
   const mins = conditions.workplaces.map(
-    (w) => complex.commuteMinutes[w.id] ?? Number.POSITIVE_INFINITY,
+    (w) => home.commuteMinutes[w.id] ?? Number.POSITIVE_INFINITY,
   );
   const worst = mins.length ? Math.max(...mins) : 0;
 
@@ -63,25 +77,27 @@ export function commuteScore(
   return 0;
 }
 
-/** 신축: 연식 선형 (신축 100 → newnessZeroAtYears년 이상 0) */
-export function newnessScore(complex: Complex, config: ScoringConfig): number {
-  const age = Math.max(config.currentYear - complex.completionYear, 0);
+/** 신축: 연식 선형 (신축 100 → newnessZeroAtYears년 이상 0).
+ *  existing=준공연도, presale=입주예정연도(미래면 신축 만점). */
+export function newnessScore(home: Home, config: ScoringConfig): number {
+  const year = home.kind === "existing" ? home.completionYear : home.moveInYear;
+  const age = Math.max(config.currentYear - year, 0);
   return clamp(100 * (1 - age / config.newnessZeroAtYears));
 }
 
 /** 7축 원시 점수(반올림 전). 총점 계산에는 이 값을 쓴다. */
 export function computeAxisScores(
-  complex: Complex,
+  home: Home,
   conditions: UserConditions,
   config: ScoringConfig,
 ): Record<PriorityKey, number> {
   return {
-    price: priceScore(complex, conditions, config),
-    commute: commuteScore(complex, conditions, config),
-    newness: newnessScore(complex, config),
-    education: clamp(complex.metrics.education),
-    infrastructure: clamp(complex.metrics.infrastructure),
-    environment: clamp(complex.metrics.environment),
-    futurePotential: clamp(complex.metrics.futurePotential),
+    price: priceScore(home, conditions, config),
+    commute: commuteScore(home, conditions, config),
+    newness: newnessScore(home, config),
+    education: clamp(home.metrics.education),
+    infrastructure: clamp(home.metrics.infrastructure),
+    environment: clamp(home.metrics.environment),
+    futurePotential: clamp(home.metrics.futurePotential),
   };
 }

@@ -28,6 +28,7 @@ export function makeComplex(overrides: Partial<Complex> = {}): Complex {
     id: "c1",
     name: "테스트 단지",
     regionId: "r1",
+    kind: "existing",
     price: { sale: { representative: 80000 }, jeonse: { representative: 50000 } },
     sizesPyeong: [25, 32],
     completionYear: 2018,

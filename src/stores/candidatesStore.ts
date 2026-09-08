@@ -1,21 +1,27 @@
-// 사용자 후보 상태 (docs/design/domain-model.md §5).
-// zustand + persist. ID만 참조한다 — Complex/Region 원본이나 FitResult는 저장하지 않는다.
+// 사용자 후보 상태 (docs/design/domain-model.md §5, v2 §4).
+// zustand + persist. 참조는 {kind, id}만 저장 — 원본/FitResult는 저장하지 않는다.
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Candidate, CandidateNotes, RegionInterest } from "@/domain/types";
+import type {
+  Candidate,
+  CandidateNotes,
+  ListingKind,
+  RegionInterest,
+} from "@/domain/types";
 
 export interface CandidatesState {
   candidates: Candidate[];
   regionInterests: RegionInterest[];
   hasHydrated: boolean;
 
-  addCandidate: (complexId: string) => void;
-  removeCandidate: (complexId: string) => void;
-  toggleFavorite: (complexId: string) => void;
-  updateNotes: (complexId: string, notes: Partial<CandidateNotes>) => void;
-  isCandidate: (complexId: string) => boolean;
-  getCandidate: (complexId: string) => Candidate | undefined;
+  // id + kind(기본 existing)로 대상을 구분한다.
+  addCandidate: (id: string, kind?: ListingKind) => void;
+  removeCandidate: (id: string, kind?: ListingKind) => void;
+  toggleFavorite: (id: string, kind?: ListingKind) => void;
+  updateNotes: (id: string, notes: Partial<CandidateNotes>, kind?: ListingKind) => void;
+  isCandidate: (id: string, kind?: ListingKind) => boolean;
+  getCandidate: (id: string, kind?: ListingKind) => Candidate | undefined;
 
   addRegionInterest: (regionId: string) => void;
   removeRegionInterest: (regionId: string) => void;
@@ -25,6 +31,15 @@ export interface CandidatesState {
   setHasHydrated: (hasHydrated: boolean) => void;
 }
 
+const sameRef = (c: Candidate, id: string, kind: ListingKind) =>
+  c.id === id && c.kind === kind;
+
+/** persist에 저장되는 슬라이스 */
+type PersistedCandidates = Pick<
+  CandidatesState,
+  "candidates" | "regionInterests"
+>;
+
 export const useCandidatesStore = create<CandidatesState>()(
   persist(
     (set, get) => ({
@@ -32,12 +47,12 @@ export const useCandidatesStore = create<CandidatesState>()(
       regionInterests: [],
       hasHydrated: false,
 
-      addCandidate: (complexId) =>
+      addCandidate: (id, kind = "existing") =>
         set((s) => {
-          // 같은 complexId 중복 저장 금지
-          if (s.candidates.some((c) => c.complexId === complexId)) return s;
+          if (s.candidates.some((c) => sameRef(c, id, kind))) return s;
           const candidate: Candidate = {
-            complexId,
+            kind,
+            id,
             favorite: false,
             notes: { pros: [], cons: [] },
             addedAt: new Date().toISOString(),
@@ -45,33 +60,31 @@ export const useCandidatesStore = create<CandidatesState>()(
           return { candidates: [...s.candidates, candidate] };
         }),
 
-      removeCandidate: (complexId) =>
+      removeCandidate: (id, kind = "existing") =>
         set((s) => ({
-          candidates: s.candidates.filter((c) => c.complexId !== complexId),
+          candidates: s.candidates.filter((c) => !sameRef(c, id, kind)),
         })),
 
-      toggleFavorite: (complexId) =>
+      toggleFavorite: (id, kind = "existing") =>
         set((s) => ({
           candidates: s.candidates.map((c) =>
-            c.complexId === complexId ? { ...c, favorite: !c.favorite } : c,
+            sameRef(c, id, kind) ? { ...c, favorite: !c.favorite } : c,
           ),
         })),
 
-      // 기존 Candidate의 다른 필드(favorite·addedAt)는 보존, notes만 병합
-      updateNotes: (complexId, notes) =>
+      // favorite·addedAt는 보존, notes만 병합
+      updateNotes: (id, notes, kind = "existing") =>
         set((s) => ({
           candidates: s.candidates.map((c) =>
-            c.complexId === complexId
-              ? { ...c, notes: { ...c.notes, ...notes } }
-              : c,
+            sameRef(c, id, kind) ? { ...c, notes: { ...c.notes, ...notes } } : c,
           ),
         })),
 
-      isCandidate: (complexId) =>
-        get().candidates.some((c) => c.complexId === complexId),
+      isCandidate: (id, kind = "existing") =>
+        get().candidates.some((c) => sameRef(c, id, kind)),
 
-      getCandidate: (complexId) =>
-        get().candidates.find((c) => c.complexId === complexId),
+      getCandidate: (id, kind = "existing") =>
+        get().candidates.find((c) => sameRef(c, id, kind)),
 
       addRegionInterest: (regionId) =>
         set((s) => {
@@ -99,7 +112,23 @@ export const useCandidatesStore = create<CandidatesState>()(
     }),
     {
       name: "homefit-candidates",
-      version: 1,
+      version: 2,
+      // v1({complexId}) → v2({kind:"existing", id}) 마이그레이션.
+      // 기존 저장값은 전부 기존 아파트라 변환이 명확하다.
+      migrate: (persisted, version) => {
+        const state = persisted as {
+          candidates?: Array<Record<string, unknown>>;
+          regionInterests?: unknown;
+        } | null;
+        if (state && version < 2 && Array.isArray(state.candidates)) {
+          state.candidates = state.candidates.map((c) => {
+            if ("id" in c && "kind" in c) return c;
+            const { complexId, ...rest } = c;
+            return { kind: "existing", id: complexId, ...rest };
+          });
+        }
+        return state as unknown as PersistedCandidates;
+      },
       // hasHydrated는 세션 전용이라 저장하지 않는다
       partialize: (s) => ({
         candidates: s.candidates,

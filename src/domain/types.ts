@@ -99,20 +99,196 @@ export interface ComplexMetrics {
   futurePotential: number;
 }
 
-export interface Complex {
+// ===== 대상 분류 (domain-model-v2.md) =====
+// 집(지점) = existing | presale → HomeFit,  지역(면) = area → AreaFit
+export type ListingKind = "existing" | "presale" | "area";
+
+/** 집(지점) 공통 속성 */
+interface HomeBase {
   id: string;
   name: string;
   regionId: string;
   price: ComplexPrice;
   sizesPyeong: number[];
-  completionYear: number;
-  households: number;
-  stationDistanceM: number;
   /** workplaceId → 편도 분 (교통수단 반영된 값) */
   commuteMinutes: Record<string, number>;
   metrics: ComplexMetrics;
   schoolNearby?: boolean;
   images?: string[];
+}
+
+/** 기존 아파트 — 실거래가 기반 */
+export interface ExistingHome extends HomeBase {
+  kind: "existing";
+  completionYear: number;
+  households: number;
+  stationDistanceM: number;
+}
+
+/** 분양 단지 — 분양가·청약. 입주 전이라 일부 값 미확정(optional) */
+export interface PresaleHome extends HomeBase {
+  kind: "presale";
+  /** 입주 예정연도 (연식 대체) */
+  moveInYear: number;
+  households?: number;
+  stationDistanceM?: number;
+  subscription?: { announcementDate?: string; scheduleNote?: string };
+  // ── 분양권/전매 (presale-rights.md) — 전부 선택(가산적) ──
+  lifecycle?: PresaleLifecycle;
+  transfer?: TransferInfo;
+  offering?: OfferingPrice;
+}
+
+// ===== 분양권 · 취득경로 (docs/design/presale-rights.md) =====
+
+/** 취득 방법 — kind(물리적 유형)와 직교 */
+export type AcquisitionPath = "subscription" | "resale" | "existing_trade";
+
+/** 분양 lifecycle 상태 */
+export type PresalePhase =
+  | "planned"
+  | "subscription_scheduled"
+  | "subscription_open"
+  | "subscription_closed"
+  | "transfer_restricted"
+  | "transferable"
+  | "occupied";
+
+/** ① 전매 허용 여부(대상 사실) */
+export type TransferStatus = "tradable" | "restricted" | "conditional" | "unknown";
+/** ② 데이터 신뢰도(정보 품질) — 거래 위험과 별개 */
+export type VerificationStatus = "verified" | "needs_review" | "unknown";
+/** ③ 거래 위험도(파생 신호) */
+export type TransactionRisk = "normal" | "needs_review" | "high_risk";
+
+/** 개별 주의 신호 */
+export type RiskFlag =
+  | "transfer_restricted"
+  | "transferability_unconfirmed"
+  | "listing_mismatch"
+  | "rights_check_needed"
+  | "price_source_unclear"
+  | "stale_info"
+  | "title_transfer_unconfirmed";
+
+export type SourceType =
+  | "official_announcement"
+  | "government"
+  | "public_data"
+  | "transaction"
+  | "listing"
+  | "manual";
+
+/** 출처·검증 메타 (정책 민감 → 판단마다 근거) */
+export interface Provenance {
+  sourceType: SourceType;
+  sourceId?: string;
+  sourceUrl?: string;
+  effectiveFrom?: string;
+  effectiveTo?: string;
+  /** 마지막 검증일 — 필수 */
+  lastVerifiedAt: string;
+  verificationStatus: VerificationStatus;
+}
+
+export interface PresaleLifecycle {
+  phase: PresalePhase;
+  phaseSince?: string;
+  lastVerifiedAt: string;
+  source?: Provenance;
+  note?: string;
+}
+
+export interface TransferInfo {
+  status: TransferStatus;
+  restrictionReason?: string;
+  restrictionEndDate?: string;
+  conditions?: string[];
+  reviewReasons?: string[];
+  riskFlags: RiskFlag[];
+  provenance: Provenance;
+}
+
+/** 값 확보난이도 — Provenance(출처 메타)와 다른 축 */
+export type ValueProvenance = "sourced" | "computed" | "user_input" | "hard";
+
+export interface Money {
+  manwon: number;
+  valueProvenance: ValueProvenance;
+  asOf?: string;
+  source?: Provenance;
+}
+
+/** 분양가·분양권가·현금흐름. 값 없음은 undefined(0 아님) */
+export interface OfferingPrice {
+  basePrice?: Money;
+  resalePrice?: Money;
+  premium?: Money;
+  downPayment?: Money;
+  midPaymentPaid?: Money;
+  midPaymentRemaining?: Money;
+  balance?: Money;
+  cashNeededAtPurchase?: Money;
+  estimatedTotalAcquisition?: Money;
+  byUnitType?: Record<string, Partial<OfferingPrice>>;
+}
+
+export type Home = ExistingHome | PresaleHome;
+
+/** v1 명칭 — ExistingHome 별칭(하위호환). */
+export type Complex = ExistingHome;
+
+/** 지역 수준 지표 (0~100) */
+export interface AreaMetrics {
+  plannedInfra: number;
+  transitPlan: number;
+  supply: number;
+  futurePotential: number;
+  environment: number;
+}
+
+/** 개발 예정지 (3기신도시 등) — AreaFit 대상 */
+export interface Area {
+  kind: "area";
+  id: string;
+  name: string;
+  regionId: string;
+  summary?: string;
+  areaMetrics: AreaMetrics;
+  targetMoveInYear?: number;
+  /** 지역 중심 기준(선택) */
+  commuteMinutes?: Record<string, number>;
+}
+
+export type Listing = Home | Area;
+
+// ===== 가구 프로필 (자격 판정용, 점수와 직교) =====
+export type HousingStatus = "none" | "own"; // 무주택 | 유주택
+/** 법적 기혼 | 예비 신혼부부 | 사실혼(동거, 미신고) */
+export type MaritalStatus = "married" | "prospective" | "de_facto";
+
+/** 미입력(undefined)은 자격 판정에서 unknown으로 처리한다. */
+export interface HouseholdProfile {
+  maritalStatus?: MaritalStatus;
+  /** 혼인 기간(개월) — maritalStatus==="married"일 때 */
+  marriedMonths?: number;
+  housingStatus?: HousingStatus;
+  /** 미성년 자녀 수(태아 포함) */
+  minorChildren?: number;
+  /** 최근 2년내 출산(임신 포함) 여부 — 신생아 특공·특례대출 요건 */
+  hasNewborn?: boolean;
+  /** 가구원수 — 도시근로자 소득기준 표 조회 키 */
+  householdSize?: number;
+  /** 맞벌이 여부 — 소득 상한 비율 선택 */
+  dualIncome?: boolean;
+  /** 부부합산 월평균 소득(만원, 세전) */
+  monthlyIncomeManwon?: number;
+  /** 부동산가액(세대 합산, 만원) */
+  realEstateAssetManwon?: number;
+  /** 자동차가액(세대 합산, 만원) */
+  carValueManwon?: number;
+  /** 청약통장 가입기간(개월) — 신청자 기준(합산 아님) */
+  subscriptionMonths?: number;
 }
 
 // ===== 후보 관리 =====
@@ -122,8 +298,15 @@ export interface CandidateNotes {
   visitMemo?: string;
 }
 
+/** 후보 참조 — kind로 대상 종류 구분 (persist v3) */
+export type CandidateRef =
+  | { kind: "existing"; id: string }
+  | { kind: "presale"; id: string }
+  | { kind: "area"; id: string };
+
 export interface Candidate {
-  complexId: string;
+  kind: ListingKind;
+  id: string;
   favorite: boolean;
   notes: CandidateNotes;
   /** ISO 문자열 (정렬용) */
@@ -136,13 +319,25 @@ export interface RegionInterest {
 }
 
 // ===== 적합도 =====
+export type DealbreakerStatus = "pass" | "fail" | "unknown";
+
 export interface FitResult {
   complexId: string;
   passesDealbreakers: boolean;
   failedDealbreakers: (keyof Dealbreakers)[];
+  /** 미확정(주로 presale) — 탈락 조건 아님, 별도 표시 */
+  unknownDealbreakers: (keyof Dealbreakers)[];
   /** 각 항목 0~100 (표시용 정수) */
   axisScores: Record<PriorityKey, number>;
   /** 가중합 0~100 (정수) */
+  totalScore: number;
+}
+
+/** AreaFit 결과 — HomeFit과 직접 점수 비교 금지 (성격이 다른 척도) */
+export interface AreaFitResult {
+  areaId: string;
+  /** 반영된 축만 (제외 축은 키 없음) */
+  axisScores: Partial<Record<PriorityKey | "plannedInfra" | "transitPlan" | "supply", number>>;
   totalScore: number;
 }
 

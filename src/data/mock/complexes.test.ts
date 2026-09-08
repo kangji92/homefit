@@ -7,9 +7,9 @@ import type { UserConditions } from "@/domain/types";
 import { MOCK_COMPLEXES } from "./complexes";
 
 describe("mock 단지 데이터 무결성", () => {
-  it("8~12개 범위의 단지를 제공한다", () => {
+  it("8개 이상의 단지를 제공한다 (지역 확장에 따라 증가)", () => {
     expect(MOCK_COMPLEXES.length).toBeGreaterThanOrEqual(8);
-    expect(MOCK_COMPLEXES.length).toBeLessThanOrEqual(12);
+    expect(MOCK_COMPLEXES.length).toBeLessThanOrEqual(30);
   });
 
   it("모든 단지가 유효한 regionId를 가진다", () => {

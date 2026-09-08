@@ -7,9 +7,9 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("BottomNav", () => {
-  it("4개 탭을 링크로 렌더링한다", () => {
+  it("5개 탭을 링크로 렌더링한다", () => {
     render(<BottomNav />);
-    for (const name of ["홈", "후보", "비교", "우리 조건"]) {
+    for (const name of ["홈", "탐색", "후보", "비교", "우리 조건"]) {
       expect(screen.getByRole("link", { name })).toBeInTheDocument();
     }
   });

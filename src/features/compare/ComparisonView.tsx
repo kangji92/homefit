@@ -4,9 +4,9 @@ import { DEFAULT_SCORING_CONFIG } from "@/domain/scoring/config";
 import {
   PRIORITY_KEYS,
   type Comparison,
-  type Complex,
   type DealType,
   type FitResult,
+  type Home,
   type Winner,
   type Workplace,
 } from "@/domain/types";
@@ -16,7 +16,7 @@ import { DEALBREAKER_LABELS } from "@/lib/dealbreakerLabels";
 import { cn } from "@/lib/utils";
 
 interface Side {
-  complex: Complex;
+  complex: Home;
   fit: FitResult;
   regionName?: string;
 }
@@ -126,8 +126,18 @@ export function ComparisonView({
   dealType: DealType;
 }) {
   const cfg = DEFAULT_SCORING_CONFIG;
-  const age = (c: Complex) => cfg.currentYear - c.completionYear;
-  const priceText = (c: Complex) => {
+  // 연식/입주: existing=준공연차, presale=입주예정
+  const ageText = (c: Home) =>
+    c.kind === "presale"
+      ? `${c.moveInYear}년 입주예정`
+      : `${c.completionYear}년 (${cfg.currentYear - c.completionYear}년차)`;
+  const households = (c: Home) =>
+    c.households != null ? `${c.households.toLocaleString("ko-KR")}세대` : "미정";
+  const station = (c: Home) =>
+    c.stationDistanceM != null
+      ? `${c.stationDistanceM.toLocaleString("ko-KR")}m`
+      : "미정";
+  const priceText = (c: Home) => {
     const band = priceBandFor(c.price, dealType);
     return band ? formatKoreanMoney(band.representative) : "매물 정보 없음";
   };
@@ -176,19 +186,19 @@ export function ComparisonView({
           b={`${b.complex.sizesPyeong.join(", ")}평`}
         />
         <CompareRow
-          a={`${a.complex.households.toLocaleString("ko-KR")}세대`}
+          a={households(a.complex)}
           label="세대수"
-          b={`${b.complex.households.toLocaleString("ko-KR")}세대`}
+          b={households(b.complex)}
         />
         <CompareRow
-          a={`${a.complex.completionYear}년 (${age(a.complex)}년차)`}
+          a={ageText(a.complex)}
           label="연식"
-          b={`${b.complex.completionYear}년 (${age(b.complex)}년차)`}
+          b={ageText(b.complex)}
         />
         <CompareRow
-          a={`${a.complex.stationDistanceM.toLocaleString("ko-KR")}m`}
+          a={station(a.complex)}
           label="역 거리"
-          b={`${b.complex.stationDistanceM.toLocaleString("ko-KR")}m`}
+          b={station(b.complex)}
         />
         {workplaces
           .filter((w) => w.id.length > 0)

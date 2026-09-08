@@ -7,7 +7,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { computeFit } from "@/domain/scoring";
 import { compareFit } from "@/domain/scoring/compare";
 import type { Priorities } from "@/domain/types";
-import { useComplexes, useRegions } from "@/hooks/queries";
+import { useHomes, useRegions } from "@/hooks/queries";
 import { isConditionsReady } from "@/lib/conditions";
 import { useCandidatesStore } from "@/stores/candidatesStore";
 import { useConditionsStore } from "@/stores/conditionsStore";
@@ -37,7 +37,7 @@ export function CompareFeature() {
   const [savedFlash, setSavedFlash] = useState(false);
   const effectivePriorities = simPriorities ?? priorities;
 
-  const complexesQuery = useComplexes();
+  const complexesQuery = useHomes();
   const regionsQuery = useRegions();
 
   if (!condHydrated || !candHydrated) {
@@ -51,7 +51,7 @@ export function CompareFeature() {
   const allComplexes = complexesQuery.data ?? [];
   const byId = new Map(allComplexes.map((c) => [c.id, c]));
   const regionName = new Map((regionsQuery.data ?? []).map((r) => [r.id, r.name]));
-  const candidateIds = new Set(candidates.map((c) => c.complexId));
+  const candidateIds = new Set(candidates.map((c) => c.id));
   const candidateComplexes = allComplexes.filter((c) => candidateIds.has(c.id));
 
   const a = searchParams.get("a") ?? "";

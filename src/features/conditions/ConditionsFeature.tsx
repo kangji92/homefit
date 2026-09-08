@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { FormProvider, useForm, type Path } from "react-hook-form";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useConditionsStore } from "@/stores/conditionsStore";
@@ -90,7 +91,12 @@ function ConditionsForm() {
           }}
           className="space-y-5"
         >
-          <h1 className="text-2xl font-bold">우리 조건</h1>
+          <div className="flex items-baseline justify-between gap-2">
+            <h1 className="text-2xl font-bold">우리 조건</h1>
+            <Link href="/profile" className="text-primary text-sm font-medium">
+              가구 프로필 →
+            </Link>
+          </div>
           <Section title="예산">
             <BudgetStep />
           </Section>

@@ -3,15 +3,18 @@
 import Link from "next/link";
 import { computeFit } from "@/domain/scoring";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { useComplex, useRegions } from "@/hooks/queries";
+import { useHome, useRegions } from "@/hooks/queries";
 import { isConditionsReady } from "@/lib/conditions";
 import { useCandidatesStore } from "@/stores/candidatesStore";
 import { useConditionsStore } from "@/stores/conditionsStore";
+import { useHouseholdStore } from "@/stores/householdStore";
 import { AxisScoreList } from "./AxisScoreList";
 import { CandidateActions } from "./CandidateActions";
 import { DealbreakerAlert } from "./DealbreakerAlert";
+import { EligibilityPanel } from "./EligibilityPanel";
 import { Hero } from "./Hero";
 import { NotesEditor } from "./NotesEditor";
+import { PresaleStatusPanel } from "./PresaleStatusPanel";
 import { RawInfo } from "./RawInfo";
 
 function Center({ children }: { children: React.ReactNode }) {
@@ -23,21 +26,24 @@ function Center({ children }: { children: React.ReactNode }) {
 }
 
 export function ComplexDetailFeature({ id }: { id: string }) {
-  const complexQuery = useComplex(id);
+  const complexQuery = useHome(id);
   const regionsQuery = useRegions();
 
   const condHydrated = useConditionsStore((s) => s.hasHydrated);
   const candHydrated = useCandidatesStore((s) => s.hasHydrated);
+  const householdHydrated = useHouseholdStore((s) => s.hasHydrated);
+  const profile = useHouseholdStore((s) => s.profile);
   const conditions = useConditionsStore((s) => s.conditions);
   const priorities = useConditionsStore((s) => s.priorities);
   const dealbreakers = useConditionsStore((s) => s.dealbreakers);
 
   const isCandidate = useCandidatesStore((s) =>
-    s.candidates.some((c) => c.complexId === id),
+    s.candidates.some((c) => c.id === id),
   );
 
   // hydration 전에는 판정 보류(후보 버튼 flicker 방지)
-  if (!condHydrated || !candHydrated) return <Center>불러오는 중…</Center>;
+  if (!condHydrated || !candHydrated || !householdHydrated)
+    return <Center>불러오는 중…</Center>;
   if (complexQuery.isLoading) return <Center>불러오는 중…</Center>;
   if (complexQuery.isError) {
     return (
@@ -74,9 +80,15 @@ export function ComplexDetailFeature({ id }: { id: string }) {
         dealType={conditions.dealType}
       />
 
-      {fit && !fit.passesDealbreakers && (
-        <DealbreakerAlert failed={fit.failedDealbreakers} />
+      {fit && (
+        <DealbreakerAlert
+          failed={fit.failedDealbreakers}
+          unknown={fit.unknownDealbreakers}
+        />
       )}
+
+      {complex.kind === "presale" && <PresaleStatusPanel home={complex} />}
+      {complex.kind === "presale" && <EligibilityPanel profile={profile} />}
 
       {!ready && (
         <div className="border-border rounded-xl border p-4 text-center">
@@ -117,8 +129,8 @@ export function ComplexDetailFeature({ id }: { id: string }) {
         </div>
       </details>
 
-      <CandidateActions complexId={id} />
-      {isCandidate && <NotesEditor complexId={id} />}
+      <CandidateActions complexId={id} kind={complex.kind} />
+      {isCandidate && <NotesEditor complexId={id} kind={complex.kind} />}
     </PageContainer>
   );
 }

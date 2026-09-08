@@ -9,20 +9,25 @@ export function RecommendationCard({
   recommendation,
   regionName,
   dealType,
+  action,
 }: {
   recommendation: Recommendation;
   regionName?: string;
   dealType: DealType;
+  /** 카드 우상단에 얹는 액션(예: 관심 담기). 링크 이동과 분리된 슬롯. */
+  action?: React.ReactNode;
 }) {
   const { complex, fit } = recommendation;
   const axes = topAxes(fit, 3);
 
   return (
-    <Link
-      href={`/complex/${complex.id}`}
-      className="bg-surface border-border block rounded-xl border p-4"
-    >
-      <div className="flex items-center gap-4">
+    <div className="relative">
+      {action && <div className="absolute right-3 top-3 z-10">{action}</div>}
+      <Link
+        href={`/complex/${complex.id}`}
+        className="bg-surface border-border block rounded-xl border p-4"
+      >
+        <div className="flex items-center gap-4">
         <ScoreGauge score={fit.totalScore} label="적합도" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -47,8 +52,9 @@ export function RecommendationCard({
               </li>
             ))}
           </ul>
+          </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 }

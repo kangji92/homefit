@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { useComplexes, useRegions } from "@/hooks/queries";
+import { useAreas, useHomes, useRegions } from "@/hooks/queries";
 import { isConditionsReady } from "@/lib/conditions";
 import { recommendComplexes } from "@/features/home/recommend";
 import { useCandidatesStore } from "@/stores/candidatesStore";
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { cn } from "@/lib/utils";
+import { AreaInterestList } from "./AreaInterestList";
 import { CandidateCard } from "./CandidateCard";
 import { DiscoverList } from "./DiscoverList";
 import { RegionInterestList } from "./RegionInterestList";
@@ -27,8 +28,9 @@ export function CandidatesFeature() {
   const dealbreakers = useConditionsStore((s) => s.dealbreakers);
   const candidates = useCandidatesStore((s) => s.candidates);
 
-  const complexesQuery = useComplexes();
+  const complexesQuery = useHomes();
   const regionsQuery = useRegions();
+  const areasQuery = useAreas();
 
   const regionName = useMemo(
     () => new Map((regionsQuery.data ?? []).map((r) => [r.id, r.name])),
@@ -36,7 +38,7 @@ export function CandidatesFeature() {
   );
 
   const allComplexes = complexesQuery.data ?? [];
-  const candidateIds = new Set(candidates.map((c) => c.complexId));
+  const candidateIds = new Set(candidates.map((c) => c.id));
   const candidateComplexes = allComplexes.filter((c) => candidateIds.has(c.id));
   const ready = isConditionsReady(conditions);
 
@@ -76,11 +78,24 @@ export function CandidatesFeature() {
         </TabButton>
       </div>
 
-      {tab === "complexes"
-        ? renderComplexesTab()
-        : <RegionInterestList regions={regionsQuery.data ?? []} />}
+      {tab === "complexes" ? renderComplexesTab() : renderRegionsTab()}
     </PageContainer>
   );
+
+  function renderRegionsTab() {
+    return (
+      <div className="space-y-6">
+        <section className="space-y-2">
+          <h2 className="font-semibold">관심 개발예정지</h2>
+          <AreaInterestList areas={areasQuery.data ?? []} />
+        </section>
+        <section className="space-y-2">
+          <h2 className="font-semibold">관심 지역</h2>
+          <RegionInterestList regions={regionsQuery.data ?? []} />
+        </section>
+      </div>
+    );
+  }
 
   function renderComplexesTab() {
     if (complexesQuery.isLoading) {
@@ -108,7 +123,7 @@ export function CandidatesFeature() {
 
     const fitById = new Map(recommendations.map((r) => [r.complex.id, r.fit]));
     const rankIndex = new Map(recommendations.map((r, i) => [r.complex.id, i]));
-    const candById = new Map(candidates.map((c) => [c.complexId, c]));
+    const candById = new Map(candidates.map((c) => [c.id, c]));
 
     let items = candidateComplexes.map((c) => ({
       complex: c,
