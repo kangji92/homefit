@@ -133,6 +133,104 @@ export interface PresaleHome extends HomeBase {
   households?: number;
   stationDistanceM?: number;
   subscription?: { announcementDate?: string; scheduleNote?: string };
+  // ── 분양권/전매 (presale-rights.md) — 전부 선택(가산적) ──
+  lifecycle?: PresaleLifecycle;
+  transfer?: TransferInfo;
+  offering?: OfferingPrice;
+}
+
+// ===== 분양권 · 취득경로 (docs/design/presale-rights.md) =====
+
+/** 취득 방법 — kind(물리적 유형)와 직교 */
+export type AcquisitionPath = "subscription" | "resale" | "existing_trade";
+
+/** 분양 lifecycle 상태 */
+export type PresalePhase =
+  | "planned"
+  | "subscription_scheduled"
+  | "subscription_open"
+  | "subscription_closed"
+  | "transfer_restricted"
+  | "transferable"
+  | "occupied";
+
+/** ① 전매 허용 여부(대상 사실) */
+export type TransferStatus = "tradable" | "restricted" | "conditional" | "unknown";
+/** ② 데이터 신뢰도(정보 품질) — 거래 위험과 별개 */
+export type VerificationStatus = "verified" | "needs_review" | "unknown";
+/** ③ 거래 위험도(파생 신호) */
+export type TransactionRisk = "normal" | "needs_review" | "high_risk";
+
+/** 개별 주의 신호 */
+export type RiskFlag =
+  | "transfer_restricted"
+  | "transferability_unconfirmed"
+  | "listing_mismatch"
+  | "rights_check_needed"
+  | "price_source_unclear"
+  | "stale_info"
+  | "title_transfer_unconfirmed";
+
+export type SourceType =
+  | "official_announcement"
+  | "government"
+  | "public_data"
+  | "transaction"
+  | "listing"
+  | "manual";
+
+/** 출처·검증 메타 (정책 민감 → 판단마다 근거) */
+export interface Provenance {
+  sourceType: SourceType;
+  sourceId?: string;
+  sourceUrl?: string;
+  effectiveFrom?: string;
+  effectiveTo?: string;
+  /** 마지막 검증일 — 필수 */
+  lastVerifiedAt: string;
+  verificationStatus: VerificationStatus;
+}
+
+export interface PresaleLifecycle {
+  phase: PresalePhase;
+  phaseSince?: string;
+  lastVerifiedAt: string;
+  source?: Provenance;
+  note?: string;
+}
+
+export interface TransferInfo {
+  status: TransferStatus;
+  restrictionReason?: string;
+  restrictionEndDate?: string;
+  conditions?: string[];
+  reviewReasons?: string[];
+  riskFlags: RiskFlag[];
+  provenance: Provenance;
+}
+
+/** 값 확보난이도 — Provenance(출처 메타)와 다른 축 */
+export type ValueProvenance = "sourced" | "computed" | "user_input" | "hard";
+
+export interface Money {
+  manwon: number;
+  valueProvenance: ValueProvenance;
+  asOf?: string;
+  source?: Provenance;
+}
+
+/** 분양가·분양권가·현금흐름. 값 없음은 undefined(0 아님) */
+export interface OfferingPrice {
+  basePrice?: Money;
+  resalePrice?: Money;
+  premium?: Money;
+  downPayment?: Money;
+  midPaymentPaid?: Money;
+  midPaymentRemaining?: Money;
+  balance?: Money;
+  cashNeededAtPurchase?: Money;
+  estimatedTotalAcquisition?: Money;
+  byUnitType?: Record<string, Partial<OfferingPrice>>;
 }
 
 export type Home = ExistingHome | PresaleHome;
