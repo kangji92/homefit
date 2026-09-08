@@ -14,7 +14,8 @@
     "e2e": "playwright test",
     "gen:seed": "node --experimental-strip-types scripts/gen-seed.ts",
     "poc:tx": "node --experimental-strip-types scripts/poc-transactions.ts",
-    "ingest:prices": "node --experimental-strip-types scripts/ingest-prices.ts"
+    "ingest:prices": "node --experimental-strip-types scripts/ingest-prices.ts",
+    "ingest:kapt": "node --env-file=.env.local --experimental-strip-types scripts/ingest-kapt.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
