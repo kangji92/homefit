@@ -14,6 +14,7 @@ import { DealbreakerAlert } from "./DealbreakerAlert";
 import { EligibilityPanel } from "./EligibilityPanel";
 import { Hero } from "./Hero";
 import { NotesEditor } from "./NotesEditor";
+import { PresaleStatusPanel } from "./PresaleStatusPanel";
 import { RawInfo } from "./RawInfo";
 
 function Center({ children }: { children: React.ReactNode }) {
@@ -86,6 +87,7 @@ export function ComplexDetailFeature({ id }: { id: string }) {
         />
       )}
 
+      {complex.kind === "presale" && <PresaleStatusPanel home={complex} />}
       {complex.kind === "presale" && <EligibilityPanel profile={profile} />}
 
       {!ready && (

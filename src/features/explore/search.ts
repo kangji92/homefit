@@ -8,7 +8,9 @@ import {
   type ScoringConfig,
 } from "@/domain/scoring/config";
 import { priceBandFor } from "@/domain/price";
+import { availableAcquisitionPaths } from "@/domain/presale";
 import type {
+  AcquisitionPath,
   Area,
   AreaFitResult,
   Dealbreakers,
@@ -29,6 +31,8 @@ export interface SearchParams {
   kind: ListingKindFilter;
   priceMax?: number; // 만원 — 대표가 이하 (집에만)
   sizeMin?: number; // 평 — 최소 평형 (집에만)
+  /** 취득경로 필터 (분양권 거래 가능 등). 지정 시 area 제외. */
+  acquisitionPath?: AcquisitionPath;
   sort: SortKey;
 }
 
@@ -96,6 +100,12 @@ export function searchListings(
       const maxSize = Math.max(...home.sizesPyeong, 0);
       if (maxSize < params.sizeMin) return false;
     }
+    if (
+      params.acquisitionPath &&
+      !availableAcquisitionPaths(home).includes(params.acquisitionPath)
+    ) {
+      return false;
+    }
     return true;
   });
 
@@ -110,6 +120,7 @@ export function searchListings(
   const areaResults = areas
     .filter((area) => {
       if (params.kind !== "all" && params.kind !== "area") return false;
+      if (params.acquisitionPath) return false; // 취득경로 필터 시 지역 제외
       if (!nameMatches(area.name, params.q)) return false;
       if (params.regionId !== "all" && area.regionId !== params.regionId)
         return false;

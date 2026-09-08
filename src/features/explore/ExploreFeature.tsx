@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { DEAL_TYPE_LABEL } from "@/domain/price";
 import type { DealType } from "@/domain/types";
+import type { AcquisitionPath } from "@/domain/types";
 import { useAreas, useHomes, useRegions } from "@/hooks/queries";
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { isConditionsReady } from "@/lib/conditions";
@@ -50,6 +51,7 @@ export function ExploreFeature() {
   const [kind, setKind] = useState<ListingKindFilter>("all");
   const [priceMaxRaw, setPriceMaxRaw] = useState<number | null>(null);
   const [sizeMinRaw, setSizeMinRaw] = useState<number | null>(null);
+  const [acquisitionPath, setAcquisitionPath] = useState<AcquisitionPath | "">("");
   const [sort, setSort] = useState<SortKey>("fit");
 
   const homes = useMemo(() => homesQuery.data ?? [], [homesQuery.data]);
@@ -79,6 +81,7 @@ export function ExploreFeature() {
     kind,
     priceMax: priceMaxRaw ?? undefined,
     sizeMin: sizeMinRaw ?? undefined,
+    acquisitionPath: acquisitionPath || undefined,
     sort,
   };
 
@@ -91,7 +94,7 @@ export function ExploreFeature() {
         dealbreakers,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [homes, areas, q, regionId, dealType, kind, priceMaxRaw, sizeMinRaw, sort, conditions, priorities, dealbreakers],
+    [homes, areas, q, regionId, dealType, kind, priceMaxRaw, sizeMinRaw, acquisitionPath, sort, conditions, priorities, dealbreakers],
   );
 
   function resetFilters() {
@@ -100,6 +103,7 @@ export function ExploreFeature() {
     setKind("all");
     setPriceMaxRaw(null);
     setSizeMinRaw(null);
+    setAcquisitionPath("");
     setSort("fit");
   }
 
@@ -239,6 +243,22 @@ export function ExploreFeature() {
             />
           </label>
         )}
+
+        <label className="block">
+          <span className="sr-only">취득경로</span>
+          <select
+            aria-label="취득경로"
+            value={acquisitionPath}
+            onChange={(e) =>
+              setAcquisitionPath(e.target.value as AcquisitionPath | "")
+            }
+            className={`${controlCls} w-full`}
+          >
+            <option value="">취득경로 전체</option>
+            <option value="subscription">청약 가능</option>
+            <option value="resale">분양권 거래 가능</option>
+          </select>
+        </label>
 
         <label className="block">
           <span className="sr-only">정렬</span>

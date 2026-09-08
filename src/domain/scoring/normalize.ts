@@ -2,6 +2,7 @@
 
 import type { Home, PriorityKey, UserConditions } from "../types";
 import { maxBudgetFor, priceBandFor } from "../price";
+import { effectiveAcquisitionPriceManwon } from "../presale/price";
 import type { ScoringConfig } from "./config";
 
 export const clamp = (x: number, lo = 0, hi = 100): number =>
@@ -25,10 +26,23 @@ export function priceScore(
   conditions: UserConditions,
   config: ScoringConfig,
 ): number {
-  const band = priceBandFor(home.price, conditions.dealType);
-  if (!band) return 0; // 해당 거래유형 매물 없음
+  // 분양권/청약: offering이 있으면 유효 취득가(총 취득금액/분양가)를 우선 사용.
+  //   매매(sale) 기준. 값 미확정이면 매물 정보 없음과 동일하게 0.
+  let p: number;
+  if (
+    home.kind === "presale" &&
+    home.offering &&
+    conditions.dealType === "sale"
+  ) {
+    const eff = effectiveAcquisitionPriceManwon(home);
+    if (eff === undefined) return 0;
+    p = eff;
+  } else {
+    const band = priceBandFor(home.price, conditions.dealType);
+    if (!band) return 0; // 해당 거래유형 매물 없음
+    p = band.representative;
+  }
   const budget = maxBudgetFor(conditions);
-  const p = band.representative;
 
   const floor = budget * config.priceFloorRatio;
   const denom = budget - floor;

@@ -118,6 +118,28 @@ describe("searchListings", () => {
     expect(r.homes.map((h) => h.complex.id)).toEqual(["c", "b", "a"]);
   });
 
+  it("취득경로 필터 — 분양권 거래 가능만(resale)", () => {
+    // presaleC(lifecycle transferable + tradable)만 resale 경로
+    const transferable: Home = {
+      ...presaleC,
+      id: "c2",
+      lifecycle: { phase: "transferable", lastVerifiedAt: "2026-09-01" },
+      transfer: {
+        status: "tradable",
+        riskFlags: [],
+        provenance: { sourceType: "official_announcement", lastVerifiedAt: "2026-09-01", verificationStatus: "verified" },
+      },
+    };
+    const r = searchListings(
+      [homeA, homeB, transferable],
+      AREAS,
+      { ...baseParams, acquisitionPath: "resale" },
+      ctx,
+    );
+    expect(r.homes.map((h) => h.complex.id)).toEqual(["c2"]);
+    expect(r.areas).toHaveLength(0); // 취득경로 필터 시 지역 제외
+  });
+
   it("적합도순은 dealbreaker 통과분을 먼저, 불충족도 목록에 유지", () => {
     const c: SearchContext = { ...ctx, dealbreakers: { maxPrice: 85000 } };
     const r = run({ sort: "fit" }, c);
