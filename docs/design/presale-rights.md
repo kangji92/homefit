@@ -243,7 +243,12 @@ official_announcement ≈ government  >  public_data  >  transaction  >  listing
 
 - 전매제한은 (a) 주택법 시행령 기반 **정책 추정**과 (b) 공고별 **개별 확인**이 다를 수
   있음 → `sourceType`으로 구분(정책=`government`, 공고=`official_announcement`).
-  정책 추정만 있는 경우 `verificationStatus`는 `needs_review` 이하로 둔다.
+- **【§12-3 확정】 공고로 확인된 것만 `tradable`/`restricted`로 단정한다.** 정책
+  추정만 있으면 `verificationStatus="needs_review"`(또는 `unknown`)로 두고 **절대
+  `tradable`로 단정하지 않는다.** 법적 판단이 필요한 값은 "공식 공고 및 관계기관
+  확인 필요"로 안내.
+- **【§12-5 확정】 분양권 실거래 표본 부족**(주택형·시점 매칭 임계 미만)이면 대표
+  `resalePrice`를 노출하지 않고 `price_source_unclear` 플래그를 세운다.
 
 ---
 
@@ -323,9 +328,10 @@ HomeFit  ×  Affordability  ×  Transfer Eligibility  ×  Subscription Eligibili
 | newness | `moveInYear`(입주 예정) |
 | commute · education · infrastructure · environment · futurePotential | kind 무관 동일 |
 
-- **price 축은 "그 경로로 얻을 때의 총액"을 쓴다.** 분양권은 분양가가 아니라
-  `estimatedTotalAcquisition`이 유효가격(프리미엄 포함). 값 unknown이면 price 축은
-  presale의 dealbreaker처럼 **unknown**(2B `DealbreakerStatus` 재사용).
+- **【§12-1 확정】 price 축은 "그 경로로 얻을 때의 총액"을 쓴다.** 분양권은 분양가가
+  아니라 `estimatedTotalAcquisition`(분양가+프리미엄)이 유효가격 → 기존 매매/전세의
+  "지불 총액" 기준과 일치. 값 unknown이면 price 축은 presale의 dealbreaker처럼
+  **unknown**(2B `DealbreakerStatus` 재사용).
 
 ### 7.2 점수에 넣지 않고 분리하는 값
 - **Affordability(감당가능성)**: `cashNeededAtPurchase`, 향후 납부부담(중도금·잔금
@@ -371,8 +377,9 @@ HomeFit  ×  Affordability  ×  Transfer Eligibility  ×  Subscription Eligibili
  ├ 분양권 거래 가능  2   (presale · path=resale, transfer=tradable)
  └ 주변 기존 매매    5   (existing)
 ```
-- 필터 "분양권 거래 가능"은 `availableAcquisitionPaths` 파생값으로. (기존 탐색
-  화면 `explore-search.md`에 취득경로 필터 축 추가.)
+- **【§12-6 확정】** 필터 "분양권 거래 가능"을 **탐색 1급 필터**로 노출
+  (`availableAcquisitionPaths` 파생값). 기존 `explore-search.md` 유형 필터에 취득경로
+  축 추가.
 
 ### 9.2 분양 단지 상세 — 상태 배지 + 신호등
 lifecycle+transfer를 사람이 이해할 문장으로:
@@ -383,7 +390,7 @@ lifecycle+transfer를 사람이 이해할 문장으로:
 **신호등(거래 위험도 + 상태 결합, 보수적):**
 | 표시 | 조건 | 문구 예 |
 |------|------|---------|
-| 🟢 현재 전매 가능 | `tradable` **그리고** `verified` **그리고** 위험플래그 없음 | "현재 분양권 거래 가능 (○○공고 기준, 검증일 …)" |
+| 🟢 현재 전매 가능 | `tradable` + `verified` + 위험플래그 없음 **+ `sourceType==="official_announcement"`**(§12-7) | "현재 분양권 거래 가능 (○○공고 기준, 검증일 …)" |
 | 🟡 조건/확인 필요 | `conditional`, 또는 `needs_review` | "조건 확인 필요 — 공식 공고 및 관계기관 확인 필요" |
 | 🔴 전매제한 중 | `restricted` / `transfer_restricted` | "전매제한 중 · 사유 … · YYYY.MM 종료 예정" |
 | ⚪ 공식 정보 확인 필요 | `unknown` / 미검증 | "공식 공고 및 관계기관 확인 필요" |
@@ -454,28 +461,22 @@ lifecycle+transfer를 사람이 이해할 문장으로:
 
 ---
 
-## 12. 아직 결정이 필요한 사항 【사용자 확정 요망】
+## 12. 결정 확정 【완료】
 
-1. **분양권 유효가격**: HomeFit price 축에 `estimatedTotalAcquisition`(분양가+프리미엄)
-   을 쓰고 프리미엄까지 점수 반영 — 이게 맞나? 아니면 분양가만 점수, 프리미엄은
-   Affordability로만? (제안: 총 취득금액을 유효가격으로.)
-2. **occupied → existing 전환**: 입주·실거래 발생 후 같은 주택을 자동으로
-   `ExistingHome`으로 승격할지, presale로 유지하고 phase만 occupied로 둘지.
-3. **전매제한 확보 범위**: 정책(주택법) 기반 자동 추정까지 할지, 아니면 **공고로
-   확인된 것만** 표기하고 나머지는 `unknown`으로 둘지. (법적 리스크 관련.)
-4. **청약홈 API**: 청약/분양 공고 자동 수집을 위해 청약홈 OpenAPI 활용신청을 진행할지
-   (없으면 lifecycle/subscription은 수동·부분 데이터로 시작).
-5. **분양권 전매 실거래 매칭 신뢰도**: 주택형·동·시점 매칭이 애매할 때 대표
-   `resalePrice`를 노출할지, "표본 부족" 처리할지 기준.
-6. **AcquisitionPath 필터를 탐색 1급 축으로** 노출할지(“분양권 거래 가능만 보기”), 아니면
-   분양 상세 안에서만 상태로 보여줄지.
-7. **🟢(전매 가능) 표시 최소 요건**: `verified + tradable + 무플래그`로 충분한지,
-   아니면 **출처가 `official_announcement`일 때만** 초록 허용처럼 더 엄격히 할지.
-8. **정보 노후 임계(`stale_info`)**: 며칠(예: 30/60/90일) 지나면 `needs_review`로
-   강등할지 — 정책 민감도에 따라.
-9. **출처 충돌 우선순위 확정**: 제안(§5.4) `공식공고≈정부 > 공공데이터 > 실거래 >
-   매물 > 수기` 그대로 채택할지, 조정할지.
-10. **위험도 파생 규칙(§5.5)** 세부(어떤 플래그를 high_risk로 승격할지) 확정.
+| # | 항목 | 확정 |
+|---|------|------|
+| 1 | 분양권 유효가격 | **총 취득금액(분양가+프리미엄) = `estimatedTotalAcquisition`**을 HomeFit price 축 입력으로. 프리미엄 점수 반영. 기존 매매/전세와 "지불 총액" 기준 일치. |
+| 2 | occupied → existing 전환 | **자동 승격 안 함.** presale 유지 + `phase="occupied"`. 실거래 dedup 연동은 후속(§4 재검토). |
+| 3 | 전매제한 표시 범위 | **공고로 확인된 것만 단정**(tradable/restricted). 정책(주택법) 추정만 있으면 **`unknown`/`needs_review`**, 절대 tradable로 단정 안 함. (법적 리스크 최소) |
+| 4 | 청약홈 OpenAPI | **활용신청 진행.** 청약·분양 공고를 자동 수집해 lifecycle/subscription 실데이터화. (data.go.kr 활용신청 필요 — 사용자 액션) |
+| 5 | 분양권 실거래 매칭 신뢰도 | **표본 부족 처리.** 주택형·시점 매칭 표본이 임계 미만이면 대표 `resalePrice` 미노출 + `price_source_unclear` 플래그. |
+| 6 | 취득경로 탐색 필터 | **탐색 1급 필터로 노출**("분양권 거래 가능만 보기"). `availableAcquisitionPaths` 파생값 사용. |
+| 7 | 🟢 최소 요건 | **`official_announcement` 출처까지 필수.** verified+tradable+무플래그**여도** 공식 공고 근거가 아니면 🟡(확인 필요). (보수적) |
+| 8 | 정보 노후 임계 | **`lastVerifiedAt` 60일 초과 → `stale_info` → `needs_review` 강등.** |
+| 9 | 출처 충돌 우선순위 | §5.4 그대로: `공식공고≈정부 > 공공데이터 > 실거래 > 매물 > 수기`. |
+| 10 | 위험도 파생 규칙 | §5.5 그대로(보수적): 제한/미검증/확인계열 플래그 → 위험 쪽 반올림. |
+
+이 확정으로 §5·§7·§9의 관련 규칙을 반영했다(아래).
 
 ---
 
