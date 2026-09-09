@@ -4,7 +4,8 @@
 // (docs/design/data-phase2-supabase-catalog.md §6)
 
 import { MOCK_AREAS, getMockArea } from "@/data/mock/areas";
-import { MOCK_PRESALES, getMockPresale } from "@/data/mock/presales";
+import { MOCK_PRESALES } from "@/data/mock/presales";
+import { APPLYHOME_PRESALES } from "@/data/mock/applyhomePresales";
 import type { AreaRepository, ComplexListParams, HomeRepository } from "./types";
 import { mockComplexRepository, mockRegionRepository } from "./mock";
 import {
@@ -24,17 +25,28 @@ export const regionRepository = useSupabase
   ? supabaseRegionRepository
   : mockRegionRepository;
 
-// 집 통합: 기존(활성 소스) + 분양(mock). 분양 실데이터는 청약홈 adapter로 후속.
+// 청약홈 공고 기반 PresaleHome은 플래그(기본 off)일 때만 병합.
+// (분양가·평형·lifecycle은 실데이터, metrics·통근은 placeholder라 기본 제외)
+const useApplyhome = process.env.NEXT_PUBLIC_APPLYHOME_PRESALES === "1";
+const allPresales = useApplyhome
+  ? [...MOCK_PRESALES, ...APPLYHOME_PRESALES]
+  : MOCK_PRESALES;
+
+// 집 통합: 기존(활성 소스) + 분양(mock + 청약홈 스냅샷).
 export const homeRepository: HomeRepository = {
   async list(params?: ComplexListParams) {
     const existing = await complexRepository.list(params);
     const presales = params?.regionId
-      ? MOCK_PRESALES.filter((p) => p.regionId === params.regionId)
-      : MOCK_PRESALES;
+      ? allPresales.filter((p) => p.regionId === params.regionId)
+      : allPresales;
     return [...existing, ...presales];
   },
   async getById(id: string) {
-    return (await complexRepository.getById(id)) ?? getMockPresale(id) ?? null;
+    return (
+      (await complexRepository.getById(id)) ??
+      allPresales.find((p) => p.id === id) ??
+      null
+    );
   },
 };
 

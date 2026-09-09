@@ -16,6 +16,7 @@ import { Hero } from "./Hero";
 import { NotesEditor } from "./NotesEditor";
 import { PresaleStatusPanel } from "./PresaleStatusPanel";
 import { RawInfo } from "./RawInfo";
+import { SchoolPanel } from "./SchoolPanel";
 
 function Center({ children }: { children: React.ReactNode }) {
   return (
@@ -89,6 +90,8 @@ export function ComplexDetailFeature({ id }: { id: string }) {
 
       {complex.kind === "presale" && <PresaleStatusPanel home={complex} />}
       {complex.kind === "presale" && <EligibilityPanel profile={profile} />}
+
+      <SchoolPanel regionId={complex.regionId} />
 
       {!ready && (
         <div className="border-border rounded-xl border p-4 text-center">

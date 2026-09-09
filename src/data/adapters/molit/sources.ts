@@ -4,7 +4,12 @@
 export interface MolitSource {
   complexId: string; // 카탈로그 id
   lawdCd: string; // 시군구 법정동코드 5자리
-  aptName: string; // 매칭용 실제 아파트명(aptNm)
+  aptName: string; // 실거래 매칭용 아파트명(aptNm)
+  /**
+   * 공동주택정보(kapt) 등록명 — 실거래 aptName과 다를 때만 지정.
+   * 지정 시 ingest:kapt가 이 이름으로 kaptCode를 찾는다(없으면 aptName 사용).
+   */
+  kaptName?: string;
   /** 라이브 조회로 실거래 확인 여부 */
   verified: boolean;
 }
@@ -33,9 +38,9 @@ export const MOLIT_SOURCES: MolitSource[] = [
   // 군포 산본·금정 (LAWD_CD 41410) — 검증
   { complexId: "gunpo-hyereus", lawdCd: "41410", aptName: "래미안하이어스", verified: true },
   { complexId: "gunpo-sejong", lawdCd: "41410", aptName: "세종", verified: true },
-  // 의왕 (LAWD_CD 41430) — 검증
-  { complexId: "uiwang-ixi-1", lawdCd: "41430", aptName: "인덕원센트럴자이1단지", verified: true },
-  { complexId: "uiwang-naeson-epyeon", lawdCd: "41430", aptName: "의왕내손e편한세상", verified: true },
+  // 의왕 (LAWD_CD 41430) — 검증. 실거래명↔kapt 등록명 상이 → kaptName 별칭.
+  { complexId: "uiwang-ixi-1", lawdCd: "41430", aptName: "인덕원센트럴자이1단지", kaptName: "인덕원센트럴자이", verified: true },
+  { complexId: "uiwang-naeson-epyeon", lawdCd: "41430", aptName: "의왕내손e편한세상", kaptName: "이편한세상인덕원더퍼스트", verified: true },
   // 하남 감일지구 (LAWD_CD 41450 — 하남시, umdNm 감일동) — 검증(거래 소량)
   { complexId: "gamil-penterium", lawdCd: "41450", aptName: "감일금강펜테리움센트럴파크", verified: true },
 ];

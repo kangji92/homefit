@@ -256,8 +256,17 @@ export interface Area {
   summary?: string;
   areaMetrics: AreaMetrics;
   targetMoveInYear?: number;
+  /** 계획 세대수(실 발표치) — supply 지표를 결정적으로 환산하는 근거 */
+  plannedHouseholds?: number;
+  /** 지역지표 점수의 핵심 근거(루브릭 적용 요약). 표시용. */
+  metricsBasis?: string;
   /** 지역 중심 기준(선택) */
   commuteMinutes?: Record<string, number>;
+  /**
+   * AI가 정리한 지역 참고 정보(정성). **점수(AreaFit)에는 절대 반영하지 않는다.**
+   * 결정적 점수와 분리된 표시용 — "AI 생성·참고용·사실과 다를 수 있음" 라벨 필수.
+   */
+  aiInsight?: string;
 }
 
 export type Listing = Home | Area;

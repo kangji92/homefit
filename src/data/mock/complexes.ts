@@ -264,10 +264,11 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
   },
 
   // ── 안양권 (아래 단지들) ──────────────────────────────────
-  // price(sale/jeonse) = 국토부 실거래가 스냅샷(기준월 202606·최근 3개월 중앙값,
-  //   `pnpm ingest:prices`로 갱신). sizesPyeong·completionYear·households·
-  //   stationDistanceM·metrics·schoolNearby 는 추정치 — 공동주택 기본정보 API
-  //   활용신청 승인 후 실데이터로 교체 예정.
+  // price = 국토부 실거래가 스냅샷(기준월 202606·중앙값, `pnpm ingest:prices`).
+  // households·completionYear = 공동주택 기본정보 V5 실데이터(`pnpm ingest:kapt`);
+  //   V5 결측(세대 0)인 단지만 추정 유지(주석 표기).
+  // sizesPyeong = 국토부 실거래 전용면적(excluUseAr)→공급 평형 도출.
+  // stationDistanceM·metrics·schoolNearby 는 추정치.
   {
     id: "pyeongchon-urbaine",
     name: "평촌어바인퍼스트",
@@ -277,9 +278,9 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
       sale: { representative: 95500, min: 40000, max: 124500 },
       jeonse: { representative: 48000, min: 28300, max: 70000 },
     },
-    sizesPyeong: [24, 34],
+    sizesPyeong: [16, 19, 24, 30, 34],
     completionYear: 2021,
-    households: 3040,
+    households: 3850,
     stationDistanceM: 600,
     commuteMinutes: COMMUTE.pyeongchon,
     metrics: { education: 88, infrastructure: 84, environment: 74, futurePotential: 80 },
@@ -294,9 +295,9 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
       sale: { representative: 94250, min: 47500, max: 114500 },
       jeonse: { representative: 47000, min: 26500, max: 67000 },
     },
-    sizesPyeong: [25, 34],
+    sizesPyeong: [16, 18, 20, 24, 31, 34],
     completionYear: 2021,
-    households: 640,
+    households: 640, // V5 세대 결측 → 추정 유지(동수 22)
     stationDistanceM: 700,
     commuteMinutes: COMMUTE.pyeongchon,
     metrics: { education: 85, infrastructure: 80, environment: 72, futurePotential: 78 },
@@ -311,7 +312,7 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
       sale: { representative: 94750, min: 47500, max: 122000 },
       jeonse: { representative: 55000, min: 28000, max: 85000 },
     },
-    sizesPyeong: [24, 34],
+    sizesPyeong: [16, 20, 24, 34, 46, 56],
     completionYear: 2016,
     households: 4250,
     stationDistanceM: 500,
@@ -328,9 +329,9 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
       sale: { representative: 69250, min: 35000, max: 84000 },
       jeonse: { representative: 49000, min: 23585, max: 60000 },
     },
-    sizesPyeong: [24, 33],
+    sizesPyeong: [16, 18, 20, 24, 30, 34],
     completionYear: 2021,
-    households: 1394,
+    households: 1394, // V5 세대 결측 → 추정 유지(동수 13)
     stationDistanceM: 700,
     commuteMinutes: COMMUTE.anyang,
     metrics: { education: 75, infrastructure: 76, environment: 74, futurePotential: 75 },
@@ -345,7 +346,7 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
       sale: { representative: 109500, min: 79000, max: 145000 },
       jeonse: { representative: 65000, min: 48300, max: 84000 },
     },
-    sizesPyeong: [33, 45],
+    sizesPyeong: [24, 34, 45, 51, 60, 72],
     completionYear: 2010,
     households: 2644,
     stationDistanceM: 450,
@@ -362,9 +363,9 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
       sale: { representative: 55700, min: 35000, max: 80000 },
       jeonse: { representative: 29400, min: 24150, max: 48300 },
     },
-    sizesPyeong: [20, 31],
+    sizesPyeong: [24, 34],
     completionYear: 1994,
-    households: 1490,
+    households: 1827,
     stationDistanceM: 500,
     commuteMinutes: COMMUTE.gunpo,
     metrics: { education: 72, infrastructure: 74, environment: 72, futurePotential: 60 },
@@ -372,16 +373,16 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
   },
   {
     id: "uiwang-ixi-1",
-    name: "인덕원센트럴자이1단지",
+    name: "인덕원센트럴자이",
     regionId: "uiwang",
     kind: "existing",
     price: {
       sale: { representative: 115750, min: 75000, max: 134000 },
       jeonse: { representative: 65000, min: 45000, max: 82000 },
     },
-    sizesPyeong: [25, 34],
-    completionYear: 2022,
-    households: 1774,
+    sizesPyeong: [24, 34, 49],
+    completionYear: 2009, // 내손동, V5·실거래 buildYear 확인(추정 2022 정정)
+    households: 2540,
     stationDistanceM: 800,
     commuteMinutes: COMMUTE.uiwang,
     metrics: { education: 82, infrastructure: 80, environment: 78, futurePotential: 85 },
@@ -396,7 +397,7 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
       sale: { representative: 107000, min: 75500, max: 127000 },
       jeonse: { representative: 56500, min: 44000, max: 76000 },
     },
-    sizesPyeong: [25, 34],
+    sizesPyeong: [24, 34, 39, 45, 52, 64],
     completionYear: 2012,
     households: 2422,
     stationDistanceM: 900,
@@ -414,9 +415,9 @@ export const MOCK_COMPLEXES: readonly Complex[] = [
       sale: { representative: 127000, min: 125000, max: 127500 },
       jeonse: { representative: 33535, min: 33535, max: 72000 },
     },
-    sizesPyeong: [25, 34],
+    sizesPyeong: [30, 34],
     completionYear: 2021,
-    households: 578,
+    households: 684,
     stationDistanceM: 700,
     commuteMinutes: COMMUTE.gamil,
     metrics: { education: 78, infrastructure: 72, environment: 82, futurePotential: 80 },

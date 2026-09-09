@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
-import { adaptAptDetail, adaptAptList } from "./adapt";
-import type { ApplyhomeResponse } from "./types";
+import { adaptAptDetail, adaptAptList, adaptAptMdl, toPresaleHome } from "./adapt";
+import type { ApplyhomeMdlRaw, ApplyhomeResponse } from "./types";
 
 // vitest에서 import.meta.url이 file://가 아니라 cwd 상대 경로로 읽는다.
 const fixture = JSON.parse(
@@ -50,5 +50,51 @@ describe("adaptAptDetail (청약홈 실 fixture)", () => {
     const all = adaptAptList(raws, "2026-09-16");
     expect(all).toHaveLength(raws.length);
     expect(all.every((a) => a.id.startsWith("applyhome-"))).toBe(true);
+  });
+});
+
+const mdlRows: ApplyhomeMdlRaw[] = [
+  { LTTOT_TOP_AMOUNT: "30760", SUPLY_AR: "54.8990" }, // 3.076억 / 16.6평
+  { LTTOT_TOP_AMOUNT: "48000", SUPLY_AR: "84.9500" }, // 4.8억 / 25.7평
+  { LTTOT_TOP_AMOUNT: "52000", SUPLY_AR: "112.5000" }, // 5.2억 / 34평
+];
+
+describe("adaptAptMdl", () => {
+  it("분양가 밴드와 공급 평형을 도출한다", () => {
+    const d = adaptAptMdl(mdlRows);
+    expect(d.basePriceManwon).toBe(48000); // median
+    expect(d.priceMin).toBe(30760);
+    expect(d.priceMax).toBe(52000);
+    expect(d.sizesPyeong).toEqual([17, 26, 34]);
+  });
+  it("빈 입력은 분양가 undefined, 평형 []", () => {
+    const d = adaptAptMdl([]);
+    expect(d.basePriceManwon).toBeUndefined();
+    expect(d.sizesPyeong).toEqual([]);
+  });
+});
+
+describe("toPresaleHome", () => {
+  it("공고+Mdl → PresaleHome(분양가·평형·offering·lifecycle)", () => {
+    const a = adaptAptDetail(first, "2026-09-16");
+    const home = toPresaleHome(a, {
+      regionId: "presale-capital",
+      fallbackMoveInYear: 2029,
+      mdl: adaptAptMdl(mdlRows),
+    });
+    expect(home.kind).toBe("presale");
+    expect(home.price.sale?.representative).toBe(48000);
+    expect(home.offering?.basePrice?.manwon).toBe(48000);
+    expect(home.offering?.basePrice?.valueProvenance).toBe("sourced");
+    expect(home.sizesPyeong).toEqual([17, 26, 34]);
+    expect(home.lifecycle?.phase).toBe("subscription_open");
+    expect(home.regionId).toBe("presale-capital");
+  });
+  it("Mdl 없으면 price {}·offering undefined(0 아님), metrics placeholder", () => {
+    const a = adaptAptDetail(first, "2026-09-16");
+    const home = toPresaleHome(a, { regionId: "r", fallbackMoveInYear: 2029 });
+    expect(home.price).toEqual({});
+    expect(home.offering).toBeUndefined();
+    expect(home.metrics.education).toBe(60);
   });
 });

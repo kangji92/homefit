@@ -79,12 +79,42 @@ export function AreaFeature({ id }: { id: string }) {
             </div>
           ))}
         </dl>
+        {area.metricsBasis && (
+          <div className="border-border mt-3 border-t pt-3">
+            <p className="text-xs font-medium">점수 근거</p>
+            <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+              {area.metricsBasis}
+            </p>
+            {area.plannedHouseholds && (
+              <p className="text-muted-foreground mt-1 text-xs">
+                공급 지표는 실 계획 세대수(약{" "}
+                {Math.round(area.plannedHouseholds / 1000).toLocaleString()}천
+                세대) 기준으로 산정했어요.
+              </p>
+            )}
+          </div>
+        )}
         <p className="text-muted-foreground mt-2 text-xs">
           지역 적합도는 우리 우선순위 중 지역에 대응하는 축만으로 계산해요(통근은
-          교통계획으로 반영, 가격·신축 등 대응 지표가 없는 축은 제외). 지표는 현재
-          테스트용 데이터입니다.
+          교통계획으로 반영, 가격·신축 등 대응 지표가 없는 축은 제외). 공급은 실
+          세대수로 산정하고, 나머지 지표는 채점 루브릭 기준의 판단값이라 공식
+          지구계획으로 확인이 필요해요.
         </p>
       </section>
+
+      {area.aiInsight && (
+        <section className="border-border bg-surface-muted rounded-xl border p-4">
+          <div className="flex items-center gap-1.5">
+            <span aria-hidden>✨</span>
+            <h2 className="text-sm font-semibold">AI가 정리한 지역 정보</h2>
+          </div>
+          <p className="mt-2 text-sm leading-relaxed">{area.aiInsight}</p>
+          <p className="text-muted-foreground mt-2 text-xs">
+            AI가 공식 발표 자료를 바탕으로 생성한 참고 정보예요. 점수(적합도)에는
+            반영되지 않고, 사실과 다를 수 있으니 공식 공고·계획으로 확인하세요.
+          </p>
+        </section>
+      )}
 
       {candidate ? (
         <button

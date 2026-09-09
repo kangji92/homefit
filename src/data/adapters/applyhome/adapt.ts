@@ -2,8 +2,14 @@
 // 아니라 청약홈이 줄 수 있는 슬라이스(lifecycle·일정·입주·근거)만. metrics·통근·
 // 분양가는 다른 소스와 repository에서 병합한다. (presale-rights.md §8,§10)
 
-import type { PresaleLifecycle, PresalePhase, Provenance } from "@/domain/types";
-import type { ApplyhomeAptRaw } from "./types";
+import type {
+  ComplexMetrics,
+  PresaleHome,
+  PresaleLifecycle,
+  PresalePhase,
+  Provenance,
+} from "@/domain/types";
+import type { ApplyhomeAptRaw, ApplyhomeMdlRaw } from "./types";
 
 // ── lifecycle 파생 (co-located: adapter 체인에 런타임 sibling import를 두지 않아
 //    strip-types 스크립트에서도 import 가능). 청약홈은 전매제한/전매 시점을 주지
@@ -112,4 +118,92 @@ export function adaptAptList(
   today: string,
 ): AdaptedAnnouncement[] {
   return raws.map((r) => adaptAptDetail(r, today));
+}
+
+// ── 주택형별(Mdl) → 분양가·평형 파생 ──────────────────────
+export interface MdlDerived {
+  basePriceManwon?: number; // 대표(중앙값)
+  priceMin?: number;
+  priceMax?: number;
+  sizesPyeong: number[]; // 공급 평형(㎡→평)
+}
+
+function median(xs: number[]): number {
+  const s = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
+}
+
+/** 주택형 rows → 분양가 밴드 + 공급 평형 */
+export function adaptAptMdl(rows: ApplyhomeMdlRaw[]): MdlDerived {
+  const amounts = rows
+    .map((r) => num(r.LTTOT_TOP_AMOUNT))
+    .filter((v): v is number => v !== undefined && v > 0);
+  const sizes = [
+    ...new Set(
+      rows
+        .map((r) => num(r.SUPLY_AR))
+        .filter((v): v is number => v !== undefined && v > 0)
+        .map((ar) => Math.round(ar / 3.3058)),
+    ),
+  ].sort((a, b) => a - b);
+  return {
+    basePriceManwon: amounts.length ? median(amounts) : undefined,
+    priceMin: amounts.length ? Math.min(...amounts) : undefined,
+    priceMax: amounts.length ? Math.max(...amounts) : undefined,
+    sizesPyeong: sizes,
+  };
+}
+
+// ── 공고 + 파생 → PresaleHome (repository 병합용) ──────────
+const PLACEHOLDER_METRICS: ComplexMetrics = {
+  education: 60,
+  infrastructure: 60,
+  environment: 60,
+  futurePotential: 65,
+};
+
+export interface ToPresaleOpts {
+  regionId: string;
+  fallbackMoveInYear: number; // a.moveInYear 없을 때
+  mdl?: MdlDerived;
+  metrics?: ComplexMetrics; // 미지정 시 placeholder
+  commuteMinutes?: Record<string, number>; // 미지정 시 {}(통근 데이터 없음)
+}
+
+/**
+ * 청약홈 공고를 PresaleHome으로 변환. 분양가·평형은 Mdl에서, metrics·통근은
+ * 아직 소스가 없어 placeholder/빈값(honest gap). 값 없음은 undefined 유지.
+ */
+export function toPresaleHome(
+  a: AdaptedAnnouncement,
+  opts: ToPresaleOpts,
+): PresaleHome {
+  const base = opts.mdl?.basePriceManwon;
+  const offering = base
+    ? {
+        basePrice: {
+          manwon: base,
+          valueProvenance: "sourced" as const,
+          source: a.provenance,
+        },
+      }
+    : undefined;
+  return {
+    kind: "presale",
+    id: a.id,
+    name: a.name,
+    regionId: opts.regionId,
+    price: base
+      ? { sale: { representative: base, min: opts.mdl?.priceMin, max: opts.mdl?.priceMax } }
+      : {},
+    sizesPyeong: opts.mdl?.sizesPyeong ?? [],
+    commuteMinutes: opts.commuteMinutes ?? {},
+    metrics: opts.metrics ?? PLACEHOLDER_METRICS,
+    moveInYear: a.moveInYear ?? opts.fallbackMoveInYear,
+    households: a.households,
+    subscription: a.subscription,
+    lifecycle: a.lifecycle,
+    offering,
+  };
 }

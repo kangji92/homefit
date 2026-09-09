@@ -12,6 +12,10 @@ const COMMUTE_DONGTAN = {
   gangnam: 55, pangyo: 45, yeouido: 70, gwanghwamun: 75,
   jamsil: 50, magok: 85, "guro-gasan": 65,
 };
+const COMMUTE_UIWANG = {
+  gangnam: 45, pangyo: 30, yeouido: 50, gwanghwamun: 55,
+  jamsil: 50, magok: 60, "guro-gasan": 30,
+};
 
 // 공식 공고 근거(mock). 실제는 청약홈 공고 URL·검증일.
 const officialSrc = (id: string, verified = true): Provenance => ({
@@ -120,6 +124,82 @@ export const MOCK_PRESALES: readonly PresaleHome[] = [
     },
     offering: {
       basePrice: { manwon: 61000, valueProvenance: "sourced", source: officialSrc("2026GEOMDAN-C") },
+    },
+  },
+
+  // ── 의왕역·의왕시청역 최근 분양(청약홈 실데이터) ──────────
+  // 가격(분양가 중앙값)·평형·세대수·입주·lifecycle = 청약홈 실데이터,
+  // 통근 = 의왕시 기준 추정, metrics = 추정. 셋 다 청약 종료 상태.
+  {
+    kind: "presale",
+    id: "presale-uiwang-hanshin",
+    name: "의왕역 한신더휴 (분양)",
+    regionId: "uiwang",
+    price: { sale: { representative: 79100, min: 56300, max: 94000 } },
+    sizesPyeong: [21, 25, 32, 36],
+    commuteMinutes: COMMUTE_UIWANG,
+    metrics: { education: 74, infrastructure: 76, environment: 72, futurePotential: 82 },
+    moveInYear: 2029,
+    households: 108,
+    stationDistanceM: 500,
+    schoolNearby: true,
+    subscription: { announcementDate: "2026-08-13", scheduleNote: "청약 종료" },
+    lifecycle: {
+      phase: "subscription_closed",
+      phaseSince: "2026-08-13",
+      lastVerifiedAt: "2026-09-09",
+      source: officialSrc("2026000377"),
+    },
+    offering: {
+      basePrice: { manwon: 79100, valueProvenance: "sourced", source: officialSrc("2026000377") },
+    },
+  },
+  {
+    kind: "presale",
+    id: "presale-uiwang-skview",
+    name: "의왕역 SK VIEW (분양)",
+    regionId: "uiwang",
+    price: { sale: { representative: 89500, min: 39500, max: 109800 } },
+    sizesPyeong: [17, 21, 26, 35],
+    commuteMinutes: COMMUTE_UIWANG,
+    metrics: { education: 74, infrastructure: 76, environment: 72, futurePotential: 82 },
+    moveInYear: 2029,
+    households: 820,
+    stationDistanceM: 400,
+    schoolNearby: true,
+    subscription: { announcementDate: "2026-07-10", scheduleNote: "청약 종료" },
+    lifecycle: {
+      phase: "subscription_closed",
+      phaseSince: "2026-07-10",
+      lastVerifiedAt: "2026-09-09",
+      source: officialSrc("2026000301"),
+    },
+    offering: {
+      basePrice: { manwon: 89500, valueProvenance: "sourced", source: officialSrc("2026000301") },
+    },
+  },
+  {
+    kind: "presale",
+    id: "presale-uiwang-cityhall-ipark",
+    name: "의왕시청역 SK VIEW IPARK (분양)",
+    regionId: "uiwang",
+    price: { sale: { representative: 84365, min: 49640, max: 100720 } },
+    sizesPyeong: [20, 22, 25, 31, 35],
+    commuteMinutes: COMMUTE_UIWANG,
+    metrics: { education: 74, infrastructure: 74, environment: 72, futurePotential: 84 },
+    moveInYear: 2030,
+    households: 958,
+    stationDistanceM: 600,
+    schoolNearby: true,
+    subscription: { announcementDate: "2025-11-21", scheduleNote: "청약 종료" },
+    lifecycle: {
+      phase: "subscription_closed",
+      phaseSince: "2025-11-21",
+      lastVerifiedAt: "2026-09-09",
+      source: officialSrc("2025000549"),
+    },
+    offering: {
+      basePrice: { manwon: 84365, valueProvenance: "sourced", source: officialSrc("2025000549") },
     },
   },
 ];
