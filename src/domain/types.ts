@@ -256,6 +256,10 @@ export interface Area {
   summary?: string;
   areaMetrics: AreaMetrics;
   targetMoveInYear?: number;
+  /** 계획 세대수(실 발표치) — supply 지표를 결정적으로 환산하는 근거 */
+  plannedHouseholds?: number;
+  /** 지역지표 점수의 핵심 근거(루브릭 적용 요약). 표시용. */
+  metricsBasis?: string;
   /** 지역 중심 기준(선택) */
   commuteMinutes?: Record<string, number>;
   /**
