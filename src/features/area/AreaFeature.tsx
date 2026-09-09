@@ -86,6 +86,20 @@ export function AreaFeature({ id }: { id: string }) {
         </p>
       </section>
 
+      {area.aiInsight && (
+        <section className="border-border bg-surface-muted rounded-xl border p-4">
+          <div className="flex items-center gap-1.5">
+            <span aria-hidden>✨</span>
+            <h2 className="text-sm font-semibold">AI가 정리한 지역 정보</h2>
+          </div>
+          <p className="mt-2 text-sm leading-relaxed">{area.aiInsight}</p>
+          <p className="text-muted-foreground mt-2 text-xs">
+            AI가 공식 발표 자료를 바탕으로 생성한 참고 정보예요. 점수(적합도)에는
+            반영되지 않고, 사실과 다를 수 있으니 공식 공고·계획으로 확인하세요.
+          </p>
+        </section>
+      )}
+
       {candidate ? (
         <button
           type="button"
