@@ -4,7 +4,9 @@
 // (node --env-file=.env.local --experimental-strip-types)
 
 import { writeFileSync } from "node:fs";
+import { WORK_AREAS } from "../src/data/workAreas.ts";
 import { fetchAptDetail, fetchAptMdl } from "../src/data/adapters/applyhome/client.ts";
+import { commuteFromAddress } from "../src/data/adapters/applyhome/commute.ts";
 import {
   adaptAptDetail,
   adaptAptMdl,
@@ -28,8 +30,14 @@ const homes = [];
 for (const { raw, ann } of anns) {
   const mno = raw.HOUSE_MANAGE_NO;
   const mdl = mno ? adaptAptMdl(await fetchAptMdl(mno)) : undefined;
+  const commuteMinutes = commuteFromAddress(raw.HSSPLY_ADRES, WORK_AREAS);
   homes.push(
-    toPresaleHome(ann, { regionId: "presale-capital", fallbackMoveInYear, mdl }),
+    toPresaleHome(ann, {
+      regionId: "presale-capital",
+      fallbackMoveInYear,
+      mdl,
+      commuteMinutes,
+    }),
   );
 }
 
