@@ -69,14 +69,16 @@ let basisApproved = false;
 for (const src of MOLIT_SOURCES) {
   if (!TARGET_IDS.has(src.complexId)) continue;
   const list = await sigunguList(src.lawdCd);
-  // 정확 일치 우선(부분일치는 '더샵' 등 접미사로 오단지 매칭 위험).
+  // kaptName 별칭이 있으면 그 이름으로(실거래명과 다른 경우). 정확 일치 우선
+  // (부분일치는 '더샵' 등 접미사로 오단지 매칭 위험).
+  const lookup = src.kaptName ?? src.aptName;
   const matches = list.filter(
-    (r) => r.kaptName && norm(r.kaptName).includes(norm(src.aptName)),
+    (r) => r.kaptName && norm(r.kaptName).includes(norm(lookup)),
   );
   const hit =
-    matches.find((r) => norm(r.kaptName) === norm(src.aptName)) ?? matches[0];
+    matches.find((r) => norm(r.kaptName) === norm(lookup)) ?? matches[0];
   if (!hit) {
-    console.log(`✗ ${src.complexId}: '${src.aptName}' kaptCode 매칭 실패 (목록 ${list.length}건)`);
+    console.log(`✗ ${src.complexId}: '${lookup}' kaptCode 매칭 실패 (목록 ${list.length}건)`);
     continue;
   }
   const basis = await basisInfo(hit.kaptCode);
