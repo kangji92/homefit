@@ -1,12 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { MOCK_COMPLEXES } from "@/data/mock/complexes";
+import { AUTO_COMPLEXES } from "@/data/mock/complexes.generated";
 import { MOCK_REGIONS } from "@/data/mock/regions";
 import { mockComplexRepository, mockRegionRepository } from "./mock";
 
 describe("mockComplexRepository", () => {
-  it("list()는 모든 단지를 반환한다", async () => {
+  it("list()는 큐레이션+자동수집 단지를 모두 반환한다", async () => {
     const all = await mockComplexRepository.list();
-    expect(all).toHaveLength(MOCK_COMPLEXES.length);
+    expect(all).toHaveLength(MOCK_COMPLEXES.length + AUTO_COMPLEXES.length);
   });
 
   it("regionId로 필터링한다", async () => {

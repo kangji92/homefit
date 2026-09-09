@@ -17,7 +17,8 @@
     "ingest:prices": "node --experimental-strip-types scripts/ingest-prices.ts",
     "ingest:kapt": "node --env-file=.env.local --experimental-strip-types scripts/ingest-kapt.ts",
     "ingest:applyhome": "node --env-file=.env.local --experimental-strip-types scripts/ingest-applyhome.ts",
-    "ingest:schools": "node --env-file=.env.local --experimental-strip-types scripts/ingest-schools.ts"
+    "ingest:schools": "node --env-file=.env.local --experimental-strip-types scripts/ingest-schools.ts",
+    "ingest:complexes": "node --env-file=.env.local --experimental-strip-types scripts/ingest-complexes.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
