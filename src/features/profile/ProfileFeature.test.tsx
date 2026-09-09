@@ -1,8 +1,14 @@
-import { beforeEach, describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useHouseholdStore } from "@/stores/householdStore";
 import { ProfileFeature } from "./ProfileFeature";
+
+vi.mock("next-auth/react", () => ({
+  useSession: () => ({ data: null, status: "unauthenticated" }),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+}));
 
 beforeEach(() => {
   localStorage.clear();
