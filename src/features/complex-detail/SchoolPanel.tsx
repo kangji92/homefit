@@ -17,8 +17,23 @@ export function SchoolPanel({ regionId }: { regionId: string }) {
     <section className="bg-surface border-border rounded-xl border p-4">
       <div className="flex items-center gap-1.5">
         <span aria-hidden>🎒</span>
-        <h2 className="text-sm font-semibold">학군 · {sigungu} 학교 현황</h2>
+        <h2 className="text-sm font-semibold">{sigungu} 학교 수 (참고)</h2>
       </div>
+
+      <p className="bg-surface-muted text-muted-foreground mt-2 rounded-md p-2 text-xs leading-relaxed">
+        초·중학교는 <span className="text-foreground font-medium">통학구역(학구도)</span>
+        으로 배정돼요. 아래는 {sigungu} 전체 학교 수일 뿐, 이 단지의 배정 학교가
+        아니에요. 실제 배정 초·중학교는{" "}
+        <a
+          href="https://schoolzone.emac.kr/"
+          target="_blank"
+          rel="noreferrer"
+          className="text-primary underline"
+        >
+          학구도안내서비스
+        </a>
+        에서 주소로 확인하세요.
+      </p>
 
       <ul className="mt-3 grid grid-cols-3 gap-2">
         {LEVELS.map(({ key, label }) => (
@@ -43,8 +58,7 @@ export function SchoolPanel({ regionId }: { regionId: string }) {
       )}
 
       <p className="text-muted-foreground mt-3 text-xs">
-        공공데이터(전국 학교 위치 표준데이터) 기준 · {sigungu} 전체 집계예요. 실제
-        배정 학교·학군은 주소·학구도로 확인하세요.
+        공공데이터(전국 학교 위치 표준데이터) 기준 · {sigungu} 전체 집계.
       </p>
     </section>
   );
