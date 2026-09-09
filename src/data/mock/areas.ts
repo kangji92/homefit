@@ -72,6 +72,87 @@ export const MOCK_AREAS: readonly Area[] = [
     aiInsight:
       "3기신도시가 아닌 성북 도심 재개발이에요. 13구역 신속통합기획이 2026년 확정돼 총 약 5,900세대 규모로 계획됩니다. 도심이라 기존 생활 인프라가 강점이지만, 사업 초기 단계라 분양·입주는 수년 뒤가 될 전망이에요.",
   },
+
+  // ── 신규 공공택지 (2021~2023 발표) ──────────────────────
+  {
+    kind: "area",
+    id: "area-gwangmyeong-siheung",
+    name: "광명시흥",
+    regionId: "capital",
+    summary: "3기신도시 최대 규모(약 6.7만 가구)·GTX-B/신안산선 연계",
+    areaMetrics: { plannedInfra: 80, transitPlan: 82, supply: 95, futurePotential: 86, environment: 68 },
+    targetMoveInYear: 2032,
+    aiInsight:
+      "3기신도시 중 최대 규모(약 6.7만 가구)예요. GTX-B·신안산선·7호선·KTX광명역 등 광역철도 연계로 서울 도심 20분대 진입을 목표로 합니다. 자족도시로 조성되지만 규모가 커 완성까지 시간이 걸려요.",
+  },
+  {
+    kind: "area",
+    id: "area-guri-topyeong2",
+    name: "구리 토평2",
+    regionId: "capital",
+    summary: "한강변 신규 택지(약 1.85만 가구)·서울 동부 인접",
+    areaMetrics: { plannedInfra: 68, transitPlan: 66, supply: 60, futurePotential: 74, environment: 78 },
+    targetMoveInYear: 2030,
+    aiInsight:
+      "약 1.85만 가구 규모의 한강변 신규 택지(2023 발표)예요. 서울 동부(강동·잠실)에 인접한 위치가 강점입니다. 지구지정 초기 단계라 입주까지는 시간이 걸려요.",
+  },
+  {
+    kind: "area",
+    id: "area-osan-segyo3",
+    name: "오산 세교3",
+    regionId: "capital",
+    summary: "반도체 클러스터 중심·KTX/GTX-C 연장 계획(약 3.1만 가구)",
+    areaMetrics: { plannedInfra: 66, transitPlan: 72, supply: 76, futurePotential: 74, environment: 66 },
+    targetMoveInYear: 2031,
+    aiInsight:
+      "약 3.1만 가구 규모(2023 발표). 화성·용인·평택 반도체 클러스터 중심부에 있고, KTX·GTX-C 연장 등 철도 계획으로 서울 접근성이 기대돼요.",
+  },
+  {
+    kind: "area",
+    id: "area-yongin-idong",
+    name: "용인 이동",
+    regionId: "capital",
+    summary: "용인 반도체 국가산단 배후 주거지(약 1.6만 가구)",
+    areaMetrics: { plannedInfra: 64, transitPlan: 58, supply: 60, futurePotential: 80, environment: 66 },
+    targetMoveInYear: 2031,
+    aiInsight:
+      "약 1.6만 가구 규모(2023 발표). 용인 반도체 국가산단 배후 주거지로 계획돼 첨단산업 종사자 수요가 핵심이에요. 서울 도심과는 거리가 있는 편입니다.",
+  },
+
+  // ── 1기 신도시 재건축(노후계획도시 특별법 선도지구, 2024 선정) ──
+  {
+    kind: "area",
+    id: "area-bundang-redev",
+    name: "분당 재건축(선도지구)",
+    regionId: "capital",
+    summary: "1기 신도시 재건축 선도지구·신분당선/판교 접근성",
+    areaMetrics: { plannedInfra: 88, transitPlan: 82, supply: 55, futurePotential: 88, environment: 80 },
+    targetMoveInYear: 2030,
+    aiInsight:
+      "1기 신도시 재건축 선도지구예요(2024 선정, 2027 착공·2030 입주 목표). 성숙한 생활 인프라와 신분당선·판교 접근성이 강점입니다. 재건축이라 순증 공급은 적고 분담금·이주 등 변수가 있어요.",
+  },
+  {
+    kind: "area",
+    id: "area-pyeongchon-redev",
+    name: "평촌 재건축(선도지구)",
+    regionId: "capital",
+    summary: "1기 신도시 재건축 선도지구(3개 구역 약 5,460세대)",
+    areaMetrics: { plannedInfra: 84, transitPlan: 74, supply: 52, futurePotential: 82, environment: 76 },
+    targetMoveInYear: 2030,
+    aiInsight:
+      "1기 신도시 재건축 선도지구예요(평촌 3개 구역 약 5,460세대, 2024 선정). 학군·인프라가 성숙한 안양 평촌의 재정비로 2027 착공·2030 입주 목표입니다. 재건축 특성상 순증 공급은 제한적이에요.",
+  },
+  {
+    kind: "area",
+    id: "area-sanbon-redev",
+    name: "산본 재건축(선도지구)",
+    regionId: "capital",
+    summary: "1기 신도시 재건축 선도지구(약 4,620세대)·4호선",
+    areaMetrics: { plannedInfra: 78, transitPlan: 70, supply: 52, futurePotential: 78, environment: 76 },
+    targetMoveInYear: 2030,
+    aiInsight:
+      "1기 신도시 재건축 선도지구예요(산본 약 4,620세대, 2024 선정). 4호선 산본신도시의 재정비로 2027 착공·2030 입주 목표입니다. 성숙 인프라가 강점이나 재건축 변수(분담금·이주)가 있어요.",
+  },
 ];
 
 export function getMockArea(id: string): Area | undefined {
