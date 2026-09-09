@@ -6,15 +6,26 @@ export interface SchoolRaw {
   schoolSe?: string; // 초등학교 | 중학교 | 고등학교 | ...
   lnmadr?: string; // 지번주소
   rdnmadr?: string; // 도로명주소
+  latitude?: string;
+  longitude?: string;
 }
 
 export type SchoolLevel = "elementary" | "middle" | "high";
+
+/** 개별 학교 좌표(최근접 배정후보 계산용). la=위도, lo=경도 */
+export interface SchoolPoint {
+  nm: string;
+  lv: SchoolLevel;
+  la: number;
+  lo: number;
+}
 
 export interface SigunguSchools {
   elementary: number;
   middle: number;
   high: number;
   names: Record<SchoolLevel, string[]>;
+  points: SchoolPoint[];
 }
 
 const LEVEL: Record<string, SchoolLevel> = {
@@ -48,9 +59,40 @@ export function aggregateBySigungu(
         middle: 0,
         high: 0,
         names: { elementary: [], middle: [], high: [] },
+        points: [],
       });
     s[level] += 1;
     if (s.names[level].length < NAME_CAP) s.names[level].push(r.schoolNm);
+    const la = Number(r.latitude);
+    const lo = Number(r.longitude);
+    if (Number.isFinite(la) && Number.isFinite(lo)) {
+      s.points.push({ nm: r.schoolNm, lv: level, la, lo });
+    }
+  }
+  return out;
+}
+
+function haversineKm(a: { la: number; lo: number }, b: { la: number; lo: number }) {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b.la - a.la);
+  const dLng = toRad(b.lo - a.lo);
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.la)) * Math.cos(toRad(b.la)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+
+/** 좌표에서 급별 가장 가까운 학교(배정 후보, 배정과 다를 수 있음). */
+export function nearestByLevel(
+  point: { la: number; lo: number },
+  schools: SchoolPoint[],
+): Partial<Record<SchoolLevel, { nm: string; km: number }>> {
+  const out: Partial<Record<SchoolLevel, { nm: string; km: number }>> = {};
+  for (const s of schools) {
+    const km = haversineKm(point, s);
+    const cur = out[s.lv];
+    if (!cur || km < cur.km) out[s.lv] = { nm: s.nm, km: Math.round(km * 10) / 10 };
   }
   return out;
 }
