@@ -23,8 +23,17 @@ export interface ApplyhomeAptRaw {
   PBLANC_URL?: string; // 공고 URL
 }
 
-export interface ApplyhomeResponse {
-  data?: ApplyhomeAptRaw[];
+/** 주택형별 raw (getAPTLttotPblancMdl) — 분양가·공급면적 */
+export interface ApplyhomeMdlRaw {
+  HOUSE_MANAGE_NO?: string;
+  HOUSE_TY?: string; // 주택형(전용면적)
+  SUPLY_AR?: string; // 공급면적 ㎡
+  SUPLY_HSHLDCO?: number | string; // 공급 세대수
+  LTTOT_TOP_AMOUNT?: string; // 분양 최고금액(만원)
+}
+
+export interface ApplyhomeResponse<T = ApplyhomeAptRaw> {
+  data?: T[];
   totalCount?: number;
   currentCount?: number;
 }

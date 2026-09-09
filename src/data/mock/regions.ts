@@ -11,4 +11,6 @@ export const MOCK_REGIONS: readonly Region[] = [
   { id: "gunpo", name: "군포·산본", summary: "4호선 산본신도시, 금정역 환승" },
   { id: "uiwang", name: "의왕", summary: "인덕원 인접 신축, 판교 접근성" },
   { id: "gamil", name: "하남 감일지구", summary: "강남 접근성 좋은 하남 서부 택지지구" },
+  // 청약홈 공고 기반 분양(수도권) — regionId 미세분류 전 임시 그룹
+  { id: "presale-capital", name: "수도권 분양(청약홈)", summary: "청약홈 공고 실시간 반영" },
 ];
