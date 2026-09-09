@@ -9,6 +9,7 @@ import { upcomingSubscriptions } from "@/domain/subscription";
 import { useAreas, useHomes, useRegions } from "@/hooks/queries";
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { AreaCard } from "@/features/area/AreaCard";
+import { LoginButton } from "@/features/auth/LoginButton";
 import { ConditionsSummary } from "./ConditionsSummary";
 import { RecommendationCard } from "./RecommendationCard";
 import { UpcomingSubscriptions } from "./UpcomingSubscriptions";
@@ -88,6 +89,7 @@ export function HomeFeature() {
 
   return (
     <PageContainer className="max-w-2xl space-y-6">
+      <LoginButton />
       <ConditionsSummary conditions={conditions} />
       <UpcomingSubscriptions items={subscriptions} />
       {renderContent()}

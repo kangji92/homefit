@@ -11,13 +11,18 @@ export function LoginButton() {
   }
 
   if (session?.user) {
+    const provider = (session.user as { id?: string }).id?.split(":")[0];
+    const providerLabel =
+      provider === "naver" ? "네이버" : provider === "kakao" ? "카카오" : "소셜";
     return (
       <div className="border-border bg-surface flex items-center justify-between gap-3 rounded-lg border p-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">
             {session.user.name ?? "로그인됨"}
           </p>
-          <p className="text-muted-foreground text-xs">카카오 계정으로 로그인</p>
+          <p className="text-muted-foreground text-xs">
+            {providerLabel} 계정으로 로그인
+          </p>
         </div>
         <button
           type="button"
@@ -31,7 +36,11 @@ export function LoginButton() {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="border-border bg-surface space-y-2 rounded-xl border p-4">
+      <p className="text-sm font-medium">로그인</p>
+      <p className="text-muted-foreground pb-1 text-xs">
+        로그인하면 다른 기기·브라우저에서도 내 조건·관심이 그대로 이어져요.
+      </p>
       <button
         type="button"
         onClick={() => signIn("kakao")}

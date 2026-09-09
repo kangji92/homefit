@@ -8,7 +8,6 @@ import type {
   MaritalStatus,
 } from "@/domain/types";
 import { useHouseholdStore } from "@/stores/householdStore";
-import { LoginButton } from "@/features/auth/LoginButton";
 import { EligibilityOverview } from "./EligibilityOverview";
 
 const labelCls = "text-sm font-medium";
@@ -64,8 +63,6 @@ export function ProfileFeature() {
           판정에 반영돼요.
         </p>
       </div>
-
-      <LoginButton />
 
       <div>
         <label htmlFor="maritalStatus" className={labelCls}>

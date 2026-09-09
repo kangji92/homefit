@@ -17,6 +17,11 @@ const { replaceMock, useComplexesMock, useRegionsMock } = vi.hoisted(() => ({
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: replaceMock }),
 }));
+vi.mock("next-auth/react", () => ({
+  useSession: () => ({ data: null, status: "unauthenticated" }),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+}));
 vi.mock("@/hooks/queries", () => ({
   useComplexes: () => useComplexesMock(),
   useHomes: () => useComplexesMock(),
