@@ -48,6 +48,17 @@ export const MOCK_AREAS: readonly Area[] = [
     areaMetrics: { plannedInfra: 70, transitPlan: 66, supply: 72, futurePotential: 70, environment: 66 },
     targetMoveInYear: 2030,
   },
+  // 도심 재개발(3기신도시 아님) — 신속통합기획 단계라 분양·입주 수년 후.
+  // 공공 API 데이터 없음: areaMetrics·일정 전부 수동 추정(뉴스·정비몽땅 기반).
+  {
+    kind: "area",
+    id: "area-jangwi",
+    name: "장위뉴타운(성북)",
+    regionId: "capital",
+    summary: "성북 도심 재개발 약 5,900세대 · 13구역 신통기획 확정(2026)",
+    areaMetrics: { plannedInfra: 74, transitPlan: 64, supply: 78, futurePotential: 82, environment: 60 },
+    // 착공·분양 미정 → 입주 예정연도 미상(undefined)
+  },
 ];
 
 export function getMockArea(id: string): Area | undefined {

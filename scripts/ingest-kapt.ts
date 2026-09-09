@@ -55,15 +55,11 @@ async function sigunguList(code: string) {
   return listCache.get(code)!;
 }
 
-// 기본정보 서비스 후보(버전 드리프트 대비)
+// 기본정보 서비스 — V5(현행). getAphusBassInfoV5: kaptdaCnt·kaptUsedate 등.
 async function basisInfo(kaptCode: string) {
-  for (const svc of [
-    "AptBasisInfoServiceV4/getAphusBassInfoV4",
-    "AptBasisInfoServiceV3/getAphusBassInfoV3",
-  ]) {
-    const r = await getJson(svc, { kaptCode });
-    if (r.ok && r.list.length) return { svc, info: r.list[0] as Record<string, string> };
-  }
+  const svc = "AptBasisInfoServiceV5/getAphusBassInfoV5";
+  const r = await getJson(svc, { kaptCode });
+  if (r.ok && r.list.length) return { svc, info: r.list[0] as Record<string, string> };
   return null;
 }
 
@@ -73,7 +69,12 @@ let basisApproved = false;
 for (const src of MOLIT_SOURCES) {
   if (!TARGET_IDS.has(src.complexId)) continue;
   const list = await sigunguList(src.lawdCd);
-  const hit = list.find((r) => r.kaptName && norm(r.kaptName).includes(norm(src.aptName)));
+  // 정확 일치 우선(부분일치는 '더샵' 등 접미사로 오단지 매칭 위험).
+  const matches = list.filter(
+    (r) => r.kaptName && norm(r.kaptName).includes(norm(src.aptName)),
+  );
+  const hit =
+    matches.find((r) => norm(r.kaptName) === norm(src.aptName)) ?? matches[0];
   if (!hit) {
     console.log(`✗ ${src.complexId}: '${src.aptName}' kaptCode 매칭 실패 (목록 ${list.length}건)`);
     continue;
