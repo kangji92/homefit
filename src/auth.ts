@@ -8,4 +8,19 @@ import Naver from "next-auth/providers/naver";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Kakao, Naver],
+  callbacks: {
+    // provider별 계정 id를 토큰에 남긴다(계정 저장 키).
+    jwt({ token, account }) {
+      if (account) (token as { provider?: string }).provider = account.provider;
+      return token;
+    },
+    // 세션에 안정적 user id 노출: "provider:sub"
+    session({ session, token }) {
+      const provider = (token as { provider?: string }).provider ?? "x";
+      if (session.user) {
+        (session.user as { id?: string }).id = `${provider}:${token.sub}`;
+      }
+      return session;
+    },
+  },
 });

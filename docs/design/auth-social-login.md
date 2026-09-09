@@ -13,7 +13,7 @@ MVP는 로그인 없이 localStorage로만 동작했다(우리 조건·관심·�
 |------|------|------|
 | **1차(이번)** | 카카오 로그인/로그아웃 + 사용자(닉네임) 표시. 비로그인=게스트(기존 localStorage 유지) | AUTH_KAKAO_*·AUTH_SECRET |
 | 2차 | 네이버 provider 추가 | AUTH_NAVER_* |
-| 3차 | **Supabase per-user 저장**(조건/후보/프로필). 로그인 시 서버 hydrate, 변경 시 upsert. 게스트→로그인 시 로컬 데이터 이관 | Supabase 프로젝트 |
+| 3차(구현) | **Supabase per-user 저장**(조건/후보/프로필). 로그인 시 서버 hydrate, 변경 시 upsert. 게스트→로그인 시 로컬 데이터 이관 | Supabase 프로젝트 |
 
 ## 원칙
 - **게스트 우선**: 로그인 안 해도 앱은 100% 동작(현행 유지). 로그인은 "기기 간 유지"를 위한 부가.
@@ -36,10 +36,20 @@ AUTH_NAVER_ID / AUTH_NAVER_SECRET    # 2차
 ```
 Vercel에도 동일 등록(서버 전용 — NEXT_PUBLIC_ 아님).
 
-## 3차 데이터 모델 (예고)
+## 3차 구현 (계정 동기화)
+- 테이블 `user_state(user_id pk, data jsonb, updated_at)` — 세 스토어 슬라이스를
+  jsonb 1건으로(`supabase/user_state.sql`). **RLS enable + 정책 없음** → anon
+  접근 차단, **서버 service role**만 read/write(본인 데이터만 세션 id로).
+- 세션: `session.user.id = "provider:sub"`(auth.ts 콜백).
+- 서버 액션 `sync-actions.ts`(loadUserState/saveUserState) — 세션 id + service
+  role 클라이언트(`supabase-admin.ts`). **env 없으면 no-op**(게스트).
+- 클라이언트 `useAccountSync`(AccountSync, 레이아웃 마운트): 로그인 시 서버 상태
+  적용(없으면 로컬로 seed=게스트 이관), 이후 스토어 변경을 1.2s 디바운스 저장.
+  로드 완료 전 저장 금지(루프 방지).
+
+### 필요 env (서버 전용)
 ```
-user_conditions(user_id pk, conditions jsonb, priorities jsonb, dealbreakers jsonb)
-user_candidates(user_id, kind, id, favorite, notes jsonb, added_at)
-user_profile(user_id pk, profile jsonb)
+SUPABASE_URL(또는 NEXT_PUBLIC_SUPABASE_URL)
+SUPABASE_SERVICE_ROLE_KEY
 ```
-RLS로 본인 데이터만. 로그인 시 store를 서버값으로 hydrate.
+미설정 시 로그인은 되지만 동기화만 비활성(게스트처럼 로컬 저장).

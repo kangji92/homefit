@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
 import { AuthSessionProvider } from "@/providers/session-provider";
+import { AccountSync } from "@/features/auth/AccountSync";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="bg-background text-foreground min-h-full">
         <AuthSessionProvider>
+          <AccountSync />
           <QueryProvider>{children}</QueryProvider>
         </AuthSessionProvider>
       </body>
