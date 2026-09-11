@@ -6,6 +6,7 @@
 import { MOCK_AREAS, getMockArea } from "@/data/mock/areas";
 import { MOCK_PRESALES } from "@/data/mock/presales";
 import { APPLYHOME_PRESALES } from "@/data/mock/applyhomePresales";
+import { withMockLocation } from "@/data/mock/coordinates";
 import type { AreaRepository, ComplexListParams, HomeRepository } from "./types";
 import { mockComplexRepository, mockRegionRepository } from "./mock";
 import {
@@ -39,23 +40,24 @@ export const homeRepository: HomeRepository = {
     const presales = params?.regionId
       ? allPresales.filter((p) => p.regionId === params.regionId)
       : allPresales;
-    return [...existing, ...presales];
+    // presale은 항상 mock이므로 큐레이션 좌표 병합. existing은 소스 repo가 좌표 담당.
+    return [...existing, ...presales.map(withMockLocation)];
   },
   async getById(id: string) {
-    return (
-      (await complexRepository.getById(id)) ??
-      allPresales.find((p) => p.id === id) ??
-      null
-    );
+    const existing = await complexRepository.getById(id);
+    if (existing) return existing;
+    const presale = allPresales.find((p) => p.id === id);
+    return presale ? withMockLocation(presale) : null;
   },
 };
 
-// 개발 예정지 — mock(실데이터는 개발계획 adapter로 후속).
+// 개발 예정지 — mock(실데이터는 개발계획 adapter로 후속). 대표 좌표 병합.
 export const areaRepository: AreaRepository = {
   async list() {
-    return [...MOCK_AREAS];
+    return MOCK_AREAS.map(withMockLocation);
   },
   async getById(id: string) {
-    return getMockArea(id) ?? null;
+    const found = getMockArea(id);
+    return found ? withMockLocation(found) : null;
   },
 };
