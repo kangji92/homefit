@@ -136,7 +136,14 @@ generateStrategies(conditions, profile, listings): HousingStrategy[]
 
 - 생성은 **후보를 넓히는 것**이고, 실행가능성(Affordability·자격)은 **Decision에서
   설명**한다(생성 단계에서 성급히 제외하지 않음 — unknown≠fail).
-- 사용자는 생성된 전략을 **선택/수정/제거**할 수 있다(완전 수동 생성은 향후).
+- 사용자는 생성된 전략을 **제외/보관/선택하는 가벼운 수정만** 한다. **완전 수동
+  Strategy Builder는 MVP 제외.**
+- **강한 필터링(생성 과다 방지)** 【확정】: 전략이 노이즈가 되지 않도록 규칙으로
+  좁힌다. 예 —
+  - `targetRef` 없는 추상적 대기 전략은 **생성하지 않는다**(명확한 Listing/Area
+    근거 필수). `wait_for_area`는 후속.
+  - kind별·targetRef별 **중복 제거**, 후보 상한(예: kind당 상위 N개만).
+  - 명백히 무관한 조합(예: 유주택인데 청약 대기)은 생성 제외.
 
 ---
 
@@ -190,19 +197,19 @@ HomeFit≠AreaFit 직접비교 금지. 자격·전매를 적합도에 안 섞음
 않고, **decision status + 트레이드오프 설명**으로.
 
 ```ts
-type DecisionStatus = "recommended" | "consider" | "blocked" | "needsReview";
+type DecisionStatus = "recommended" | "consider" | "blocked" | "needs_review";
 ```
 결정적 규칙(보수적):
 - **blocked**: 지금 실행 불가가 확정 — affordability.verdict==="short"(현금 부족)
   OR dealbreaker fail OR 필수 자격 fail(전매 restricted 등).
-- **needsReview**: 핵심 미확인 — 자격 판정 전(unknown), 전매 unknown, 데이터 미확인.
+- **needs_review**: 핵심 미확인 — 자격 판정 전(unknown), 전매 unknown, 데이터 미확인.
 - **recommended**: fit 상위 + affordable(ok) + 자격 pass + risk 낮음.
 - **consider**: 실행 가능하나 트레이드오프 있음(중간 fit·현금 빠듯·시점 김 등).
-- 불명확하면 위험 쪽(needsReview/consider). status도 **설명 가능한 rule**.
+- 불명확하면 위험 쪽(needs_review/consider). status도 **설명 가능한 rule**.
 
 비교 출력 예(설명형):
 > A(지금 구축 매수) — **지금 정착 가능, 자격 불확실성 낮음.**
-> B(전세→청약) — **현금 보존 유리하나 당첨·입주 시점 불확실(needsReview).**
+> B(전세→청약) — **현금 보존 유리하나 당첨·입주 시점 불확실(needs_review).**
 > C(분양권) — **주택 적합도 최고이나 지금 필요현금 부족(blocked).**
 
 ---
@@ -294,9 +301,9 @@ interface DecisionMapInput {
 
 - **순수 함수 단위테스트**(결정성): `generateStrategies`(조건별 후보 생성),
   `computeStrategyDecision`(요소 집계), `deriveDecisionStatus`(경계: blocked/
-  needsReview/recommended/consider), timing 파생.
+  needs_review/recommended/consider), timing 파생.
 - 시나리오 픽스처: 시나리오 A/B/C 가구 프로필 → 기대 전략·status 검증.
-- unknown≠fail·자격 미판정→needsReview·현금부족→blocked 등 원칙을 테스트로 고정.
+- unknown≠fail·자격 미판정→needs_review·현금부족→blocked 등 원칙을 테스트로 고정.
 - UI 렌더 테스트(전략 카드·Decision View 요소 노출).
 - 기존 computeHomeFit/AreaFit·자격·현금흐름 테스트 **불변**.
 
@@ -314,16 +321,19 @@ interface DecisionMapInput {
 
 ---
 
-## 16. 미결정 사항 【사용자 확정 요망】
+## 16. 결정 확정 【완료】
 
-1. **Affordability 상세도(MVP)**: "지금 필요현금 + 대략 향후부담"까지만 vs 대출
-   한도·월부담까지. (제안: 전자 — 시뮬은 후속)
-2. **전략 생성 방식**: 자동생성 + 사용자 수정 vs 자동만 vs 수동만. (제안: 자동생성
-   + 선택/제거)
-3. **MVP StrategyKind 범위**: 4종(위) vs 3종(buy_existing·rent_then_apply·
-   buy_presale_right)으로 더 좁게. (제안: 3종부터, 시나리오 A/B/C 커버)
-4. **Decision status 노출 방식**: recommended/consider/blocked/needsReview 배지 vs
-   설명 문장만. (제안: 배지 + 설명 병행)
-5. **홈 재구성 강도**: 홈을 "전략 우선"으로 바꿀지, 별도 `/strategy` 탭 추가로
-   점진 도입할지. (제안: 별도 탭 먼저 → 검증 후 홈 격상)
-6. **targetRef 없는 전략**(막연한 area 대기): Decision View를 어디까지 채울지.
+| # | 항목 | 확정 |
+|---|------|------|
+| 1 | Affordability(MVP) | **지금 필요현금 + 향후 주요 부담**까지만. 대출한도·월상환·정교한 financing 시뮬은 후속. 목적은 금융계산기가 아니라 Strategy 비교 가치 검증. |
+| 2 | 전략 생성 | **자동 생성**(조건+Listing 기반). 사용자는 **제외/보관/선택**의 가벼운 수정만. 완전 수동 Strategy Builder는 MVP 제외. |
+| 3 | MVP StrategyKind | **4종**: `buy_existing`·`apply_presale`·`rent_then_apply`·`buy_presale_right`. `rent_jeonse`·`wait_for_area`는 후속. |
+| 4 | Decision Status | **배지 + 설명**: `recommended`/`consider`/`needs_review`/`blocked`. **status는 단독 결론 금지 — 항상 deterministic reason과 함께.** |
+| 5 | 홈 재구성 | 홈을 바로 갈아엎지 않고 **`/strategy` 화면 먼저 추가**. 가치 검증 후 홈 primary 승격 여부 판단. |
+| 6 | targetRef 없는 대기 전략 | **MVP 제한** — 명확한 Listing/Area 근거 없는 추상적 wait 전략은 자동 생성 안 함. `wait_for_area`는 후속. |
+
+### 추가 원칙 (확정)
+- Strategy 자체의 **새로운 종합점수를 만들지 않는다.**
+- HomeFit/AreaFit/Eligibility/Affordability/Transfer/Risk/Unknown을 **직교 유지.**
+- Strategy generation은 **explainable rule-based**로 시작.
+- generated strategy가 과다해지지 않도록 **강한 필터링 규칙**(§6).
