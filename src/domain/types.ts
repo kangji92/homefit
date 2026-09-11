@@ -77,6 +77,37 @@ export interface Region {
   summary?: string;
 }
 
+/**
+ * 지역 참조 — 계층 확장 가능(시>구>생활권>역세권). MVP는 기존 flat `Region.id`를
+ * 그대로 담고 level은 optional. 자유 문자열 배열로 고정하지 않기 위한 최소 래퍼.
+ */
+export type RegionLevel = "city" | "district" | "neighborhood" | "station_area";
+export interface RegionRef {
+  /** 안정적 식별자. MVP는 기존 Region.id와 동일. */
+  id: string;
+  level?: RegionLevel;
+  /** 표시용 스냅샷(옵션). */
+  label?: string;
+}
+
+// ===== 위치(좌표) =====
+// provider-neutral 최소 값타입. **Map SDK/geocoding provider 타입은 넣지 않는다**
+// (provider·placeId·geocodedAt·sourceAddress 등은 data 계층 metadata로 분리).
+// (docs/design/coordinate-data-plan.md, decision-map.md §11)
+export interface Location {
+  /** 위도 (WGS84 / EPSG:4326) */
+  lat: number;
+  /** 경도 (WGS84 / EPSG:4326) */
+  lng: number;
+}
+
+/**
+ * 위치 정확도 tier — 지도에서 "정확 위치 / 대표 위치 / 위치 근사"를 구분하기 위한
+ * 표시용 신호. **Fit/Strategy scoring에는 절대 사용하지 않는다.**
+ *   building=건물 지번 · complex=단지 · area=개발지구/생활권 대표 · region=시군구 · unknown
+ */
+export type LocationAccuracy = "building" | "complex" | "area" | "region" | "unknown";
+
 /** 한 거래 유형의 대표가 + 범위. */
 export interface PriceBand {
   representative: number;
@@ -115,6 +146,10 @@ interface HomeBase {
   metrics: ComplexMetrics;
   schoolNearby?: boolean;
   images?: string[];
+  /** 지도 표시용 좌표(선택). 없으면 지도는 degraded 처리. */
+  location?: Location;
+  /** 위 location의 정확도 tier(표시용). */
+  locationAccuracy?: LocationAccuracy;
 }
 
 /** 기존 아파트 — 실거래가 기반 */
@@ -262,6 +297,10 @@ export interface Area {
   metricsBasis?: string;
   /** 지역 중심 기준(선택) */
   commuteMinutes?: Record<string, number>;
+  /** 지도 표시용 대표 좌표(선택). Area는 polygon 없이 representative point면 충분. */
+  location?: Location;
+  /** 위 location의 정확도 tier(표시용). */
+  locationAccuracy?: LocationAccuracy;
   /**
    * AI가 정리한 지역 참고 정보(정성). **점수(AreaFit)에는 절대 반영하지 않는다.**
    * 결정적 점수와 분리된 표시용 — "AI 생성·참고용·사실과 다를 수 있음" 라벨 필수.
@@ -298,6 +337,137 @@ export interface HouseholdProfile {
   carValueManwon?: number;
   /** 청약통장 가입기간(개월) — 신청자 기준(합산 아님) */
   subscriptionMonths?: number;
+}
+
+// ===== 현재 주거 맥락 (Current Housing Context) =====
+// "앞으로 원하는 집"(UserConditions)과 별개로, **지금 어디서 어떻게 사는지**를
+// 출발점으로 둔다. Decision View가 "좋은 집 설명"이 아니라 "현재 상태에서 이 선택으로
+// 옮기면 무엇이 달라지는가"가 되도록 하는 기준점. (docs/design/current-housing.md)
+
+/** 현재 점유 형태. HouseholdProfile.housingStatus(자격용)보다 세분화. */
+export type Tenure = "owner" | "jeonse" | "monthly_rent" | "family" | "other";
+
+/** 현재 생활권을 얼마나 유지하고 싶은지. hard=stay_current_area, 나머지는 soft. */
+export type MovePreference =
+  | "stay_current_area" // (hard) 현재 생활권 유지가 중요
+  | "prefer_nearby" // (soft) 가급적 근처
+  | "open_to_move" // (neutral) 다른 지역도 가능
+  | "want_to_leave"; // (soft) 오히려 다른 지역 희망
+
+export interface CurrentHousing {
+  tenure: Tenure;
+  /** 현재 지역(계층 확장 가능). */
+  regionRef?: RegionRef;
+  /** Homefit 데이터와 매칭되는 경우의 단지 참조(옵션). */
+  homeRef?: CandidateRef;
+  /** 매칭 못한 경우의 최소 표시명. */
+  homeName?: string;
+  /** 보증금(만원) — 전세/월세. */
+  deposit?: number;
+  /** 월세(만원) — 월세. */
+  monthlyRent?: number;
+  movePreference: MovePreference;
+}
+
+/** 관심/제외 지역. preferred=soft(우선), excluded=hard(생성·추천 제외). */
+export interface RegionPreferences {
+  preferred: RegionRef[];
+  excluded: RegionRef[];
+}
+
+// ===== 현재 집 ↔ 후보 비교 (새 종합점수 아님) =====
+export type DeltaDirection = "gain" | "tradeoff" | "neutral";
+export interface HousingDelta {
+  key: string;
+  label: string;
+  /** 사용자 표시 문자열(수치 or 라벨). 미상이면 undefined. */
+  current?: string;
+  candidate?: string;
+  /** 변화 요약(예: "+8평", "생활권 이동"). */
+  change?: string;
+  direction: DeltaDirection;
+}
+
+/** HomeFit과 섞지 않는 별도 결과. 현재→후보의 변화만 결정적으로 서술. */
+export interface CurrentHomeComparison {
+  hasCurrent: boolean;
+  rows: HousingDelta[];
+  gains: string[];
+  tradeoffs: string[];
+}
+
+// ===== 주거 전략 (docs/design/housing-strategy.md) =====
+// Strategy는 Listing의 subtype이 아니라 "행동+시간의 경로". 새 종합점수를 만들지
+// 않고 기존 엔진(HomeFit/자격/현금흐름/전매)을 직교로 조합한다.
+
+export type StrategyKind =
+  | "buy_existing" // 기존주택 즉시 매수
+  | "apply_presale" // 청약 도전(접수 중)
+  | "rent_then_apply" // 전세 거주 → 청약 대기(예정)
+  | "buy_presale_right"; // 분양권 매수
+
+export type StrategyStepKind = "buy" | "rent" | "apply" | "wait" | "move_in";
+
+export type Horizon = "now" | "short" | "mid" | "long"; // 즉시/1~2년/2~4년/4년+
+
+export interface TimingHint {
+  horizon: Horizon;
+  targetYear?: number;
+  note?: string;
+}
+
+export interface StrategyStep {
+  kind: StrategyStepKind;
+  ref?: CandidateRef; // 미정(예: 새 전세)이면 없음
+  acquisitionPath?: AcquisitionPath;
+  timing: TimingHint;
+  note?: string;
+}
+
+export interface HousingStrategy {
+  id: string;
+  kind: StrategyKind;
+  label: string;
+  steps: StrategyStep[]; // 시간순
+  targetRef?: CandidateRef; // 최종 정착 대상(HomeFit 기준)
+}
+
+export type DecisionStatus =
+  | "recommended"
+  | "consider"
+  | "needs_review"
+  | "blocked";
+
+/** status 근거 — 코드(테스트/규칙) + 설명(표시). UI 문구에 규칙이 종속되지 않게 분리. */
+export interface DecisionReason {
+  code: string;
+  text: string;
+}
+
+export interface StrategyDecision {
+  strategyId: string;
+  status: DecisionStatus;
+  reasons: DecisionReason[];
+  fit?: FitResult | AreaFitResult;
+  affordability: {
+    cashNeededNow?: number; // 만원
+    futureBurden?: number; // 만원(향후 주요 부담)
+    verdict: "ok" | "short" | "unknown";
+  };
+  timing: { settleBy?: number; horizon: Horizon };
+  eligibility?: { status: DealbreakerStatus; program?: string };
+  transfer?: TransferInfo;
+  risk: {
+    flags: string[];
+    /** 확인이 필요한 불확실성 — 자격·전매/권리·자금·법적/정책. status를 needs_review로 강등. */
+    requiredReviews: string[];
+    /** 사용자가 아직 정하지 않은 중간 단계(예: 전세 후보 미선정). 정보가 채워지면
+     *  해소되며, 이것만 있으면 needs_review로 강등하지 않는다(consider 유지). */
+    incompleteInputs: string[];
+  };
+  pros: string[];
+  cons: string[];
+  nextActions: string[];
 }
 
 // ===== 후보 관리 =====

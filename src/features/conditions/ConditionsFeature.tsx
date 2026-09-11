@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FormProvider, useForm, type Path } from "react-hook-form";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useConditionsStore } from "@/stores/conditionsStore";
+import { CurrentHousingSection } from "@/features/currentHousing/CurrentHousingSection";
 import { BudgetStep } from "@/features/onboarding/steps/BudgetStep";
 import { CommuteStep } from "@/features/onboarding/steps/CommuteStep";
 import { HouseholdStep } from "@/features/onboarding/steps/HouseholdStep";
@@ -112,6 +113,8 @@ function ConditionsForm() {
           <Section title="절대조건">
             <DealbreakerStep />
           </Section>
+
+          <CurrentHousingSection />
 
           {saved && (
             <p role="status" className="text-success text-sm font-medium">

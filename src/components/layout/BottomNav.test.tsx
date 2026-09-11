@@ -7,11 +7,13 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("BottomNav", () => {
-  it("5개 탭을 링크로 렌더링한다", () => {
+  it("4개 탭을 링크로 렌더링한다(전략·비교는 흡수)", () => {
     render(<BottomNav />);
-    for (const name of ["홈", "탐색", "후보", "비교", "우리 조건"]) {
+    for (const name of ["홈", "탐색", "후보", "우리 조건"]) {
       expect(screen.getByRole("link", { name })).toBeInTheDocument();
     }
+    expect(screen.queryByRole("link", { name: "전략" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "비교" })).not.toBeInTheDocument();
   });
 
   it("현재 경로에 해당하는 탭을 활성으로 표시한다", () => {

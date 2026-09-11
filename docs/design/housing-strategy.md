@@ -127,9 +127,10 @@ generateStrategies(conditions, profile, listings): HousingStrategy[]
 규칙 예(초기):
 - **buy_existing**: 예산 내 existing home마다. (항상 후보)
 - **rent_jeonse**: 전세 가능 existing마다. (항상 후보)
-- **rent_then_apply**: 무주택 + 청약통장 보유 → 전세 스텝 + 청약 대상 presale
-  (subscription phase) 조합.
-- **apply_presale**: subscription phase presale마다(자격은 facet에서 판정).
+- **rent_then_apply**: 자격 스크리닝 non-fail(§6.1) + 예정(planned/scheduled)
+  presale → 전세 스텝 + 청약 대상 presale 조합.
+- **apply_presale**: 자격 스크리닝 non-fail(§6.1) + subscription_open presale마다
+  (세부 자격은 Decision facet에서 판정).
 - **buy_presale_right**: transferable + `transfer.status==="tradable"` presale +
   가용현금이 필요현금 이상일 때.
 - **wait_for_area**: 관심 area마다.
@@ -143,7 +144,38 @@ generateStrategies(conditions, profile, listings): HousingStrategy[]
   - `targetRef` 없는 추상적 대기 전략은 **생성하지 않는다**(명확한 Listing/Area
     근거 필수). `wait_for_area`는 후속.
   - kind별·targetRef별 **중복 제거**, 후보 상한(예: kind당 상위 N개만).
-  - 명백히 무관한 조합(예: 유주택인데 청약 대기)은 생성 제외.
+
+### 6.1 청약 자격은 **자격 계층(eligibility screen)**으로 게이팅 【보정 확정】
+
+`hasHome`(유주택 여부)를 **Strategy generator가 정책 규칙처럼 직접 해석하지 않는다.**
+청약 가능 여부는 공급유형(특공/일반/무순위)·정책·공고에 따라 달라지므로, 판단을
+`domain/eligibility/screen.ts`의 `screenSubscriptionEligibility(profile)` 한 곳으로
+일원화한다.
+
+| screen 결과 | 생성 | Decision status |
+|---|---|---|
+| `fail` (랭크드 특공·일반이 전부 hard-fail) | **제외** | (미생성) — 유지되면 `blocked` |
+| `unknown` (hard-fail 없이 미입력만) | **생성** | `needs_review` |
+| `pass` (특공/일반 중 하나 충족) | **생성** | 정상 |
+
+- 무주택 요건은 **프로그램별 요건**(`housingRequirement`)에 이미 인코딩돼 있다.
+  일반공급(추첨제)은 유주택도 통장만 있으면 통과하므로, **유주택이라고 청약 전략을
+  일괄 제외하지 않는다**.
+- **무순위(줍줍)**는 항상 열려 있어(누구나 eligible) 판별신호가 못 되므로
+  스크리닝에서 **제외**한다(카탈로그로는 `evaluatePrograms`에 남음).
+- **MVP 한계(TODO)**: `evaluatePrograms`는 현재 청약 프로그램만 다룬다. 공급유형
+  (공공/민영)·공고별 거주요건·대출 연계는 미모델. 이 계층 범위가 넓어지면 자연히
+  정교해진다. (product-vision Scope Guardrail)
+
+### 6.2 `rent_then_apply`의 중간 전세 step 의미 【보정 확정】
+
+- 최종 `targetRef`는 **반드시 presale listing**을 가진다(청약 정착 대상).
+- 중간 `rent` step은 실제 전세 후보가 아직 없을 수 있어 **`ref`를 optional** 허용.
+- `rent` step에 `ref`가 없으면 Decision View에서 **"전세 후보 미선정"을 unknown +
+  "거주할 전세 후보를 추가로 탐색하세요" nextAction**으로 명시한다.
+- 이는 §6의 **"targetRef 없는 추상 전략 금지"와 충돌하지 않는다** — 전략 자체는
+  명확한 청약 대상(targetRef)을 가진 **구체 전략**이고, 다만 **중간 거주지만
+  미선정**일 뿐이다. (전략 존재 근거 = targetRef ≠ 개별 step의 ref)
 
 ---
 
@@ -337,3 +369,94 @@ interface DecisionMapInput {
 - HomeFit/AreaFit/Eligibility/Affordability/Transfer/Risk/Unknown을 **직교 유지.**
 - Strategy generation은 **explainable rule-based**로 시작.
 - generated strategy가 과다해지지 않도록 **강한 필터링 규칙**(§6).
+- 청약 자격 게이팅은 **자격 계층(screen)** 경유(§6.1) — `hasHome` 직접 해석 금지.
+- `rent_then_apply` 중간 전세 step은 **ref optional**, 미선정 시 unknown 표시(§6.2).
+
+### 보정 확정 (Phase 1 이후)
+| 항목 | 확정 |
+|------|------|
+| 청약 자격 게이팅 | generator가 `hasHome`를 직접 해석하지 않고 `screenSubscriptionEligibility`로 일원화. fail→제외, unknown→생성+needs_review, pass→정상(§6.1). |
+| rent step 의미 | 최종 targetRef=presale 필수, 중간 rent step ref optional, 미선정 시 "전세 후보 미선정" unknown+nextAction(§6.2). |
+| `recommendFitMin=78` | **영구 제품 기준 아님 — 현재 MVP calibration 값.** mock 정성지표 분포 기준. 실데이터 분포가 쌓이면 재보정. (`strategy/config.ts`) |
+
+---
+
+## 17. unknown 분리 · 비교 UX · IA (Phase 3 확정)
+
+### 17.1 unknown을 두 성격으로 분리 【보정 확정】
+`StrategyDecision.risk`를 두 배열로 나눈다:
+| 종류 | 예 | status 영향 | UI |
+|------|-----|------------|-----|
+| `requiredReviews` | 청약 자격 미판정, 전매·권리 확인, 자금 미확정, 법적/정책 확인 | **needs_review로 강등** | "확인이 필요해요"(warning) |
+| `incompleteInputs` | 전세 후보 미선정 등 아직 안 고른 중간 단계 | **강등 안 함** — `consider` 유지 | "아직 정하지 않은 항목"(중립) |
+
+- `incompleteInputs`만 있는 전략은 **needs_review가 아니라 `consider`**. 단, `recommended`
+  로는 올리지 않는다(아직 미완 선택이 있으므로). status.ts는 recommended 게이트에서
+  `incompleteInputs.length===0`을 요구하고, 아니면 `consider_incomplete` 사유로 consider.
+- 결과: MVP의 `rent_then_apply`(전세 후보 항상 미선정)는 자격이 pass여도 **최대 consider**.
+
+### 17.2 전략 간 비교(Decision View) 【확정】
+- **동일 축 비교 매트릭스**(`StrategyCompareTable`): 행=축(적합도·감당가능성·시점·자격·
+  전매·확인필요·미결정), 열=전략 종류. **종합점수로 줄세우지 않는다.**
+- 대신 **축별 극값만 강조**(적합도 최고 / 필요현금 최저 / 정착 最速). 종합 우세 배지 없음.
+- 비교 열은 **kind별 최상위 1개**만 뽑아 "서로 다른 전략 종류"를 나란히 둔다.
+
+### 17.3 1차 grouping: **strategy-first** 【확정】
+- A(status-first) vs B(strategy-first)를 검토한 결과, **B 채택.**
+- 카드 목록 1차 grouping = **전략 종류**(지금 매수/청약/전세→청약/분양권), status는 **카드
+  배지**로. Vision상 사용자가 먼저 이해할 것은 rank가 아니라 "어떤 주거 전략인가".
+- status-first는 "결정" 국면(비교/필터)에서 보조로만. 비교 매트릭스 열도 kind-first라 일관.
+
+### 17.4 전략 → 후보 → 상세 내비게이션 【확정】
+- 카드·비교열의 targetRef → 기존 상세(`/complex/[id]`, 개발예정지 `/area/[id]`)로 연결.
+- 전략(추상 결정) → 실제 후보(단지) → 상세(실거래·통근·학군)로 자연 하강.
+
+### 17.5 BottomNav / IA — Phase 3 이후 재편 제안 (미확정)
+- 현재 6탭(홈·탐색·전략·후보·비교·조건)은 **`/strategy` 검증용 임시 진입점**. 최종 IA 아님.
+- Strategy가 핵심 경험으로 확인되면 제안:
+  1. **홈을 Strategy 중심으로 재구성**(현재 추천 목록 → 전략 Decision View 우선).
+  2. **비교를 독립 탭에서 제거**하고 각 맥락의 context action(단지/전략 비교 버튼)으로 이동.
+  3. **BottomNav 4탭 축소** 예: 홈(=전략) · 탐색 · 후보 · 조건.
+- 지금 단계에선 **홈 미변경**. 위는 Phase 3 이후 별도 결정.
+
+---
+
+## 18. Decision View 심화 · 홈 IA 재편 (Phase 4 구현)
+
+목표: 구조적 차별점(전략 비교·직교 축)을 **화면에서도** 느끼게. 점수보다 **결정
+서사·전략 차이**를 전면에.
+
+### 18.1 StrategyCard 정보 우선순위 재구성 【구현】
+순서: ① 무엇(전략명) → ② 왜(한 줄 서사) → ③ 지금 실행 가능? → ④ 필요 현금 →
+⑤ 정착 시점 → ⑥ 왜 고려(✓) → ⑦ 주의(제약+확인필요, △) → ⑧ 아직 정하지 않은 항목 →
+⑨ 다음 행동(실제 라우트) → ⑩ **HomeFit(보조)**. HomeFit ScoreGauge(원형·색 강조)를
+없애고 **하단 얇은 바 + "HomeFit NN"**으로 강등 — 결론이 아니라 근거 하나.
+
+### 18.2 Strategy Narrative (deterministic) 【구현】
+`features/strategy/narrative.ts` — kind별 기본 문구 + Decision facet에 따른 변주(결정적,
+AI 미사용). 예: buy_existing는 `horizon==="now"`면 "지금 바로 정착…", 아니면 "정착 시점을
+앞당겨…". rent_then_apply는 자격 pass면 "청약 자격을 살려…".
+
+### 18.3 Trade-off Summary (의사결정용) vs 비교표(근거용) 역할 분리 【구현】
+- 비교 화면 상단 `TradeoffSummary`: 각 전략의 +/−를 **사용자 언어**로. **종합 승자 없음.**
+  deterministic(`tradeoffSummary()`): 강점(적합도 최고/현금 최저/最速/자격/전매), 약점
+  (현금 N 더 필요/정착 늦음/자격 불확실/미결정).
+- 그 아래 `StrategyCompareTable`은 **근거 확인용** 표로 역할 분리.
+
+### 18.4 Status presentation label 【구현】
+도메인 enum 유지, 표시 문구만 서술형: recommended=`조건이 잘 맞아요`,
+consider=`검토해볼 만해요`, needs_review=`확인이 필요해요`, blocked=`현재 조건에선 어려워요`.
+
+### 18.5 홈 IA 재편 (최소 구현) 【구현】
+- 홈 상단에 `StrategyHomeSection`(주인공): "우리 가족에게 가능한 주거 선택"(kind별 대표
+  1개, 최대 3) + "지금 가장 먼저 확인할 것" 체크리스트(실제 라우트). 
+- 기존 추천 단지는 **"참고 · 조건에 맞는 단지"**(muted, 상위 3개)로 **강등**. 홈은 유지하되
+  주인공을 Strategy로 교체. 대규모 삭제 없음.
+
+### 18.6 BottomNav 4탭 확정 【구현】
+홈 / 탐색 / 후보 / 우리 조건. `전략`→홈 흡수(/strategy는 홈 탭 활성), `비교`→context
+action(후보 탭 활성). `/strategy`·`/compare` 라우트는 내부 유지, 네비에서만 제거.
+
+### 18.7 Next Action = 실제 라우트만 【구현】
+fake CTA 금지. 카드 CTA: 대상 단지 상세(`/complex|/area`), 청약 자격 확인(`/profile`),
+전세 후보 찾기(`/explore`). 홈 체크리스트도 동일 라우트만.

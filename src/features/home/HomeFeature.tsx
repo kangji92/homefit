@@ -10,6 +10,7 @@ import { useAreas, useHomes, useRegions } from "@/hooks/queries";
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { AreaCard } from "@/features/area/AreaCard";
 import { LoginButton } from "@/features/auth/LoginButton";
+import { StrategyHomeSection } from "@/features/strategy/StrategyHomeSection";
 import { ConditionsSummary } from "./ConditionsSummary";
 import { RecommendationCard } from "./RecommendationCard";
 import { UpcomingSubscriptions } from "./UpcomingSubscriptions";
@@ -91,6 +92,9 @@ export function HomeFeature() {
     <PageContainer className="max-w-2xl space-y-6">
       <LoginButton />
       <ConditionsSummary conditions={conditions} />
+      {/* 주인공: 주거 전략 Decision View */}
+      <StrategyHomeSection />
+      {/* 이하 보조: 청약 일정 · 추천 단지 · 개발예정지 */}
       <UpcomingSubscriptions items={subscriptions} />
       {renderContent()}
       {renderAreas()}
@@ -140,9 +144,21 @@ export function HomeFeature() {
       return <Notice>표시할 단지가 없어요.</Notice>;
     }
     return (
-      <section aria-label="추천 주택" className="space-y-3">
-        <h2 className="text-lg font-bold">추천 주택</h2>
-        {recommendations.map((r) => (
+      <section aria-label="추천 단지" className="space-y-3">
+        <div className="flex items-end justify-between">
+          <div>
+            <h2 className="text-muted-foreground text-sm font-semibold">
+              참고 · 조건에 맞는 단지
+            </h2>
+            <p className="text-muted-foreground text-xs">
+              전략의 대상 후보를 고를 때 참고하세요
+            </p>
+          </div>
+          <Link href="/explore" className="text-primary shrink-0 text-sm font-medium">
+            더 탐색
+          </Link>
+        </div>
+        {recommendations.slice(0, 3).map((r) => (
           <RecommendationCard
             key={r.complex.id}
             recommendation={r}

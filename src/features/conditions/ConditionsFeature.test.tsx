@@ -1,8 +1,14 @@
-import { beforeEach, describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DEFAULT_CONDITIONS, useConditionsStore } from "@/stores/conditionsStore";
 import { ConditionsFeature } from "./ConditionsFeature";
+
+// CurrentHousingSection(우리 조건에 추가된 섹션)이 쓰는 쿼리 모킹.
+vi.mock("@/hooks/queries", () => ({
+  useRegions: () => ({ data: [] }),
+  useHomes: () => ({ data: [] }),
+}));
 
 const READY = {
   ...DEFAULT_CONDITIONS,

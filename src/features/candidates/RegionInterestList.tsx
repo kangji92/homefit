@@ -1,11 +1,9 @@
 import type { Region } from "@/domain/types";
-import { useCandidatesStore } from "@/stores/candidatesStore";
+import { usePreferredRegions } from "@/features/currentHousing/usePreferredRegions";
 
 export function RegionInterestList({ regions }: { regions: Region[] }) {
-  const interests = useCandidatesStore((s) => s.regionInterests);
-  const addRegionInterest = useCandidatesStore((s) => s.addRegionInterest);
-  const removeRegionInterest = useCandidatesStore((s) => s.removeRegionInterest);
-  const ids = new Set(interests.map((r) => r.regionId));
+  // 권위 source = regionPrefs.preferred (regionInterests는 dual-write 호환).
+  const { isPreferred, toggle } = usePreferredRegions();
 
   if (regions.length === 0) {
     return (
@@ -18,7 +16,7 @@ export function RegionInterestList({ regions }: { regions: Region[] }) {
   return (
     <ul className="space-y-2">
       {regions.map((r) => {
-        const on = ids.has(r.id);
+        const on = isPreferred(r.id);
         return (
           <li
             key={r.id}
@@ -34,7 +32,7 @@ export function RegionInterestList({ regions }: { regions: Region[] }) {
             </div>
             <button
               type="button"
-              onClick={() => (on ? removeRegionInterest(r.id) : addRegionInterest(r.id))}
+              onClick={() => toggle({ id: r.id, label: r.name })}
               aria-pressed={on}
               className="border-border shrink-0 rounded-md border px-3 py-1.5 text-sm font-medium"
             >

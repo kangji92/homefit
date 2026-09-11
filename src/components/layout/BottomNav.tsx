@@ -2,11 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, Home, Scale, Search, SlidersHorizontal } from "lucide-react";
+import { Building2, Home, Search, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/", label: "홈", icon: Home, match: (p: string) => p === "/" },
+  {
+    href: "/",
+    label: "홈",
+    icon: Home,
+    // 전략은 홈의 핵심 경험으로 흡수 — /strategy도 홈 탭 활성 유지
+    match: (p: string) => p === "/" || p.startsWith("/strategy"),
+  },
   {
     href: "/explore",
     label: "탐색",
@@ -17,14 +23,9 @@ const NAV_ITEMS = [
     href: "/candidates",
     label: "후보",
     icon: Building2,
-    // 단지 상세(/complex/[id])에서도 '후보' 탭을 활성으로 유지
-    match: (p: string) => p.startsWith("/candidates") || p.startsWith("/complex"),
-  },
-  {
-    href: "/compare",
-    label: "비교",
-    icon: Scale,
-    match: (p: string) => p.startsWith("/compare"),
+    // 단지 상세(/complex/[id])·비교(/compare)도 '후보' 탭 활성 유지
+    match: (p: string) =>
+      p.startsWith("/candidates") || p.startsWith("/complex") || p.startsWith("/compare"),
   },
   {
     href: "/conditions",
@@ -35,8 +36,9 @@ const NAV_ITEMS = [
 ] as const;
 
 /**
- * 하단 고정 내비게이션 (홈 / 탐색 / 후보 / 비교 / 우리 조건).
- * (docs/design/screens-and-routing.md §2, explore-search.md §2)
+ * 하단 고정 내비게이션 (홈 / 탐색 / 후보 / 우리 조건) — 4탭.
+ * 전략은 홈의 핵심 경험으로 흡수, 비교는 각 화면의 context action으로 이동.
+ * (docs/design/housing-strategy.md §17.5)
  */
 export function BottomNav() {
   const pathname = usePathname();

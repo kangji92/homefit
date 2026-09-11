@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FormProvider, useForm, type Path } from "react-hook-form";
 import { useConditionsStore } from "@/stores/conditionsStore";
+import { useLivingContextStore } from "@/stores/livingContextStore";
 import { Stepper } from "./Stepper";
+import { CurrentSituationStep } from "./steps/CurrentSituationStep";
 import { BudgetStep } from "./steps/BudgetStep";
 import { CommuteStep } from "./steps/CommuteStep";
 import { HouseholdStep } from "./steps/HouseholdStep";
@@ -32,16 +34,51 @@ const STEP_COMPONENTS = [
 
 export function OnboardingFeature() {
   const hasHydrated = useConditionsStore((s) => s.hasHydrated);
+  const lcHydrated = useLivingContextStore((s) => s.hasHydrated);
+  const introSeen = useLivingContextStore((s) => s.onboardingIntroSeen);
+  const resumeStep = useConditionsStore((s) => s.onboardingStep);
+  const setIntroSeen = useLivingContextStore((s) => s.setOnboardingIntroSeen);
 
   // localStorage 복원 전에는 판정을 보류해 잘못된 초기 스텝/플래시를 막는다
-  if (!hasHydrated) {
+  if (!hasHydrated || !lcHydrated) {
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-md items-center justify-center px-4">
         <p className="text-muted-foreground text-sm">불러오는 중…</p>
       </main>
     );
   }
+  // '현재 상황' 인트로: 새로 시작(step 0)하고 아직 안 본 경우에만 맨 앞에 1회 노출.
+  // 조건 흐름 중간(step>0) 재개 사용자에겐 보이지 않아 resume 로직에 영향 없음.
+  if (!introSeen && resumeStep === 0) {
+    return <IntroSituation onDone={() => setIntroSeen(true)} />;
+  }
   return <OnboardingFlow />;
+}
+
+function IntroSituation({ onDone }: { onDone: () => void }) {
+  return (
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 py-6">
+      <div className="flex-1 py-6">
+        <CurrentSituationStep />
+      </div>
+      <div className="flex gap-3 pt-4">
+        <button
+          type="button"
+          onClick={onDone}
+          className="border-border rounded-md border px-4 py-2 text-sm font-medium"
+        >
+          건너뛰기
+        </button>
+        <button
+          type="button"
+          onClick={onDone}
+          className="bg-primary text-primary-foreground flex-1 rounded-md px-4 py-2 text-sm font-medium"
+        >
+          다음
+        </button>
+      </div>
+    </main>
+  );
 }
 
 function OnboardingFlow() {
