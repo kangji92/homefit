@@ -7,6 +7,11 @@ Homefit 저장소에서 AI 에이전트(Claude Code 등)와 개발자가 함께 
 
 ## Development Workflow
 
+> **제품의 정체성·범위·의사결정 원칙은 [`docs/product-vision.md`]가 최상위 단일
+> 진실 소스다.** 개별 설계(`docs/design/*`)보다 상위이며, 충돌 시 vision이
+> 우선한다. 새 기능은 설계 전에 vision §11 Feature Decision Checklist를 통과해야
+> 하고, vision을 바꿔야 한다면 그 변경을 먼저 논의·기록한다.
+
 새 기능을 구현하기 전에 반드시 관련 설계 문서를 확인한다.
 
 관련 설계 문서가 없다면:
