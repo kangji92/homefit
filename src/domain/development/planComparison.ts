@@ -18,6 +18,8 @@ export type ComparablePlanField =
   | "rentalUnits"
   | "buildingCount"
   | "maxFloor"
+  | "buildingCoverageRatioMax"
+  | "floorAreaRatioMax"
   | "contractor"
   | "brand"
   | "proposedComplexName";

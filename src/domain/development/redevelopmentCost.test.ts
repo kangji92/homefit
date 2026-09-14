@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import type { Money } from "@/domain/types";
 import {
   computeRedevelopmentCost,
+  computeRedevelopmentCostRange,
   isRateSuspiciouslyHigh,
   isValidRate,
   percentToRate,
@@ -89,6 +90,22 @@ describe("computeRedevelopmentCost — 개념 분리", () => {
   it("비례율 0 이하는 권리가액 미산출", () => {
     const e = computeRedevelopmentCost({ ...base, proportionalRate: sourced(0, "user_input") });
     expect(e.estimatedRightValue).toBeUndefined();
+  });
+});
+
+describe("computeRedevelopmentCostRange — 조합원분양가 범위", () => {
+  it("min/max로 두 번 계산해 총투입액 범위(예: 84㎡ 11~11.5억)", () => {
+    const inputs = {
+      purchasePrice: sourced(won(93000), "broker"),
+      previousAssetAppraisal: sourced(won(70000), "user_input"),
+      proportionalRate: sourced(1.0, "user_input"),
+    };
+    const { low, high } = computeRedevelopmentCostRange(inputs, { min: won(110000), max: won(115000) });
+    // 권리가액 7억 → 분담금 4억~4.5억 → 기본 총투입 13.3억~13.8억
+    expect(low.estimatedAdditionalContribution?.manwon).toBe(40000);
+    expect(high.estimatedAdditionalContribution?.manwon).toBe(45000);
+    expect(low.estimatedBaseTotalCost?.manwon).toBe(133000);
+    expect(high.estimatedBaseTotalCost?.manwon).toBe(138000);
   });
 });
 

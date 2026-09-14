@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Area, CurrentHousing, Home, Workplace } from "@/domain/types";
 import { cn } from "@/lib/utils";
 import { useDevelopments, useDevelopmentProperties } from "@/hooks/queries";
+import { useManualPropertyStore } from "@/stores/manualPropertyStore";
 import { StatusBadge } from "@/features/strategy/StatusBadge";
 import {
   KIND_LABEL,
@@ -17,7 +18,13 @@ import { RedevelopmentPanel } from "./RedevelopmentPanel";
 import { RedevelopmentCostSimulator } from "./RedevelopmentCostSimulator";
 import { DevelopmentDetailPanel } from "./DevelopmentDetailPanel";
 import { DevelopmentComparison } from "./DevelopmentComparison";
+import { ManualPropertyForm } from "./ManualPropertyForm";
 import { buildDecisionMapScene } from "./scene";
+
+const propertySourceLabel = (p?: { listing?: { sourceType?: string } }) => {
+  const st = p?.listing?.sourceType;
+  return st === "broker" ? "현장 확인" : st === "user_input" ? "사용자 입력" : "샘플 데이터";
+};
 
 export interface DecisionMapViewProps {
   board: StrategyBoardItem[];
@@ -56,8 +63,10 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
   // 개발사업 영역 + 정비사업 매물(빌라 등) — 기존 home/strategy 흐름과 분리된 layer.
   const developmentsData = useDevelopments().data;
   const propertiesData = useDevelopmentProperties().data;
+  const manualProperties = useManualPropertyStore((s) => s.properties);
   const developments = useMemo(() => developmentsData ?? [], [developmentsData]);
-  const properties = useMemo(() => propertiesData ?? [], [propertiesData]);
+  // 샘플 mock 빌라 + 사용자 수기 입력 매물(현장 확인/사용자).
+  const properties = useMemo(() => [...(propertiesData ?? []), ...manualProperties], [propertiesData, manualProperties]);
   const selectedProperty = properties.find((p) => p.id === selectedPropertyId);
   const selectedPropertyArea = selectedProperty?.redevelopment
     ? developments.find((d) => d.id === selectedProperty.redevelopment!.areaId)
@@ -132,18 +141,21 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
       <div className="mt-3 space-y-2 md:order-1 md:mt-0">
         <p className="text-muted-foreground text-xs" role="status">
           {selectedProperty
-            ? `선택: ${selectedProperty.name} (매물)`
+            ? `선택: ${selectedProperty.name} · ${propertySourceLabel(selectedProperty)}`
             : selected
               ? `선택: ${selected.strategy.label}`
               : ""}
         </p>
 
-        {/* 재개발 빌라 선택 시: 실거주 + 정비사업 요약 + 비용 시뮬레이터 */}
+        {/* 현장 매물 수기 입력 */}
+        <ManualPropertyForm onAdded={(id) => setSelectedPropertyId(id)} />
+
+        {/* 재개발 빌라 선택 시: 실거주 + 정비사업 요약 + 비용 시뮬레이터 + 사업상세 */}
         {selectedProperty && (
           <>
             <RedevelopmentPanel home={selectedProperty} area={selectedPropertyArea} />
             {selectedProperty.redevelopment && (
-              <RedevelopmentCostSimulator home={selectedProperty} />
+              <RedevelopmentCostSimulator home={selectedProperty} area={selectedPropertyArea} />
             )}
             {selectedPropertyArea && <DevelopmentDetailPanel area={selectedPropertyArea} />}
           </>

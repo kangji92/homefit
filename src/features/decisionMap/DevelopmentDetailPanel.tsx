@@ -44,9 +44,11 @@ const FIELDS: { label: string; field: ComparablePlanField }[] = [
   { label: "임대", field: "rentalUnits" },
   { label: "동수", field: "buildingCount" },
   { label: "최고층", field: "maxFloor" },
+  { label: "용적률(% 이하)", field: "floorAreaRatioMax" },
+  { label: "건폐율(% 이하)", field: "buildingCoverageRatioMax" },
   { label: "시공사", field: "contractor" },
   { label: "브랜드", field: "brand" },
-  { label: "(가칭)단지명", field: "proposedComplexName" },
+  { label: "제안 단지명", field: "proposedComplexName" }, // 공식 사업명과 분리(가칭)
 ];
 const FACTS: { label: string; key: keyof NonNullable<DevelopmentArea["facts"]>; unit?: string }[] = [
   { label: "구역면적", key: "siteAreaM2", unit: "㎡" },

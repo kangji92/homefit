@@ -2,7 +2,7 @@
 // 값으로 계산·시나리오 비교만. 결과는 raw Home에 저장하지 않고 여기서 산출.
 // 개념 분리: 시장 프리미엄 ≠ 권리가액 ≠ 추가분담금. (docs/design 개발레이어 cost)
 
-import type { Money } from "../types";
+import type { Money, MoneyRange } from "../types";
 import type { DataSourceType, Sourced } from "./types";
 
 export function sourced<T>(
@@ -120,6 +120,25 @@ export function computeRedevelopmentCost(inputs: RedevelopmentCostInputs): Redev
   }
 
   return est;
+}
+
+/**
+ * 조합원분양가가 범위(min~max)일 때 low/high 두 번 계산 → 결과 범위. 계산 도메인을
+ * 복잡하게 만들지 않고 기존 pure 함수를 재사용한다. (docs/design 개발레이어 cost §7)
+ */
+export interface RedevelopmentCostRange {
+  low: RedevelopmentCostEstimate; // memberSale min 기준
+  high: RedevelopmentCostEstimate; // memberSale max 기준
+}
+export function computeRedevelopmentCostRange(
+  inputs: RedevelopmentCostInputs,
+  memberSale: MoneyRange,
+  sourceType: DataSourceType = "broker",
+): RedevelopmentCostRange {
+  return {
+    low: computeRedevelopmentCost({ ...inputs, memberSalePrice: sourced(memberSale.min, sourceType) }),
+    high: computeRedevelopmentCost({ ...inputs, memberSalePrice: sourced(memberSale.max, sourceType) }),
+  };
 }
 
 export interface RedevelopmentScenario {

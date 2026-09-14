@@ -33,6 +33,29 @@ describe("REAL 안양 재개발 fixture (official-backed)", () => {
     expect(northImpl.status).toBe("target");
   });
 
+  it("[보정1] 사업시행인가일은 official/verified (안양시 공식 추진경위)", () => {
+    const impl = east.milestones!.find((m) => m.kind === "implementation")!;
+    expect(impl.sourceType).toBe("official");
+    expect(impl.verification).toBe("verified");
+  });
+
+  it("[보정2] 건폐율/용적률을 버리지 않고 계획안별로 보존(현행 267.4 vs 최초 280)", () => {
+    const current = east.plans!.find((p) => p.id === "east-official-current")!;
+    const initial = east.plans!.find((p) => p.id === "east-designation-initial")!;
+    expect(current.floorAreaRatioMax).toBe(267.4);
+    expect(current.buildingCoverageRatioMax).toBe(30);
+    expect(initial.floorAreaRatioMax).toBe(280);
+  });
+
+  it("[보정3] 조합원 예정분양가는 broker/미확인(공식 승격 금지)", () => {
+    const est = east.memberSaleEstimates![0];
+    expect(est.sizeLabel).toBe("84㎡");
+    expect(est.sourceType).toBe("broker");
+    expect(est.verification).toBe("unverified");
+    expect(est.price.min.manwon).toBe(110000);
+    expect(est.price.max.manwon).toBe(115000);
+  });
+
   it("경계 미확보 → centroid_only(공식 GIS 아님)", () => {
     expect(east.geometryAccuracy).toBe("centroid_only");
     expect(north.geometryAccuracy).toBe("centroid_only");

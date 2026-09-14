@@ -3,7 +3,9 @@
 // certainty(확정성)를 분리. scoring(fitScore/decisionStatus)에 반영하지 않는다 — 판단 보조.
 // (docs/design/decision-map.md 개발레이어)
 
-import type { Location } from "../types";
+import type { DataSourceType, Location, MoneyRange } from "../types";
+// DataSourceType/Sourced는 base(domain/types)로 이동. 기존 import 경로 호환 위해 re-export.
+export type { DataSourceType, Sourced } from "../types";
 
 export type DevelopmentType =
   | "redevelopment"
@@ -48,17 +50,6 @@ export interface GeoPointGeom {
 }
 export type DevelopmentGeometry = GeoPolygon | GeoLine | GeoPointGeom;
 
-// ── 입력값 출처(provenance) — "누가 준 숫자인가" 축. 기존 SourceType/ValueProvenance와 별개. ──
-export type DataSourceType =
-  | "official"
-  | "association"
-  | "contractor" // 시공사 제안/IR
-  | "media" // 언론 보도 등 2차
-  | "broker"
-  | "user_input"
-  | "mock"
-  | "estimated";
-
 /**
  * 개발정보 검증 상태. **기존 `VerificationStatus`(verified|needs_review|unknown)와 의미축이
  * 다르다** — 그건 데이터 신선도/품질 축, 이건 "누가 확인했나" 출처 신뢰 축이다.
@@ -76,15 +67,6 @@ export type DevelopmentGeometryAccuracy =
   | "traced_from_official_map" // 공식 고시도면 등을 보고 수기 trace
   | "approximate" // 공개 지도 기반 근사
   | "centroid_only"; // 경계 없이 대표점만
-
-/** 값 + 출처 최소 래퍼. cost 입력·사업계획에만 사용(Money 등 전역 primitive는 안 바꿈). */
-export interface Sourced<T> {
-  value: T;
-  sourceType: DataSourceType;
-  sourceLabel?: string;
-  sourceUrl?: string;
-  verifiedAt?: string;
-}
 
 // ── 사업계획: 공식/시공사제안/사업시행/관리처분 등을 덮어쓰지 않고 배열로 병존 ──
 export type DevelopmentPlanType =
@@ -109,12 +91,26 @@ export interface DevelopmentPlan {
   rentalUnits?: number;
   buildingCount?: number;
   maxFloor?: number;
+  /** 건폐율 상한(% 이하). 시점·계획안별로 다를 수 있어 plan에 둔다. */
+  buildingCoverageRatioMax?: number;
+  /** 용적률 상한(% 이하). */
+  floorAreaRatioMax?: number;
   sourceType: DataSourceType;
   sourceLabel?: string;
   sourceUrl?: string;
   effectiveDate?: string;
   verifiedAt?: string;
   /** 이 계획안의 검증 상태(세부 필드 신뢰 기준). */
+  verification?: DevelopmentVerification;
+}
+
+/** 평형별 조합원 예정분양가(범위 가능). **공식 미확인이면 official 취급 금지.** */
+export interface MemberSaleEstimate {
+  /** 예: "84㎡", "59㎡A". */
+  sizeLabel: string;
+  price: MoneyRange;
+  sourceType: DataSourceType;
+  sourceLabel?: string;
   verification?: DevelopmentVerification;
 }
 
@@ -187,4 +183,6 @@ export interface DevelopmentArea {
   milestones?: DevelopmentMilestone[];
   /** 사업계획(공식/시공사제안/변경안 등) — 시간순 병존. 덮어쓰지 않는다. */
   plans?: DevelopmentPlan[];
+  /** 평형별 조합원 예정분양가(있으면). broker/미확인 자료는 그대로 표기, official 승격 금지. */
+  memberSaleEstimates?: MemberSaleEstimate[];
 }

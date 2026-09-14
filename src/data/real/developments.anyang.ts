@@ -5,8 +5,10 @@
 // (docs/design 개발레이어 real-pilot §1~7 / 확인일 2026-09-14)
 
 import type { DevelopmentArea } from "@/domain/development";
+import type { Money } from "@/domain/types";
 
 const ANYANG_CITY_SRC = "https://www.anyang.go.kr/newtown/sub.do?key=4230";
+const won = (manwon: number): Money => ({ manwon, valueProvenance: "sourced" });
 
 /** 종합운동장 동측일원 (비산동 1047-20 일원). 사업시행계획인가 완료(2026-05-19, 2차보도). */
 const EAST: DevelopmentArea = {
@@ -39,7 +41,8 @@ const EAST: DevelopmentArea = {
     { kind: "other", label: "조합설립추진위 승인", date: "2022-08-18", status: "confirmed", sourceType: "official", verification: "verified" },
     { kind: "association", label: "조합설립인가", date: "2023-05-08", status: "confirmed", sourceType: "official", verification: "verified" },
     { kind: "other", label: "시공사 선정(삼성물산)", date: "2024-12-22", status: "confirmed", sourceType: "contractor", verification: "reported" },
-    { kind: "implementation", label: "사업시행계획인가", date: "2026-05-19", status: "confirmed", sourceType: "media", verification: "reported" }, // 2차보도 단일 출처
+    // 인가일 primary source = 안양시 공식 추진경위(2026.05.19) → official/verified. 언론은 보조.
+    { kind: "implementation", label: "사업시행계획인가", date: "2026-05-19", status: "confirmed", sourceType: "official", sourceUrl: ANYANG_CITY_SRC, verification: "verified" },
     { kind: "management", label: "관리처분계획인가(목표)", date: "2027", status: "target", sourceType: "official", verification: "verified" },
     { kind: "construction", label: "착공(예정)", date: "2028-04", status: "target", sourceType: "contractor", verification: "reported" },
   ],
@@ -52,6 +55,8 @@ const EAST: DevelopmentArea = {
       rentalUnits: 226,
       buildingCount: 16, // 공식
       maxFloor: 35,
+      buildingCoverageRatioMax: 30, // 공식 현행: 30% 이하
+      floorAreaRatioMax: 267.4, // 공식 현행: 267.4% 이하
       // generalSaleUnits: 공식 근거상 순수 일반분양 분해 불명 → 넣지 않음
       sourceType: "official",
       sourceLabel: "안양시 정비사업 현황 - 종합운동장 동측",
@@ -76,10 +81,22 @@ const EAST: DevelopmentArea = {
       id: "east-designation-initial",
       type: "official",
       totalUnits: 1662, // 최초 지정고시(2022) 계획 — 이력 보존
+      buildingCoverageRatioMax: 50, // 최초 지정: 50% 이하
+      floorAreaRatioMax: 280, // 최초 지정: 280% 이하 (현행 267.4와 병존)
       sourceType: "official",
       sourceLabel: "정비구역 지정고시(2022) 최초 계획",
       verification: "verified",
       effectiveDate: "2022-06-30",
+    },
+  ],
+  // ⚠️ broker/미확인 — 현장 중개사 자료 예시. official 취급 금지(공식/조합 확인 전).
+  memberSaleEstimates: [
+    {
+      sizeLabel: "84㎡",
+      price: { min: won(110000), max: won(115000) }, // 11억~11.5억
+      sourceType: "broker",
+      sourceLabel: "현장 중개사(미확인)",
+      verification: "unverified",
     },
   ],
 };

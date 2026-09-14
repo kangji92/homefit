@@ -121,6 +121,33 @@ export interface ComplexPrice {
   jeonse?: PriceBand;
 }
 
+// ===== 데이터 출처(provenance) · 금액 범위 — 공용 base (development 등에서 재사용) =====
+/** "누가 준 숫자인가" 축. 기존 SourceType/ValueProvenance와 별개. */
+export type DataSourceType =
+  | "official"
+  | "association"
+  | "contractor"
+  | "media"
+  | "broker"
+  | "user_input"
+  | "mock"
+  | "estimated";
+
+/** 값 + 출처 최소 래퍼. cost 입력·사업계획 등에만 사용(Money 등 전역 primitive는 안 바꿈). */
+export interface Sourced<T> {
+  value: T;
+  sourceType: DataSourceType;
+  sourceLabel?: string;
+  sourceUrl?: string;
+  verifiedAt?: string;
+}
+
+/** 금액 범위(예: 조합원 예정분양가 11억~11.5억). 계산 도메인은 min/max로 두 번 계산해 처리. */
+export interface MoneyRange {
+  min: Money;
+  max: Money;
+}
+
 // ===== 주택 유형 · 매물/재개발 부가정보 (판단 보조 — fitScore/decisionStatus 미반영) =====
 export type HousingType = "apartment" | "villa" | "officetel" | "row_house";
 
@@ -128,9 +155,16 @@ export type HousingType = "apartment" | "villa" | "officetel" | "row_house";
 export interface PropertyListingInfo {
   askingPrice?: Money;
   recentTransactionPrice?: Money;
+  /** 공시가격. */
+  publicPrice?: Money;
   exclusiveAreaM2?: number;
   landShareM2?: number;
+  floor?: number;
   source?: Provenance;
+  /** 수기 입력 매물 구분: broker(현장 확인)·user_input·mock(샘플). */
+  sourceType?: DataSourceType;
+  sourceLabel?: string;
+  verifiedAt?: string;
   updatedAt?: string;
 }
 
@@ -145,6 +179,8 @@ export interface RedevelopmentLink {
   occupancyRightStatus?: OccupancyRightStatus;
   /** 추가분담금 — **임의 추정 금지**. 정보 없으면 undefined(UI "정보 없음"). */
   estimatedContribution?: Money;
+  /** 사용자가 입력한 종전자산평가액(있으면 비용 시뮬레이터 seed). 자동 예측 아님. */
+  previousAssetAppraisal?: Money;
 }
 
 /** 0~100 정성 지표 (측정 가능한 seed. AI 생성 아님) */
