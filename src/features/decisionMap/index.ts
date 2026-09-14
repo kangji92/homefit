@@ -7,6 +7,8 @@ export { DecisionMap } from "./DecisionMap";
 export type { DecisionMapProps } from "./DecisionMap";
 export { RedevelopmentPanel } from "./RedevelopmentPanel";
 export type { RedevelopmentPanelProps } from "./RedevelopmentPanel";
+export { RedevelopmentCostSimulator } from "./RedevelopmentCostSimulator";
+export type { RedevelopmentCostSimulatorProps } from "./RedevelopmentCostSimulator";
 export { DecisionMapView } from "./DecisionMapView";
 export type { DecisionMapViewProps } from "./DecisionMapView";
 export { KakaoMapAdapter } from "./KakaoMapAdapter";

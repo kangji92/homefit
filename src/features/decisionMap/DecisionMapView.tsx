@@ -14,6 +14,7 @@ import {
 } from "@/features/strategy/strategyView";
 import { DecisionMap } from "./DecisionMap";
 import { RedevelopmentPanel } from "./RedevelopmentPanel";
+import { RedevelopmentCostSimulator } from "./RedevelopmentCostSimulator";
 import { buildDecisionMapScene } from "./scene";
 
 export interface DecisionMapViewProps {
@@ -131,9 +132,14 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
               : ""}
         </p>
 
-        {/* 재개발 빌라 선택 시: 실거주 + 정비사업 요약 */}
+        {/* 재개발 빌라 선택 시: 실거주 + 정비사업 요약 + 비용 시뮬레이터 */}
         {selectedProperty && (
-          <RedevelopmentPanel home={selectedProperty} area={selectedPropertyArea} />
+          <>
+            <RedevelopmentPanel home={selectedProperty} area={selectedPropertyArea} />
+            {selectedProperty.redevelopment && (
+              <RedevelopmentCostSimulator home={selectedProperty} />
+            )}
+          </>
         )}
 
         {columns.map((c) => {

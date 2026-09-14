@@ -48,6 +48,51 @@ export interface GeoPointGeom {
 }
 export type DevelopmentGeometry = GeoPolygon | GeoLine | GeoPointGeom;
 
+// ── 입력값 출처(provenance) — "누가 준 숫자인가" 축. 기존 SourceType/ValueProvenance와 별개. ──
+export type DataSourceType =
+  | "official"
+  | "association"
+  | "broker"
+  | "user_input"
+  | "mock"
+  | "estimated";
+
+/** 값 + 출처 최소 래퍼. cost 입력·사업계획에만 사용(Money 등 전역 primitive는 안 바꿈). */
+export interface Sourced<T> {
+  value: T;
+  sourceType: DataSourceType;
+  sourceLabel?: string;
+  sourceUrl?: string;
+  verifiedAt?: string;
+}
+
+// ── 사업계획: 공식/시공사제안/사업시행/관리처분 등을 덮어쓰지 않고 배열로 병존 ──
+export type DevelopmentPlanType =
+  | "official"
+  | "contractor_proposal"
+  | "implementation"
+  | "management"
+  | "other";
+
+export interface DevelopmentPlan {
+  id: string;
+  type: DevelopmentPlanType;
+  contractor?: string;
+  brand?: string;
+  proposedComplexName?: string;
+  totalUnits?: number;
+  memberUnits?: number;
+  generalSaleUnits?: number;
+  rentalUnits?: number;
+  buildingCount?: number;
+  maxFloor?: number;
+  sourceType: DataSourceType;
+  sourceLabel?: string;
+  sourceUrl?: string;
+  effectiveDate?: string;
+  verifiedAt?: string;
+}
+
 export interface DevelopmentArea {
   id: string;
   name: string;
@@ -62,4 +107,6 @@ export interface DevelopmentArea {
   /** 출처/갱신 — 표시·계보용. */
   source?: string;
   updatedAt?: string;
+  /** 사업계획(공식/시공사제안/변경안 등) — 시간순 병존. 덮어쓰지 않는다. */
+  plans?: DevelopmentPlan[];
 }

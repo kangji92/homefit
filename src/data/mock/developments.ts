@@ -25,6 +25,26 @@ export const MOCK_DEVELOPMENTS: DevelopmentArea[] = [
     summary: "mock — 사업시행인가 단계로 가정한 가상 구역",
     source: "mock",
     updatedAt: "2026-01",
+    // ⚠️ mock 사업계획 — 공식/시공사제안을 덮어쓰지 않고 병존(가상 수치).
+    plans: [
+      {
+        id: "plan-east-official",
+        type: "official",
+        proposedComplexName: "(가칭) 안양 동측 재개발",
+        totalUnits: 1200, memberUnits: 700, generalSaleUnits: 400, rentalUnits: 100,
+        buildingCount: 12, maxFloor: 29,
+        sourceType: "mock", sourceLabel: "공식계획(가상)", effectiveDate: "2025-06",
+      },
+      {
+        id: "plan-east-contractor",
+        type: "contractor_proposal",
+        contractor: "○○건설(가상)", brand: "(가상)브랜드",
+        proposedComplexName: "(가칭) 동측 프리미엄(가상)",
+        totalUnits: 1320, memberUnits: 700, generalSaleUnits: 500, rentalUnits: 120,
+        buildingCount: 13, maxFloor: 35,
+        sourceType: "mock", sourceLabel: "시공사 제안(가상)", effectiveDate: "2025-11",
+      },
+    ],
   },
   {
     id: "dev-anyang-stadium-north",
