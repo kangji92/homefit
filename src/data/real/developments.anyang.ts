@@ -5,6 +5,7 @@
 // (docs/design 개발레이어 real-pilot §1~7 / 확인일 2026-09-14)
 
 import type { DevelopmentArea } from "@/domain/development";
+import { approximateSquarePolygon } from "@/domain/development";
 import type { Money } from "@/domain/types";
 
 const ANYANG_CITY_SRC = "https://www.anyang.go.kr/newtown/sub.do?key=4230";
@@ -20,9 +21,10 @@ const EAST: DevelopmentArea = {
   detailStage: "implementation",
   certainty: "confirmed",
   regionId: "pyeongchon",
-  // 경계 수치 미확보 → 대표점만(임의 경계 금지). 좌표는 비산동 종합운동장 동측 근사.
-  geometry: { kind: "point", at: { lat: 37.4009, lng: 126.945 } },
-  geometryAccuracy: "centroid_only",
+  // 공식 고시도면 좌표목록 미확보 → 실 면적(91,267㎡)로 크기 산출한 **근사 정사각** 경계.
+  // 실제 구역은 부정형이며 공식 경계 아님(traced_from_official_map/official_boundary로 승격 대상).
+  geometry: approximateSquarePolygon({ lat: 37.4009, lng: 126.945 }, 91267),
+  geometryAccuracy: "approximate",
   verification: "verified", // identity(사업 존재·구역명) 기준
   source: "안양시 도시정비 - 종합운동장 동측일원",
   sourceUrl: ANYANG_CITY_SRC,
@@ -112,8 +114,9 @@ const NORTH: DevelopmentArea = {
   detailStage: "association",
   certainty: "confirmed",
   regionId: "pyeongchon",
-  geometry: { kind: "point", at: { lat: 37.4042, lng: 126.9425 } },
-  geometryAccuracy: "centroid_only",
+  // 실 면적(64,375.3㎡)로 크기 산출한 근사 정사각 경계. 공식 경계 아님.
+  geometry: approximateSquarePolygon({ lat: 37.4042, lng: 126.9425 }, 64375.3),
+  geometryAccuracy: "approximate",
   verification: "verified",
   source: "안양시 정비사업 현황 - 종합운동장 북측 일원",
   updatedAt: "2026-03",
