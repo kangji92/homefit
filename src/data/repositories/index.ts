@@ -8,6 +8,7 @@ import { MOCK_PRESALES } from "@/data/mock/presales";
 import { APPLYHOME_PRESALES } from "@/data/mock/applyhomePresales";
 import { withMockLocation } from "@/data/mock/coordinates";
 import { MOCK_DEVELOPMENTS, getMockDevelopment } from "@/data/mock/developments";
+import { REAL_DEVELOPMENTS, getRealDevelopment } from "@/data/real/developments.anyang";
 import { MOCK_DEV_PROPERTIES } from "@/data/mock/villas";
 import type {
   AreaRepository,
@@ -72,10 +73,11 @@ export const areaRepository: AreaRepository = {
 // 개발사업 영역 + 정비사업 매물 — mock(실데이터는 후속). 기존 home/strategy 흐름과 분리.
 export const developmentRepository: DevelopmentRepository = {
   async list() {
-    return [...MOCK_DEVELOPMENTS];
+    // real(동측·북측) 우선 + 아직 mock인 항목. 각 area의 verification으로 실/가상 구분.
+    return [...REAL_DEVELOPMENTS, ...MOCK_DEVELOPMENTS];
   },
   async getById(id: string) {
-    return getMockDevelopment(id) ?? null;
+    return getRealDevelopment(id) ?? getMockDevelopment(id) ?? null;
   },
   async listProperties() {
     return MOCK_DEV_PROPERTIES.map(withMockLocation);

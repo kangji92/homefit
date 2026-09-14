@@ -15,6 +15,8 @@ import {
 import { DecisionMap } from "./DecisionMap";
 import { RedevelopmentPanel } from "./RedevelopmentPanel";
 import { RedevelopmentCostSimulator } from "./RedevelopmentCostSimulator";
+import { DevelopmentDetailPanel } from "./DevelopmentDetailPanel";
+import { DevelopmentComparison } from "./DevelopmentComparison";
 import { buildDecisionMapScene } from "./scene";
 
 export interface DecisionMapViewProps {
@@ -110,7 +112,11 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
       ? `target:${selTargetId}`
       : null;
 
+  // 실 개발사업(재개발) 비교 — 동측/북측 등 2건 이상일 때.
+  const redevelopmentAreas = developments.filter((d) => d.developmentType === "redevelopment");
+
   return (
+    <div className="space-y-4">
     <div className="md:grid md:grid-cols-2 md:gap-4">
       {/* 지도 — 모바일 상단(45vh), 데스크톱 우측 sticky */}
       <div className="md:order-2">
@@ -139,6 +145,7 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
             {selectedProperty.redevelopment && (
               <RedevelopmentCostSimulator home={selectedProperty} />
             )}
+            {selectedPropertyArea && <DevelopmentDetailPanel area={selectedPropertyArea} />}
           </>
         )}
 
@@ -181,6 +188,10 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
           );
         })}
       </div>
+    </div>
+
+    {/* 실 개발사업 진행 비교(동측/북측) */}
+    {redevelopmentAreas.length >= 2 && <DevelopmentComparison areas={redevelopmentAreas} />}
     </div>
   );
 }
