@@ -25,6 +25,22 @@ export function approximateSquarePolygon(center: Location, areaM2: number): GeoP
   return { kind: "polygon", rings: [ring] };
 }
 
+/**
+ * 중심점 + local 미터 오프셋(동=east, 북=north) 배열 → polygon. 공식 정비계획도의 경계
+ * **형상을 수기 trace**할 때 사용(북 기준 up 가정). 절대좌표는 중심점·축척 기준 근사.
+ */
+export function polygonFromLocalOffsets(
+  center: Location,
+  offsets: { east: number; north: number }[],
+): GeoPolygon {
+  const mPerDegLng = M_PER_DEG_LAT * Math.cos((center.lat * Math.PI) / 180) || 1;
+  const ring: Location[] = offsets.map((o) => ({
+    lat: center.lat + o.north / M_PER_DEG_LAT,
+    lng: center.lng + o.east / mPerDegLng,
+  }));
+  return { kind: "polygon", rings: [ring] };
+}
+
 /** polygon 첫 링의 좌표 평균(대략 중심). */
 export function polygonCentroid(poly: GeoPolygon): Location | undefined {
   const ring = poly.rings[0];

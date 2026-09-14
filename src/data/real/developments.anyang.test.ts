@@ -56,11 +56,13 @@ describe("REAL 안양 재개발 fixture (official-backed)", () => {
     expect(est.price.max.manwon).toBe(115000);
   });
 
-  it("경계는 실 면적 기준 근사 polygon(approximate, 공식 GIS 아님)", () => {
+  it("경계는 정비계획도 수기 trace polygon(traced_from_official_map, 부정형)", () => {
     expect(east.geometry.kind).toBe("polygon");
-    expect(east.geometryAccuracy).toBe("approximate");
+    expect(east.geometryAccuracy).toBe("traced_from_official_map");
     expect(north.geometry.kind).toBe("polygon");
-    expect(north.geometryAccuracy).toBe("approximate");
+    expect(north.geometryAccuracy).toBe("traced_from_official_map");
+    // 정사각(4점)이 아니라 부정형(여러 점)
+    if (east.geometry.kind === "polygon") expect(east.geometry.rings[0].length).toBeGreaterThan(4);
   });
 
   it("북측 공식 현황 facts", () => {

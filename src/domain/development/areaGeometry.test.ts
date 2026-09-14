@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { approximateSquarePolygon, polygonCentroid } from "./areaGeometry";
+import { approximateSquarePolygon, polygonCentroid, polygonFromLocalOffsets } from "./areaGeometry";
 
 describe("approximateSquarePolygon", () => {
   const center = { lat: 37.4009, lng: 126.945 };
@@ -26,5 +26,19 @@ describe("approximateSquarePolygon", () => {
     const big = approximateSquarePolygon(center, 90000);
     const span = (p: typeof small) => p.rings[0][0].lat - p.rings[0][3].lat;
     expect(span(big)).toBeGreaterThan(span(small));
+  });
+});
+
+describe("polygonFromLocalOffsets", () => {
+  const center = { lat: 37.4042, lng: 126.9425 };
+  it("동/북 오프셋(m)을 lat/lng로 변환 — 부정형 링", () => {
+    const poly = polygonFromLocalOffsets(center, [
+      { east: 100, north: 100 }, { east: 100, north: -100 }, { east: -100, north: -100 }, { east: -100, north: 100 }, { east: 0, north: 150 },
+    ]);
+    expect(poly.rings[0]).toHaveLength(5);
+    // north +100m → 위도 증가(~100/111320)
+    expect(poly.rings[0][0].lat - center.lat).toBeCloseTo(100 / 111320, 6);
+    // east +100m → 경도 증가(양수)
+    expect(poly.rings[0][0].lng).toBeGreaterThan(center.lng);
   });
 });
