@@ -56,13 +56,19 @@ describe("REAL 안양 재개발 fixture (official-backed)", () => {
     expect(est.price.max.manwon).toBe(115000);
   });
 
-  it("경계는 정비계획도 수기 trace polygon(traced_from_official_map, 부정형)", () => {
+  it("경계는 공식 NSDI SHP 좌표(official_boundary, 수도권 범위)", () => {
     expect(east.geometry.kind).toBe("polygon");
-    expect(east.geometryAccuracy).toBe("traced_from_official_map");
-    expect(north.geometry.kind).toBe("polygon");
-    expect(north.geometryAccuracy).toBe("traced_from_official_map");
-    // 정사각(4점)이 아니라 부정형(여러 점)
-    if (east.geometry.kind === "polygon") expect(east.geometry.rings[0].length).toBeGreaterThan(4);
+    expect(east.geometryAccuracy).toBe("official_boundary");
+    expect(north.geometryAccuracy).toBe("official_boundary");
+    if (east.geometry.kind === "polygon") {
+      const ring = east.geometry.rings[0];
+      expect(ring.length).toBeGreaterThan(50); // 실 경계는 다수 정점
+      // 변환 좌표가 안양 종합운동장 일대(수도권)에 위치
+      expect(ring[0].lat).toBeGreaterThan(37.39);
+      expect(ring[0].lat).toBeLessThan(37.42);
+      expect(ring[0].lng).toBeGreaterThan(126.93);
+      expect(ring[0].lng).toBeLessThan(126.97);
+    }
   });
 
   it("북측 공식 현황 facts", () => {
