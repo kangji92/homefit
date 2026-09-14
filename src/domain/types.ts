@@ -121,6 +121,32 @@ export interface ComplexPrice {
   jeonse?: PriceBand;
 }
 
+// ===== 주택 유형 · 매물/재개발 부가정보 (판단 보조 — fitScore/decisionStatus 미반영) =====
+export type HousingType = "apartment" | "villa" | "officetel" | "row_house";
+
+/** 일반 매물 정보(빌라 전용 아님). 값 없음은 undefined(UI에서 "정보 없음"). */
+export interface PropertyListingInfo {
+  askingPrice?: Money;
+  recentTransactionPrice?: Money;
+  exclusiveAreaM2?: number;
+  landShareM2?: number;
+  source?: Provenance;
+  updatedAt?: string;
+}
+
+/** 입주권 상태 — 실제 상태 자체가 unknown일 수 있어 enum으로 유지(자동 판정 안 함). */
+export type OccupancyRightStatus = "unknown" | "expected" | "confirmed" | "excluded";
+
+/** 정비사업 구역 연계. inside=구역 내부 여부. */
+export interface RedevelopmentLink {
+  /** DevelopmentArea.id 참조 */
+  areaId: string;
+  inside: boolean;
+  occupancyRightStatus?: OccupancyRightStatus;
+  /** 추가분담금 — **임의 추정 금지**. 정보 없으면 undefined(UI "정보 없음"). */
+  estimatedContribution?: Money;
+}
+
 /** 0~100 정성 지표 (측정 가능한 seed. AI 생성 아님) */
 export interface ComplexMetrics {
   education: number;
@@ -150,6 +176,16 @@ interface HomeBase {
   location?: Location;
   /** 위 location의 정확도 tier(표시용). */
   locationAccuracy?: LocationAccuracy;
+  /**
+   * 물리적 주택 유형(아파트/빌라/오피스텔/연립). 취득·리스팅 축 `kind`와 **직교**.
+   * 미지정은 undefined로 유지(도메인에 default 없음). 필요 시 UI/adapter에서만
+   * `housingType ?? "apartment"` fallback. (docs/design 개발레이어 결정 B)
+   */
+  housingType?: HousingType;
+  /** 매물 부가정보(호가·실거래·전용·대지지분 등). 판단 보조, scoring 미반영. */
+  listing?: PropertyListingInfo;
+  /** 정비사업(재개발/재건축) 구역 연계. 빌라 등에서 사용. 판단 보조. */
+  redevelopment?: RedevelopmentLink;
 }
 
 /** 기존 아파트 — 실거래가 기반 */

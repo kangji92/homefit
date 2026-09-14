@@ -9,6 +9,7 @@ import type {
   Workplace,
   CurrentHomeComparison,
 } from "@/domain/types";
+import type { DevelopmentArea } from "@/domain/development";
 import type { StrategyBoardItem } from "@/features/strategy/strategyView";
 import { buildDecisionMapScene } from "./scene";
 
@@ -122,5 +123,22 @@ describe("buildDecisionMapScene", () => {
     const target = homeAt("t3", 37.34, 126.97, { locationAccuracy: "region" });
     const scene = buildDecisionMapScene({ current, currentHome, workplaces: [], selected: boardItem("t3"), selectedTarget: target });
     expect(scene.entities.find((e) => e.selected)?.accuracy).toBe("region");
+  });
+
+  it("⑩ 개발영역 overlay + 재개발 빌라 entity(메타데이터) + 연계", () => {
+    const area: DevelopmentArea = { id: "dev-x", name: "동측 재개발", developmentType: "redevelopment", stage: "in_progress", detailStage: "implementation", certainty: "confirmed", geometry: { kind: "polygon", rings: [[{ lat: 37.40, lng: 126.94 }, { lat: 37.41, lng: 126.95 }, { lat: 37.40, lng: 126.95 }]] } };
+    const villa = { ...makeComplex({ id: "villa1" }), housingType: "villa", location: { lat: 37.402, lng: 126.945 }, locationAccuracy: "complex", redevelopment: { areaId: "dev-x", inside: true } } as Home;
+    const scene = buildDecisionMapScene({
+      current, currentHome, workplaces: [],
+      developments: [area], properties: [villa], selectedPropertyId: "villa1",
+    });
+    const pe = scene.entities.find((e) => e.id === "property:villa1")!;
+    expect(pe.housingType).toBe("villa");
+    expect(pe.inRedevelopment).toBe(true);
+    expect(pe.selected).toBe(true);
+    expect(scene.developments).toHaveLength(1);
+    expect(scene.developments![0].relatedEntityIds).toContain("property:villa1");
+    // 개발영역 좌표도 fitBounds 대상에 포함
+    expect(scene.boundsTargets.length).toBeGreaterThan(scene.entities.length);
   });
 });

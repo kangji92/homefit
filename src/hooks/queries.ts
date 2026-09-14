@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   areaRepository,
   complexRepository,
+  developmentRepository,
   homeRepository,
   regionRepository,
   type ComplexListParams,
@@ -74,6 +75,25 @@ export function useArea(id: string) {
     queryKey: areaKeys.detail(id),
     queryFn: () => areaRepository.getById(id),
     enabled: id.length > 0,
+  });
+}
+
+export const developmentKeys = {
+  all: ["developments"] as const,
+  properties: ["developmentProperties"] as const,
+};
+
+export function useDevelopments() {
+  return useQuery({
+    queryKey: developmentKeys.all,
+    queryFn: () => developmentRepository.list(),
+  });
+}
+
+export function useDevelopmentProperties() {
+  return useQuery({
+    queryKey: developmentKeys.properties,
+    queryFn: () => developmentRepository.listProperties(),
   });
 }
 

@@ -11,6 +11,7 @@ import { useLivingContextStore } from "@/stores/livingContextStore";
 import { isConditionsReady } from "@/lib/conditions";
 import { CurrentContextBanner } from "@/features/currentHousing/CurrentContextBanner";
 import { BaselineCard } from "@/features/currentHousing/BaselineCard";
+import { DecisionMapView } from "@/features/decisionMap";
 import { StrategyCard } from "./StrategyCard";
 import { StrategyCompareTable } from "./StrategyCompareTable";
 import { TradeoffSummary } from "./TradeoffSummary";
@@ -21,7 +22,7 @@ import {
   pickCompareColumns,
 } from "./strategyView";
 
-type ViewMode = "cards" | "compare";
+type ViewMode = "cards" | "compare" | "map";
 
 export function StrategyFeature() {
   const hasHydrated = useConditionsStore((s) => s.hasHydrated);
@@ -99,10 +100,27 @@ export function StrategyFeature() {
               <ToggleButton active={view === "compare"} onClick={() => setView("compare")}>
                 나란히 비교
               </ToggleButton>
+              <ToggleButton active={view === "map"} onClick={() => setView("map")}>
+                지도
+              </ToggleButton>
             </div>
           )}
 
-          {view === "compare" && compareColumns.length >= 2 ? (
+          {view === "map" && compareColumns.length >= 1 ? (
+            <section>
+              <p className="text-muted-foreground mb-3 text-xs">
+                현재 위치에서 각 전략이 공간적으로 어떤 변화인지 봅니다. 결정은 카드에서,
+                지도는 설명을 돕습니다.
+              </p>
+              <DecisionMapView
+                board={board}
+                homes={homes}
+                areas={areas}
+                workplaces={conditions.workplaces}
+                currentHousing={currentHousing}
+              />
+            </section>
+          ) : view === "compare" && compareColumns.length >= 2 ? (
             <section>
               {/* 기준점(baseline): 현재 유지 — 아래 +/-의 기준 */}
               <div className="mb-3">

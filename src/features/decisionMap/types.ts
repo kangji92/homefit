@@ -2,7 +2,14 @@
 // 그대로 지도 컴포넌트에 넘기지 않고, 지도 표현에 필요한 최소 metadata만 담는다.
 // scoring/business logic은 여기서 계산하지 않는다(재사용만). (docs/design/decision-map.md §11)
 
-import type { DecisionStatus, Location, LocationAccuracy } from "@/domain/types";
+import type { DecisionStatus, HousingType, Location, LocationAccuracy } from "@/domain/types";
+import type {
+  DevelopmentCertainty,
+  DevelopmentGeometry,
+  DevelopmentStage,
+  DevelopmentType,
+  RedevelopmentStage,
+} from "@/domain/development";
 
 export type MapEntityKind =
   | "current_home"
@@ -20,9 +27,26 @@ export interface MapEntity {
   selected?: boolean;
   dimmed?: boolean;
   accuracy?: LocationAccuracy;
+  /** 물리적 주택 유형(kind 확장 대신 metadata로 구분). 마커 스타일 분기. */
+  housingType?: HousingType;
+  /** 재개발 구역 내부 매물 표시(일반 빌라와 구분). */
+  inRedevelopment?: boolean;
   // 지도 표현용 최소 decision metadata(재사용, 재계산 아님)
   fitScore?: number;
   decisionStatus?: DecisionStatus;
+}
+
+/** 개발사업 오버레이(polygon/line/point). MapEntity(point)와 분리 — 폴리곤을 point에 넣지 않음. */
+export interface MapDevelopmentOverlay {
+  id: string;
+  label: string;
+  developmentType: DevelopmentType;
+  stage: DevelopmentStage;
+  detailStage?: RedevelopmentStage;
+  certainty: DevelopmentCertainty;
+  geometry: DevelopmentGeometry;
+  /** 이 구역과 연관된 entity id들(구역 내부 매물 등). */
+  relatedEntityIds: string[];
 }
 
 export type MapRelationKind = "move" | "commute";
@@ -41,4 +65,6 @@ export interface DecisionMapScene {
   relations: MapRelation[];
   /** fitBounds 대상 좌표(포함된 엔티티 위치). */
   boundsTargets: Location[];
+  /** 개발사업 오버레이(선택). 기존 scene 리터럴 호환 위해 optional. */
+  developments?: MapDevelopmentOverlay[];
 }

@@ -9,8 +9,14 @@ import type {
   Location,
   Workplace,
 } from "@/domain/types";
+import type { DevelopmentArea, DevelopmentGeometry } from "@/domain/development";
 import type { StrategyBoardItem } from "@/features/strategy/strategyView";
-import type { DecisionMapScene, MapEntity, MapRelation } from "./types";
+import type {
+  DecisionMapScene,
+  MapDevelopmentOverlay,
+  MapEntity,
+  MapRelation,
+} from "./types";
 
 export interface DecisionMapInput {
   current?: CurrentHousing;
@@ -23,6 +29,22 @@ export interface DecisionMapInput {
   selectedTarget?: Home | Area;
   /** 맥락용 기타 후보(dim 표시). 무조건 전부 넣지 않는다 — 호출측이 소수만 전달. */
   others?: (Home | Area)[];
+  /** 개발사업 영역(오버레이). */
+  developments?: DevelopmentArea[];
+  /** 재개발 빌라 등 매물(전략 target과 별개의 매물 마커). */
+  properties?: Home[];
+  /** 선택된 매물 entity 강조("property:<id>"). */
+  selectedPropertyId?: string;
+}
+
+function geometryPoints(g: DevelopmentGeometry): Location[] {
+  if (g.kind === "polygon") return g.rings.flat();
+  if (g.kind === "line") return g.path;
+  return [g.at];
+}
+
+function homeEntityKind(h: Home): MapEntity["kind"] {
+  return h.kind === "presale" ? "presale_home" : "existing_home";
 }
 
 // 워크플레이스 좌표가 실제로 있는지(기본값 0,0은 미설정으로 간주).
@@ -96,6 +118,43 @@ export function buildDecisionMapScene(input: DecisionMapInput): DecisionMapScene
     });
   }
 
+  // ── 매물(재개발 빌라 등) ──
+  const propertyIdsByArea = new Map<string, string[]>();
+  for (const p of input.properties ?? []) {
+    if (!p.location) continue;
+    const eid = `property:${p.id}`;
+    entities.push({
+      id: eid,
+      kind: homeEntityKind(p),
+      location: p.location,
+      label: p.name,
+      selected: p.id === input.selectedPropertyId,
+      accuracy: p.locationAccuracy,
+      housingType: p.housingType,
+      inRedevelopment: p.redevelopment?.inside ?? false,
+    });
+    const areaId = p.redevelopment?.areaId;
+    if (areaId) {
+      const arr = propertyIdsByArea.get(areaId) ?? [];
+      arr.push(eid);
+      propertyIdsByArea.set(areaId, arr);
+    }
+  }
+
+  // ── 개발사업 오버레이 ──
+  const developments: MapDevelopmentOverlay[] = (input.developments ?? []).map((d) => ({
+    id: d.id,
+    label: d.name,
+    developmentType: d.developmentType,
+    stage: d.stage,
+    detailStage: d.detailStage,
+    certainty: d.certainty,
+    geometry: d.geometry,
+    relatedEntityIds: propertyIdsByArea.get(d.id) ?? [],
+  }));
+  // 개발영역 좌표도 fitBounds에 포함(구역이 화면에 들어오도록).
+  const developmentPoints = (input.developments ?? []).flatMap((d) => geometryPoints(d.geometry));
+
   // ── 관계 ──
   // 이동: 현재 → target
   if (currentId && targetId) {
@@ -118,5 +177,10 @@ export function buildDecisionMapScene(input: DecisionMapInput): DecisionMapScene
     }
   }
 
-  return { entities, relations, boundsTargets: entities.map((e) => e.location) };
+  return {
+    entities,
+    relations,
+    boundsTargets: [...entities.map((e) => e.location), ...developmentPoints],
+    developments,
+  };
 }

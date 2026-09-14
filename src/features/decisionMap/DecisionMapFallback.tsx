@@ -68,6 +68,22 @@ export function DecisionMapFallback({ scene }: DecisionMapFallbackProps) {
           {countByKind(scene.entities, "workplace") > 0 && " 직장 위치만 표시됩니다."}
         </p>
       )}
+
+      {scene.developments && scene.developments.length > 0 && (
+        <div className="border-border mt-3 border-t pt-2">
+          <p className="text-muted-foreground mb-1 text-xs font-medium">주변 개발사업</p>
+          <ul className="space-y-0.5">
+            {scene.developments.map((d) => (
+              <li key={d.id} className="text-muted-foreground text-xs">
+                · {d.label}
+                {d.certainty !== "confirmed" && (
+                  <span className="text-warning"> ({d.certainty === "likely" ? "가능성" : "장기검토"})</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 // MVP는 mock 구현, 이후 Supabase 구현으로 교체.
 
 import type { Area, Complex, Home, Region } from "@/domain/types";
+import type { DevelopmentArea } from "@/domain/development";
 
 export interface ComplexListParams {
   regionId?: string;
@@ -27,4 +28,12 @@ export interface AreaRepository {
 
 export interface RegionRepository {
   list(): Promise<Region[]>;
+}
+
+/** 개발사업 영역 + 정비사업 매물(빌라 등). 판단 보조 데이터. */
+export interface DevelopmentRepository {
+  list(): Promise<DevelopmentArea[]>;
+  getById(id: string): Promise<DevelopmentArea | null>;
+  /** 재개발 빌라 등 매물(전략 후보와 별개의 매물 마커). */
+  listProperties(): Promise<Home[]>;
 }
