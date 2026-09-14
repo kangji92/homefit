@@ -16,7 +16,8 @@ export type MapEntityKind =
   | "workplace"
   | "existing_home"
   | "presale_home"
-  | "area";
+  | "area"
+  | "development"; // 개발사업 구역(클릭 → 상세). 경계는 별도 overlay, 이건 선택용 대표 마커.
 
 export interface MapEntity {
   id: string;

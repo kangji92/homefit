@@ -14,6 +14,7 @@ const KIND_DOT: Record<MapEntity["kind"], string> = {
   existing_home: "#2563eb",
   presale_home: "#7c3aed",
   area: "#0d9488",
+  development: "#f97316",
 };
 const KIND_TAG: Record<MapEntity["kind"], string> = {
   current_home: "현재",
@@ -21,6 +22,7 @@ const KIND_TAG: Record<MapEntity["kind"], string> = {
   existing_home: "기존",
   presale_home: "분양",
   area: "예정지",
+  development: "사업",
 };
 
 function createMarkerElement(e: MapEntity): HTMLElement {

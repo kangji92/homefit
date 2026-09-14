@@ -24,6 +24,7 @@ vi.mock("./DecisionMap", () => ({
     <div data-testid="map" data-selected={props.selectedEntityId ?? ""}>
       <button type="button" onClick={() => props.onSelectEntity?.("other:h2")}>marker-h2</button>
       <button type="button" onClick={() => props.onSelectEntity?.("property:v1")}>marker-villa</button>
+      <button type="button" onClick={() => props.onSelectEntity?.("development:dev-east")}>marker-dev</button>
     </div>
   ),
 }));
@@ -77,5 +78,13 @@ describe("DecisionMapView 카드↔지도 sync", () => {
     expect(screen.getByTestId("map").getAttribute("data-selected")).toBe("property:v1");
     expect(screen.getByText("실거주 + 정비사업 투자대상")).toBeInTheDocument();
     expect(screen.getByRole("status").textContent).toContain("A빌라");
+  });
+
+  it("개발구역 marker 선택 → DevelopmentDetailPanel 노출(매물 없이 구역 자체)", () => {
+    renderView();
+    fireEvent.click(screen.getByRole("button", { name: "marker-dev" }));
+    expect(screen.getByTestId("map").getAttribute("data-selected")).toBe("development:dev-east");
+    expect(screen.getByRole("heading", { name: "동측 재개발" })).toBeInTheDocument();
+    expect(screen.getByRole("status").textContent).toContain("개발구역");
   });
 });

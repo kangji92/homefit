@@ -58,6 +58,7 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
 
   const [selectedId, setSelectedId] = useState<string | undefined>(() => columns[0]?.strategy.id);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | undefined>();
+  const [selectedDevelopmentId, setSelectedDevelopmentId] = useState<string | undefined>();
   const selected = columns.find((c) => c.strategy.id === selectedId) ?? columns[0];
 
   // 개발사업 영역 + 정비사업 매물(빌라 등) — 기존 home/strategy 흐름과 분리된 layer.
@@ -71,6 +72,11 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
   const selectedPropertyArea = selectedProperty?.redevelopment
     ? developments.find((d) => d.id === selectedProperty.redevelopment!.areaId)
     : undefined;
+  // 매물 선택이 없을 때만 개발구역 단독 선택 상세를 노출(매물이 우선).
+  const selectedDevelopment =
+    !selectedProperty && selectedDevelopmentId
+      ? developments.find((d) => d.id === selectedDevelopmentId)
+      : undefined;
 
   const currentHome = useMemo(() => {
     const ref = currentHousing?.homeRef;
@@ -93,33 +99,44 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
       developments,
       properties,
       selectedPropertyId,
+      selectedDevelopmentId,
     });
-  }, [columns, targetOf, selected, currentHousing, currentHome, workplaces, developments, properties, selectedPropertyId]);
+  }, [columns, targetOf, selected, currentHousing, currentHome, workplaces, developments, properties, selectedPropertyId, selectedDevelopmentId]);
 
-  // entity id → 선택 갱신. "property:*"는 매물(빌라), 그 외는 전략 target.
+  // entity id → 선택 갱신. "property:*"는 매물(빌라), "development:*"는 개발구역, 그 외는 전략 target.
   const onSelectEntity = (entityId: string) => {
     const id = entityId.slice(entityId.indexOf(":") + 1);
     if (entityId.startsWith("property:")) {
       setSelectedPropertyId(id);
+      setSelectedDevelopmentId(undefined);
+      return;
+    }
+    if (entityId.startsWith("development:")) {
+      setSelectedDevelopmentId(id);
+      setSelectedPropertyId(undefined);
       return;
     }
     const col = columns.find((c) => c.strategy.targetRef?.id === id);
     if (col) {
       setSelectedId(col.strategy.id);
       setSelectedPropertyId(undefined);
+      setSelectedDevelopmentId(undefined);
     }
   };
   const selectStrategyCard = (strategyId: string) => {
     setSelectedId(strategyId);
     setSelectedPropertyId(undefined);
+    setSelectedDevelopmentId(undefined);
   };
 
   const selTargetId = selected ? selected.strategy.targetRef?.id : undefined;
   const selectedEntityId = selectedPropertyId
     ? `property:${selectedPropertyId}`
-    : selTargetId
-      ? `target:${selTargetId}`
-      : null;
+    : selectedDevelopment
+      ? `development:${selectedDevelopment.id}`
+      : selTargetId
+        ? `target:${selTargetId}`
+        : null;
 
   // 실 개발사업(재개발) 비교 — 동측/북측 등 2건 이상일 때.
   const redevelopmentAreas = developments.filter((d) => d.developmentType === "redevelopment");
@@ -142,9 +159,11 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
         <p className="text-muted-foreground text-xs" role="status">
           {selectedProperty
             ? `선택: ${selectedProperty.name} · ${propertySourceLabel(selectedProperty)}`
-            : selected
-              ? `선택: ${selected.strategy.label}`
-              : ""}
+            : selectedDevelopment
+              ? `선택: ${selectedDevelopment.name} · 개발구역`
+              : selected
+                ? `선택: ${selected.strategy.label}`
+                : ""}
         </p>
 
         {/* 현장 매물 수기 입력 */}
@@ -161,8 +180,11 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
           </>
         )}
 
+        {/* 개발구역 마커 단독 선택 시: 사업 상세만(매물 없이 구역 자체를 열람) */}
+        {selectedDevelopment && <DevelopmentDetailPanel area={selectedDevelopment} />}
+
         {columns.map((c) => {
-          const active = !selectedProperty && c.strategy.id === selected?.strategy.id;
+          const active = !selectedProperty && !selectedDevelopment && c.strategy.id === selected?.strategy.id;
           const href = strategyTargetHref(c.strategy);
           return (
             <div
