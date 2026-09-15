@@ -21,7 +21,13 @@ const villaNoAppraisal = {
 } as Home;
 const area: DevelopmentArea = {
   id: "dev-east", name: "동측", developmentType: "redevelopment", stage: "in_progress",
-  detailStage: "implementation", certainty: "confirmed", geometry: { kind: "point", at: { lat: 37.4, lng: 126.94 } },
+  detailStage: "implementation", certainty: "confirmed", verification: "verified",
+  geometry: { kind: "point", at: { lat: 37.4, lng: 126.94 } },
+  milestones: [
+    { kind: "association", label: "조합설립인가", date: "2023-05-08", status: "confirmed", sourceType: "official", verification: "verified" },
+    { kind: "implementation", label: "사업시행계획인가", date: "2026-05-19", status: "confirmed", sourceType: "official", verification: "verified" },
+    { kind: "management", label: "관리처분계획인가(목표)", date: "2027", status: "target", sourceType: "official", verification: "verified" },
+  ],
   memberSaleEstimates: [
     { id: "east-59", sizeLabel: "59㎡", sourceType: "broker", verification: "unverified" },
     { id: "east-84", sizeLabel: "84㎡", price: { min: won(110000), max: won(115000) }, sourceType: "broker", verification: "unverified" },
@@ -69,6 +75,15 @@ describe("RedevelopmentCostSimulator", () => {
     render(<RedevelopmentCostSimulator home={villa} area={area} onChangeDesiredSize={(id) => seen.push(id)} />);
     fireEvent.click(screen.getByRole("button", { name: /59㎡/ }));
     expect(seen).toContain("east-59");
+  });
+
+  it("사업단계 provenance는 확정 milestone(사업시행계획인가·공식·확인)에서 오고, 구역 내부 여부와 섞이지 않는다", () => {
+    render(<RedevelopmentCostSimulator home={villa} area={area} />);
+    // 사업단계 = 실제 확정 milestone(구역 내부/매물 provenance와 독립)
+    expect(screen.getByText("사업시행계획인가 · 공식·확인됨")).toBeInTheDocument();
+    // 구역 내부 여부는 별도 축 — 수기 매물은 미확인(사업단계 verified를 전파하지 않음)
+    expect(screen.getByText("구역 내부 여부")).toBeInTheDocument();
+    expect(screen.getByText("미확인")).toBeInTheDocument();
   });
 
   it("비례율 0 이하 경고", () => {

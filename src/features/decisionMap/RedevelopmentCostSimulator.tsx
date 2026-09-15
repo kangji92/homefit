@@ -45,6 +45,24 @@ const PRESETS = [
 const estLabel = (e?: MemberSaleEstimate) =>
   e ? `${e.sizeLabel}${e.price ? ` ${showRange(e.price.min, e.price.max)}` : " · 예정가 미확보"}` : "";
 
+/**
+ * 현재 확정된 정비사업 단계 milestone. **구역 내부 여부·매물 provenance와 무관** — 사업 자체의
+ * 공식 단계/검증만 본다. detailStage에 해당하는 확정 milestone 우선, 없으면 마지막 확정 milestone.
+ */
+function confirmedStageMilestone(area?: DevelopmentArea) {
+  const confirmed = (area?.milestones ?? []).filter((m) => m.status === "confirmed");
+  const byStage = area?.detailStage ? confirmed.find((m) => m.kind === area.detailStage) : undefined;
+  return byStage ?? confirmed[confirmed.length - 1];
+}
+function stageSourceText(area?: DevelopmentArea): string {
+  const m = confirmedStageMilestone(area);
+  if (!m) return "미확인";
+  const tag = m.sourceType === "official" && m.verification === "verified"
+    ? "공식·확인됨"
+    : m.verification === "verified" ? "확인됨" : "미검증";
+  return `${m.label ?? "사업단계"} · ${tag}`;
+}
+
 export function RedevelopmentCostSimulator({ home, area, onChangeDesiredSize }: RedevelopmentCostSimulatorProps) {
   const estimates = area?.memberSaleEstimates ?? [];
   const purchaseManwon = home.listing?.askingPrice?.manwon;
@@ -216,12 +234,11 @@ export function RedevelopmentCostSimulator({ home, area, onChangeDesiredSize }: 
                   : "사용자 직접 입력"
             }
           />
+          {/* 아래 셋은 서로 독립적 provenance — 전파/합산 금지 */}
           {area && (
-            <SourceRow
-              label="사업단계"
-              src={`${area.name}${area.verification === "verified" ? " · 공식·확인됨" : " · 미확인"}`}
-            />
+            <SourceRow label="구역 내부 여부" src={home.redevelopment?.inside === true ? "공식 경계 내부 확인" : "미확인"} />
           )}
+          {area && <SourceRow label="사업단계" src={stageSourceText(area)} />}
         </dl>
         <p className="text-muted-foreground mt-2 text-[11px]">실제 분담금은 관리처분계획 및 조합의 공식 자료에 따라 달라질 수 있어요.</p>
       </div>
