@@ -39,6 +39,15 @@ geometryAccuracy: "official_boundary",
 ```
 KakaoMapAdapter가 폴리곤을 마커 아래 layer로 렌더한다.
 
+## 공식 사업단계(공공데이터 CSV) 병행
+경계(SHP)는 위치·구역명만 준다. **사업단계·세대·인가일자**는 공공데이터포털
+"경기도 안양시_일반 정비사업 추진현황" CSV(공식)가 출처다.
+- 원본 CSV는 `src/data/real/sources/`에 UTF-8로 커밋(소량·공개).
+- `scripts/generate-anyang-developments.py`가 CSV → `developments.anyang.csv.ts`(DevelopmentArea[])
+  생성. 사업단계→stage/detailStage 매핑, 인가일자→official milestone, 세대→official plan.
+  경계는 SHP 확보 6곳만 official_boundary, 나머지는 CSV 위/경도 point(centroid_only).
+- 무명(ALIAS 빈) 피처는 추출기 `--match-index "레코드인덱스=CONST"`로 지정(‌--search로 인덱스 확인).
+
 ## 주의(현재 한계)
 - **multipart/holes**: 여러 파트면 **최대 면적 파트를 외곽**으로 사용(존치부 hole 미모델).
   어댑터도 `rings[0]`만 렌더.

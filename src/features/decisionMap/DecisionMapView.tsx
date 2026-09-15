@@ -148,7 +148,10 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
         : null;
 
   // 실 개발사업(재개발) 비교 — 동측/북측 등 2건 이상일 때.
-  const redevelopmentAreas = developments.filter((d) => d.developmentType === "redevelopment");
+  // 진행 비교는 정보량이 있는(확정 단계) 재개발만, 소수로 제한(표 폭발 방지). 전체는 탐색/상세에서.
+  const redevelopmentAreas = developments
+    .filter((d) => d.developmentType === "redevelopment" && d.certainty === "confirmed")
+    .slice(0, 4);
 
   return (
     <div className="space-y-4">
