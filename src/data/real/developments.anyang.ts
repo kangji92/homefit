@@ -7,6 +7,7 @@
 import type { DevelopmentArea } from "@/domain/development";
 import type { Money } from "@/domain/types";
 import { EAST_RING, NORTH_RING } from "./geometry.anyang";
+import { REAL_DEVELOPMENTS_ANYANG_MORE } from "./developments.anyang2";
 
 const ANYANG_CITY_SRC = "https://www.anyang.go.kr/newtown/sub.do?key=4230";
 const won = (manwon: number): Money => ({ manwon, valueProvenance: "sourced" });
@@ -163,7 +164,7 @@ const NORTH: DevelopmentArea = {
   ],
 };
 
-export const REAL_DEVELOPMENTS: DevelopmentArea[] = [EAST, NORTH];
+export const REAL_DEVELOPMENTS: DevelopmentArea[] = [EAST, NORTH, ...REAL_DEVELOPMENTS_ANYANG_MORE];
 
 export function getRealDevelopment(id: string): DevelopmentArea | undefined {
   return REAL_DEVELOPMENTS.find((d) => d.id === id);

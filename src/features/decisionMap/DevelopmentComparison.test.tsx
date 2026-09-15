@@ -5,7 +5,7 @@ import { DevelopmentComparison } from "./DevelopmentComparison";
 
 describe("DevelopmentComparison (동측/북측)", () => {
   it("두 사업을 같은 layout으로 나란히, 단계 차이를 보여준다", () => {
-    render(<DevelopmentComparison areas={REAL_DEVELOPMENTS} />);
+    render(<DevelopmentComparison areas={REAL_DEVELOPMENTS.slice(0, 2)} />); {/* 동측/북측 */}
     expect(screen.getByText("종합운동장 동측일원 재개발")).toBeInTheDocument();
     expect(screen.getByText("종합운동장 북측 일원 재개발")).toBeInTheDocument();
     // 현재 단계 구분

@@ -79,6 +79,10 @@ describe("REAL 안양 재개발 fixture (official-backed)", () => {
   it("북측 공식 현황 facts", () => {
     expect(north.facts?.siteAreaM2).toBe(64375.3);
     expect(north.facts?.memberCount).toBe(911);
-    expect(REAL_DEVELOPMENTS).toHaveLength(2);
+    // 동측/북측 + 추가 안양 구역들이 함께 병합돼 있다.
+    const ids = REAL_DEVELOPMENTS.map((d) => d.id);
+    expect(ids).toContain("dev-anyang-stadium-east");
+    expect(ids).toContain("dev-anyang-stadium-north");
+    expect(REAL_DEVELOPMENTS.length).toBeGreaterThanOrEqual(2);
   });
 });
