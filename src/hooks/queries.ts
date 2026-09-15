@@ -80,6 +80,7 @@ export function useArea(id: string) {
 
 export const developmentKeys = {
   all: ["developments"] as const,
+  detail: (id: string) => ["developments", id] as const,
   properties: ["developmentProperties"] as const,
 };
 
@@ -87,6 +88,14 @@ export function useDevelopments() {
   return useQuery({
     queryKey: developmentKeys.all,
     queryFn: () => developmentRepository.list(),
+  });
+}
+
+export function useDevelopment(id: string) {
+  return useQuery({
+    queryKey: developmentKeys.detail(id),
+    queryFn: () => developmentRepository.getById(id),
+    enabled: id.length > 0,
   });
 }
 

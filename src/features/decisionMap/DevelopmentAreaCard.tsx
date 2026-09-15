@@ -25,9 +25,10 @@ const DETAIL_LABEL: Record<RedevelopmentStage, string> = {
 
 /**
  * 정비사업 구역(DevelopmentArea)을 **판단 보조 정보 카드**로 표시. AreaFit(개발 예정지)과
- * 달리 점수/순위가 없다 — fitScore 미반영. 클릭 시 Decision Map(사업 상세)로 이동.
+ * 달리 점수/순위가 없다 — fitScore 미반영. 클릭 시 전용 상세(/development/[id])로 이동.
  */
-export function DevelopmentAreaCard({ area, href = "/strategy?view=map" }: DevelopmentAreaCardProps) {
+export function DevelopmentAreaCard({ area, href }: DevelopmentAreaCardProps) {
+  const to = href ?? `/development/${area.id}`;
   const stage = area.detailStage ? DETAIL_LABEL[area.detailStage] : STAGE_LABEL[area.stage];
   // 확정된 최신 사업단계 milestone(구역 내부·매물 provenance와 무관, 사업 자체의 공식 단계).
   const confirmed = (area.milestones ?? []).filter((m) => m.status === "confirmed");
@@ -35,7 +36,7 @@ export function DevelopmentAreaCard({ area, href = "/strategy?view=map" }: Devel
   const plan = area.plans?.find((p) => p.type === "official") ?? area.plans?.[0];
 
   return (
-    <Link href={href} className="border-border bg-surface hover:border-primary block rounded-xl border p-4">
+    <Link href={to} className="border-border bg-surface hover:border-primary block rounded-xl border p-4">
       <div className="flex items-center gap-2">
         <span className="bg-warning/10 text-warning rounded-full px-2 py-0.5 text-[11px] font-semibold">
           {TYPE_LABEL[area.developmentType]}
@@ -55,7 +56,7 @@ export function DevelopmentAreaCard({ area, href = "/strategy?view=map" }: Devel
         )}
       </dl>
       <p className="text-muted-foreground mt-2 text-[11px]">
-        판단 보조 정보 · 적합도 점수에 반영되지 않아요. 지도에서 자세히 보기 →
+        판단 보조 정보 · 적합도 점수에 반영되지 않아요. 자세히 보기 →
       </p>
     </Link>
   );

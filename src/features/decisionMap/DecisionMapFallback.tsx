@@ -16,7 +16,8 @@ export function DecisionMapFallback({ scene }: DecisionMapFallbackProps) {
   const target = scene.entities.find((e) => e.selected);
   const commutes = scene.relations.filter((r) => r.kind === "commute" && r.label);
 
-  if (scene.entities.length === 0) {
+  const hasDevelopments = (scene.developments?.length ?? 0) > 0;
+  if (scene.entities.length === 0 && !hasDevelopments) {
     return (
       <div className="border-border text-muted-foreground rounded-xl border border-dashed p-4 text-center text-sm">
         표시할 위치 정보가 아직 없어요. 현재 주거·대상 단지를 지정하면 여기서 변화를 보여드려요.
@@ -62,7 +63,7 @@ export function DecisionMapFallback({ scene }: DecisionMapFallbackProps) {
         </div>
       )}
 
-      {!target && (
+      {!target && scene.entities.length > 0 && (
         <p className="text-muted-foreground text-sm">
           비교할 전략 대상이 아직 없어요.
           {countByKind(scene.entities, "workplace") > 0 && " 직장 위치만 표시됩니다."}

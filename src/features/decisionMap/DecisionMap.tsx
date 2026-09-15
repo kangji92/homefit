@@ -39,8 +39,9 @@ export function DecisionMap({ scene, selectedEntityId, onSelectEntity, onSelectD
     devHandlerRef.current = onSelectDevelopment;
   });
 
-  const hasEntities = scene.entities.length > 0;
-  const mapVisible = loader.status === "ready" && hasEntities;
+  // 지도 표시 조건: point entity가 있거나, 개발구역 오버레이(폴리곤/라인)만 있어도 표시.
+  const hasContent = scene.entities.length > 0 || (scene.developments?.length ?? 0) > 0;
+  const mapVisible = loader.status === "ready" && hasContent;
 
   // 지도 생성/파기 — mapVisible이 true가 될 때 1회.
   useEffect(() => {
@@ -71,7 +72,7 @@ export function DecisionMap({ scene, selectedEntityId, onSelectEntity, onSelectD
     a.setSelected(selectedEntityId ?? null);
   }, [scene, selectedEntityId, mapVisible]);
 
-  if (loader.status === "error" || !hasEntities) {
+  if (loader.status === "error" || !hasContent) {
     return <DecisionMapFallback scene={scene} />;
   }
 
