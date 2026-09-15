@@ -6,7 +6,8 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { DEAL_TYPE_LABEL } from "@/domain/price";
 import type { DealType } from "@/domain/types";
 import type { AcquisitionPath } from "@/domain/types";
-import { useAreas, useHomes, useRegions } from "@/hooks/queries";
+import { useAreas, useDevelopments, useHomes, useRegions } from "@/hooks/queries";
+import { DevelopmentAreaCard } from "@/features/decisionMap";
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { isConditionsReady } from "@/lib/conditions";
 import { AreaCard } from "@/features/area/AreaCard";
@@ -24,6 +25,7 @@ const KIND_TABS: { value: ListingKindFilter; label: string }[] = [
   { value: "existing", label: "기존" },
   { value: "presale", label: "분양" },
   { value: "area", label: "개발예정지" },
+  { value: "development", label: "정비사업" },
 ];
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
@@ -44,6 +46,7 @@ export function ExploreFeature() {
   const homesQuery = useHomes();
   const areasQuery = useAreas();
   const regionsQuery = useRegions();
+  const developmentsQuery = useDevelopments();
 
   const [q, setQ] = useState("");
   const [regionId, setRegionId] = useState<string>("all");
@@ -96,6 +99,18 @@ export function ExploreFeature() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [homes, areas, q, regionId, dealType, kind, priceMaxRaw, sizeMinRaw, acquisitionPath, sort, conditions, priorities, dealbreakers],
   );
+
+  // 정비사업 구역(비점수 레이어) — 이름/지역 필터만. 집/개발예정지 검색과 분리.
+  const developments = useMemo(() => developmentsQuery.data ?? [], [developmentsQuery.data]);
+  const devResults = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return developments.filter(
+      (d) =>
+        (needle === "" || d.name.toLowerCase().includes(needle)) &&
+        (regionId === "all" || d.regionId === regionId),
+    );
+  }, [developments, q, regionId]);
+  const showDev = kind === "all" || kind === "development";
 
   function resetFilters() {
     setQ("");
@@ -296,7 +311,7 @@ export function ExploreFeature() {
       </div>
 
       {/* 결과 */}
-      {total === 0 ? (
+      {total === 0 && !(showDev && devResults.length > 0) ? (
         <div className="py-10 text-center">
           <p className="text-muted-foreground text-sm">
             지금 조건으로 검토할 후보가 없어요.
@@ -385,6 +400,20 @@ export function ExploreFeature() {
                   </div>
                 </details>
               )}
+            </section>
+          )}
+          {/* 정비사업 구역 — 판단 보조(비점수) 레이어 */}
+          {showDev && devResults.length > 0 && (
+            <section aria-label="정비사업 구역" className="space-y-3">
+              <div>
+                <h2 className="text-lg font-bold">정비사업 구역</h2>
+                <p className="text-muted-foreground text-xs">
+                  재개발·재건축 등 진행 사업이에요. 적합도 점수에 넣지 않는 판단 보조 정보예요.
+                </p>
+              </div>
+              {devResults.map((area) => (
+                <DevelopmentAreaCard key={area.id} area={area} />
+              ))}
             </section>
           )}
         </div>

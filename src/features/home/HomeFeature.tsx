@@ -6,9 +6,10 @@ import { useRouter } from "next/navigation";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { computeAreaFit } from "@/domain/scoring";
 import { upcomingSubscriptions } from "@/domain/subscription";
-import { useAreas, useHomes, useRegions } from "@/hooks/queries";
+import { useAreas, useDevelopments, useHomes, useRegions } from "@/hooks/queries";
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { AreaCard } from "@/features/area/AreaCard";
+import { DevelopmentAreaCard } from "@/features/decisionMap";
 import { LoginButton } from "@/features/auth/LoginButton";
 import { StrategyHomeSection } from "@/features/strategy/StrategyHomeSection";
 import { ConditionsSummary } from "./ConditionsSummary";
@@ -41,6 +42,8 @@ export function HomeFeature() {
   const complexesQuery = useHomes();
   const regionsQuery = useRegions();
   const areasQuery = useAreas();
+  const developmentsQuery = useDevelopments();
+  const developments = useMemo(() => developmentsQuery.data ?? [], [developmentsQuery.data]);
 
   const areaFits = useMemo(
     () =>
@@ -90,31 +93,61 @@ export function HomeFeature() {
 
   return (
     <PageContainer className="max-w-2xl space-y-6">
+      <header className="space-y-1">
+        <h1 className="text-2xl font-bold">결정</h1>
+        <p className="text-muted-foreground text-sm">
+          우리 가족이 지금 매수할지, 기다릴지, 다른 선택지를 볼지 정리해요.
+        </p>
+      </header>
       <LoginButton />
       <ConditionsSummary conditions={conditions} />
       {/* 주인공: 주거 전략 Decision View */}
       <StrategyHomeSection />
       {/* 이하 보조: 청약 일정 · 추천 단지 · 개발예정지 */}
-      <UpcomingSubscriptions items={subscriptions} />
+      <Supplement title="청약 일정" count={subscriptions.length}>
+        <UpcomingSubscriptions items={subscriptions} />
+      </Supplement>
       {renderContent()}
       {renderAreas()}
+      {renderDevelopments()}
     </PageContainer>
   );
+
+  function renderDevelopments() {
+    if (developments.length === 0) return null;
+    return (
+      <Supplement title="정비사업 구역" count={developments.length}>
+        <section aria-label="정비사업 구역" className="space-y-3">
+          <div>
+            <h2 className="text-sm font-semibold">진행 중인 정비사업</h2>
+            <p className="text-muted-foreground text-xs">
+              재개발·재건축 등 진행 사업이에요. 적합도 점수에 넣지 않는 판단 보조 정보예요.
+            </p>
+          </div>
+          {developments.map((area) => (
+            <DevelopmentAreaCard key={area.id} area={area} />
+          ))}
+        </section>
+      </Supplement>
+    );
+  }
 
   function renderAreas() {
     if (areaFits.length === 0) return null;
     return (
+      <Supplement title="개발 예정지" count={areaFits.length}>
       <section aria-label="개발 예정지" className="space-y-3">
         <div>
-          <h2 className="text-lg font-bold">개발 예정지</h2>
+          <h2 className="text-sm font-semibold">검토할 개발 예정지</h2>
           <p className="text-muted-foreground text-xs">
-            3기신도시 등 · 지역 적합도(AreaFit)
+            기다리는 선택지를 판단할 때 참고할 지역이에요.
           </p>
         </div>
         {areaFits.map(({ area, fit }) => (
           <AreaCard key={area.id} area={area} fit={fit} />
         ))}
       </section>
+      </Supplement>
     );
   }
 
@@ -135,23 +168,23 @@ export function HomeFeature() {
       );
     }
     if (complexesQuery.isLoading) {
-      return <Notice role="status">추천을 불러오는 중이에요…</Notice>;
+      return <Notice role="status">검토할 후보를 불러오는 중이에요…</Notice>;
     }
     if (complexesQuery.isError) {
-      return <Notice role="alert">추천을 불러오지 못했어요.</Notice>;
+      return <Notice role="alert">검토할 후보를 불러오지 못했어요.</Notice>;
     }
     if (recommendations.length === 0) {
-      return <Notice>표시할 단지가 없어요.</Notice>;
+      return <Notice>지금 참고할 후보가 없어요.</Notice>;
     }
     return (
-      <section aria-label="추천 단지" className="space-y-3">
+      <section aria-label="결정에 참고할 후보" className="space-y-3">
         <div className="flex items-end justify-between">
           <div>
             <h2 className="text-muted-foreground text-sm font-semibold">
-              참고 · 조건에 맞는 단지
+              결정에 참고할 후보
             </h2>
             <p className="text-muted-foreground text-xs">
-              전략의 대상 후보를 고를 때 참고하세요
+              선택지를 좁힐 때 검토할 이유가 있는 집이에요
             </p>
           </div>
           <Link href="/explore" className="text-primary shrink-0 text-sm font-medium">
@@ -169,4 +202,24 @@ export function HomeFeature() {
       </section>
     );
   }
+}
+
+function Supplement({
+  title,
+  count,
+  children,
+}: {
+  title: string;
+  count: number;
+  children: React.ReactNode;
+}) {
+  if (count === 0) return null;
+  return (
+    <details className="bg-surface-muted rounded-xl p-4">
+      <summary className="cursor-pointer text-sm font-semibold">
+        보조 후보 · {title} {count > 0 ? count : ""}
+      </summary>
+      <div className="mt-3">{children}</div>
+    </details>
+  );
 }

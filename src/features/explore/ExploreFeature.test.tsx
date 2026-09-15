@@ -8,16 +8,25 @@ import { DEFAULT_CONDITIONS, useConditionsStore } from "@/stores/conditionsStore
 import { useCandidatesStore } from "@/stores/candidatesStore";
 import { ExploreFeature } from "./ExploreFeature";
 
-const { useHomesMock, useRegionsMock, useAreasMock } = vi.hoisted(() => ({
+const { useHomesMock, useRegionsMock, useAreasMock, useDevelopmentsMock } = vi.hoisted(() => ({
   useHomesMock: vi.fn(),
   useRegionsMock: vi.fn(),
   useAreasMock: vi.fn(),
+  useDevelopmentsMock: vi.fn(),
 }));
 vi.mock("@/hooks/queries", () => ({
   useHomes: () => useHomesMock(),
   useAreas: () => useAreasMock(),
   useRegions: () => useRegionsMock(),
+  useDevelopments: () => useDevelopmentsMock(),
 }));
+
+const DEV_AREA = {
+  id: "dev-anyang-stadium-east", name: "종합운동장 동측일원 재개발", developmentType: "redevelopment",
+  stage: "in_progress", detailStage: "implementation", certainty: "confirmed", regionId: "pyeongchon",
+  geometry: { kind: "point", at: { lat: 37.4, lng: 126.94 } },
+  milestones: [{ kind: "implementation", label: "사업시행계획인가", date: "2026-05-19", status: "confirmed", sourceType: "official", verification: "verified" }],
+} as const;
 
 const READY = {
   ...DEFAULT_CONDITIONS,
@@ -55,6 +64,7 @@ beforeEach(() => {
     isLoading: false,
     isError: false,
   });
+  useDevelopmentsMock.mockReturnValue({ data: [DEV_AREA], isLoading: false, isError: false });
 });
 
 describe("ExploreFeature", () => {
@@ -82,6 +92,16 @@ describe("ExploreFeature", () => {
     const firstName = MOCK_COMPLEXES[0].name;
     await user.type(screen.getByLabelText("이름 검색"), firstName);
     expect(screen.getByText(firstName)).toBeInTheDocument();
+  });
+
+  it("'정비사업' 탭에서 정비사업 구역(비점수 판단보조)을 카드로 보여준다", async () => {
+    const user = userEvent.setup();
+    render(<ExploreFeature />);
+    await user.click(screen.getByRole("tab", { name: "정비사업" }));
+    expect(screen.getByText("종합운동장 동측일원 재개발")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "정비사업 구역" })).toBeInTheDocument();
+    // 판단 보조(점수 미반영) 고지가 함께 보인다
+    expect(screen.getAllByText(/적합도 점수에 반영되지 않아요/).length).toBeGreaterThan(0);
   });
 
   it("'현장에서 본 매물 분석하기' CTA가 지도 뷰(/strategy?view=map)로 연결된다", () => {

@@ -14,6 +14,8 @@ export type { DevelopmentDetailPanelProps } from "./DevelopmentDetailPanel";
 export { DevelopmentComparison } from "./DevelopmentComparison";
 export type { DevelopmentComparisonProps } from "./DevelopmentComparison";
 export { ManualPropertyForm } from "./ManualPropertyForm";
+export { DevelopmentAreaCard } from "./DevelopmentAreaCard";
+export type { DevelopmentAreaCardProps } from "./DevelopmentAreaCard";
 export { buildManualProperty } from "./manualProperty";
 export type { ManualPropertyInput } from "./manualProperty";
 export { DecisionMapView } from "./DecisionMapView";

@@ -21,7 +21,9 @@ import type {
 } from "@/domain/types";
 import type { Recommendation } from "@/features/home/recommend";
 
-export type ListingKindFilter = "all" | "existing" | "presale" | "area";
+// "development" = 정비사업 구역(DevelopmentArea). 집/개발예정지와 별개 레이어(비점수) — homes/areas
+// 검색엔 잡히지 않고 ExploreFeature가 별도로 렌더한다.
+export type ListingKindFilter = "all" | "existing" | "presale" | "area" | "development";
 export type SortKey = "fit" | "price" | "newest";
 
 export interface SearchParams {

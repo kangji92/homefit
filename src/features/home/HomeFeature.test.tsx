@@ -27,6 +27,7 @@ vi.mock("@/hooks/queries", () => ({
   useHomes: () => useComplexesMock(),
   useRegions: () => useRegionsMock(),
   useAreas: () => ({ data: [], isLoading: false, isError: false }),
+  useDevelopments: () => ({ data: [], isLoading: false, isError: false }),
 }));
 
 const READY_CONDITIONS = {
@@ -82,7 +83,7 @@ describe("HomeFeature", () => {
       isError: false,
     });
     render(<HomeFeature />);
-    expect(screen.getByText("추천을 불러오는 중이에요…")).toBeInTheDocument();
+    expect(screen.getByText("검토할 후보를 불러오는 중이에요…")).toBeInTheDocument();
   });
 
   it("쿼리 에러 상태를 표시한다", () => {
@@ -92,7 +93,7 @@ describe("HomeFeature", () => {
       isError: true,
     });
     render(<HomeFeature />);
-    expect(screen.getByText("추천을 불러오지 못했어요.")).toBeInTheDocument();
+    expect(screen.getByText("검토할 후보를 불러오지 못했어요.")).toBeInTheDocument();
   });
 
   it("단지 데이터가 없으면 빈 상태를 표시한다", () => {
@@ -102,7 +103,7 @@ describe("HomeFeature", () => {
       isError: false,
     });
     render(<HomeFeature />);
-    expect(screen.getByText("표시할 단지가 없어요.")).toBeInTheDocument();
+    expect(screen.getByText("지금 참고할 후보가 없어요.")).toBeInTheDocument();
   });
 
   it("조건 미완성이면 조건 설정 안내를 표시한다", () => {
@@ -111,12 +112,9 @@ describe("HomeFeature", () => {
     expect(screen.getByText("우리 조건을 먼저 완성해주세요.")).toBeInTheDocument();
   });
 
-  it("정상 추천을 상위 5개 이하로 카드에 표시한다", () => {
+  it("Decision Hub와 참고 후보를 함께 표시한다", () => {
     render(<HomeFeature />);
-    const cards = screen
-      .getAllByRole("link")
-      .filter((el) => el.getAttribute("href")?.startsWith("/complex/"));
-    expect(cards.length).toBeGreaterThan(0);
-    expect(cards.length).toBeLessThanOrEqual(5);
+    expect(screen.getByRole("heading", { name: "결정" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "결정에 참고할 후보" })).toBeInTheDocument();
   });
 });
