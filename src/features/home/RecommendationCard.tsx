@@ -1,5 +1,6 @@
-import Link from "next/link";
 import { ScoreGauge } from "@/components/ui/ScoreGauge";
+import { ListCardShell } from "@/components/ui/ListCardShell";
+import { DealbreakerBadge } from "@/components/ui/DealbreakerBadge";
 import type { DealType } from "@/domain/types";
 import { formatActivePrice } from "@/lib/format";
 import { PRIORITY_LABELS } from "@/lib/priorityLabels";
@@ -21,26 +22,20 @@ export function RecommendationCard({
   const axes = topAxes(fit, 3);
 
   return (
-    <div className="relative">
-      {action && <div className="absolute right-3 top-3 z-10">{action}</div>}
-      <Link
-        href={`/complex/${complex.id}`}
-        className="bg-surface border-border block rounded-xl border p-4"
-      >
-        <div className="flex items-center gap-4">
-        <ScoreGauge score={fit.totalScore} label="적합도" />
-        <div className="min-w-0 flex-1">
+    <ListCardShell href={`/complex/${complex.id}`} action={action}>
+        <div className="flex items-start gap-4">
+          <div className="min-w-0 flex-1">
+            <p className="text-primary text-xs font-semibold">검토할 이유</p>
           <div className="flex items-center gap-2">
             <h3 className="truncate font-semibold">{complex.name}</h3>
-            {!fit.passesDealbreakers && (
-              <span className="bg-danger/10 text-danger shrink-0 rounded px-1.5 py-0.5 text-xs font-medium">
-                조건 미충족
-              </span>
-            )}
+            {!fit.passesDealbreakers && <DealbreakerBadge />}
           </div>
           <p className="text-muted-foreground mt-0.5 text-sm">
             {regionName ? `${regionName} · ` : ""}
             {formatActivePrice(complex, dealType)}
+          </p>
+          <p className="text-muted-foreground mt-1 text-xs">
+            {axes.map((a) => PRIORITY_LABELS[a.key]).join(", ")} 조건을 확인해볼 만해요.
           </p>
           <ul className="mt-2 flex flex-wrap gap-1.5">
             {axes.map((a) => (
@@ -53,8 +48,8 @@ export function RecommendationCard({
             ))}
           </ul>
           </div>
+          <ScoreGauge score={fit.totalScore} label="적합도" />
         </div>
-      </Link>
-    </div>
+    </ListCardShell>
   );
 }

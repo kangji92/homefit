@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ListCardShell } from "@/components/ui/ListCardShell";
 import type {
   DevelopmentArea,
   DevelopmentStage,
@@ -36,7 +36,7 @@ export function DevelopmentAreaCard({ area, href }: DevelopmentAreaCardProps) {
   const plan = area.plans?.find((p) => p.type === "official") ?? area.plans?.[0];
 
   return (
-    <Link href={to} className="border-border bg-surface hover:border-primary block rounded-xl border p-4">
+    <ListCardShell href={to} className="hover:border-primary">
       <div className="flex items-center gap-2">
         <span className="bg-warning/10 text-warning rounded-full px-2 py-0.5 text-[11px] font-semibold">
           {TYPE_LABEL[area.developmentType]}
@@ -58,6 +58,6 @@ export function DevelopmentAreaCard({ area, href }: DevelopmentAreaCardProps) {
       <p className="text-muted-foreground mt-2 text-[11px]">
         판단 보조 정보 · 적합도 점수에 반영되지 않아요. 자세히 보기 →
       </p>
-    </Link>
+    </ListCardShell>
   );
 }

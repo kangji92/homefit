@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { ScoreGauge } from "@/components/ui/ScoreGauge";
+import { ListCardShell } from "@/components/ui/ListCardShell";
 import type { Area, AreaFitResult } from "@/domain/types";
 
 export function AreaCard({
@@ -13,13 +13,8 @@ export function AreaCard({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="relative">
-      {action && <div className="absolute right-3 top-3 z-10">{action}</div>}
-      <Link
-        href={`/area/${area.id}`}
-        className="bg-surface border-border block rounded-xl border p-4"
-      >
-        <div className="flex items-center gap-4">
+    <ListCardShell href={`/area/${area.id}`} action={action}>
+      <div className="flex items-center gap-4">
         <ScoreGauge score={fit.totalScore} label="적합도" />
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-semibold">{area.name}</h3>
@@ -33,9 +28,8 @@ export function AreaCard({
               {area.targetMoveInYear}년 입주 예정
             </p>
           )}
-          </div>
         </div>
-      </Link>
-    </div>
+      </div>
+    </ListCardShell>
   );
 }
