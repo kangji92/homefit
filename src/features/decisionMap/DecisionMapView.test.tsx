@@ -20,11 +20,12 @@ const villa = {
 
 // DecisionMap을 stub으로 — selection 동기화만 검증. 전략 marker + 매물 marker 트리거 제공.
 vi.mock("./DecisionMap", () => ({
-  DecisionMap: (props: { selectedEntityId?: string | null; onSelectEntity?: (id: string) => void }) => (
+  DecisionMap: (props: { selectedEntityId?: string | null; onSelectEntity?: (id: string) => void; onSelectDevelopment?: (id: string) => void }) => (
     <div data-testid="map" data-selected={props.selectedEntityId ?? ""}>
       <button type="button" onClick={() => props.onSelectEntity?.("other:h2")}>marker-h2</button>
       <button type="button" onClick={() => props.onSelectEntity?.("property:v1")}>marker-villa</button>
-      <button type="button" onClick={() => props.onSelectEntity?.("development:dev-east")}>marker-dev</button>
+      {/* 개발구역은 폴리곤 클릭(onSelectDevelopment) — entity marker가 아님 */}
+      <button type="button" onClick={() => props.onSelectDevelopment?.("dev-east")}>polygon-dev</button>
     </div>
   ),
 }));
@@ -80,10 +81,11 @@ describe("DecisionMapView 카드↔지도 sync", () => {
     expect(screen.getByRole("status").textContent).toContain("A빌라");
   });
 
-  it("개발구역 marker 선택 → DevelopmentDetailPanel 노출(매물 없이 구역 자체)", () => {
+  it("개발구역 폴리곤 클릭 → DevelopmentDetailPanel 노출(매물 없이 구역 자체, marker 승격 없음)", () => {
     renderView();
-    fireEvent.click(screen.getByRole("button", { name: "marker-dev" }));
-    expect(screen.getByTestId("map").getAttribute("data-selected")).toBe("development:dev-east");
+    fireEvent.click(screen.getByRole("button", { name: "polygon-dev" }));
+    // 구역 선택은 point marker 강조가 아니라 폴리곤 강조 → selectedEntityId는 비어있음
+    expect(screen.getByTestId("map").getAttribute("data-selected")).toBe("");
     expect(screen.getByRole("heading", { name: "동측 재개발" })).toBeInTheDocument();
     expect(screen.getByRole("status").textContent).toContain("개발구역");
   });

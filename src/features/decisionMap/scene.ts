@@ -35,7 +35,7 @@ export interface DecisionMapInput {
   properties?: Home[];
   /** 선택된 매물 entity 강조("property:<id>"). */
   selectedPropertyId?: string;
-  /** 선택된 개발구역 entity 강조("development:<id>"). */
+  /** 선택된 개발구역 강조 — MapDevelopmentOverlay.selected로 표현(폴리곤 강조, marker 아님). */
   selectedDevelopmentId?: string;
 }
 
@@ -43,13 +43,6 @@ function geometryPoints(g: DevelopmentGeometry): Location[] {
   if (g.kind === "polygon") return g.rings.flat();
   if (g.kind === "line") return g.path;
   return [g.at];
-}
-
-/** 개발구역 대표 좌표(클릭용 마커 위치) — 경계 좌표 평균. */
-function geometryCentroid(g: DevelopmentGeometry): Location {
-  const pts = geometryPoints(g);
-  const sum = pts.reduce((a, p) => ({ lat: a.lat + p.lat, lng: a.lng + p.lng }), { lat: 0, lng: 0 });
-  return { lat: sum.lat / pts.length, lng: sum.lng / pts.length };
 }
 
 function homeEntityKind(h: Home): MapEntity["kind"] {
@@ -150,28 +143,20 @@ export function buildDecisionMapScene(input: DecisionMapInput): DecisionMapScene
     }
   }
 
-  // ── 개발사업 오버레이 + 대표 마커(클릭 → 상세) ──
-  const developments: MapDevelopmentOverlay[] = [];
-  for (const d of input.developments ?? []) {
-    developments.push({
-      id: d.id,
-      label: d.name,
-      developmentType: d.developmentType,
-      stage: d.stage,
-      detailStage: d.detailStage,
-      certainty: d.certainty,
-      geometry: d.geometry,
-      relatedEntityIds: propertyIdsByArea.get(d.id) ?? [],
-    });
-    // 경계 위 대표 좌표에 클릭 가능한 마커(경계 폴리곤은 별도 overlay).
-    entities.push({
-      id: `development:${d.id}`,
-      kind: "development",
-      location: geometryCentroid(d.geometry),
-      label: d.name,
-      selected: d.id === input.selectedDevelopmentId,
-    });
-  }
+  // ── 개발사업 오버레이(geometry) ──
+  // 개발구역은 point marker로 승격하지 않는다. 폴리곤 자체가 클릭 대상(adapter.onDevelopmentClick).
+  // 보조 context이므로 후보 주택/매물 마커가 주 시각 대상이 되도록 별도 마커를 두지 않는다.
+  const developments: MapDevelopmentOverlay[] = (input.developments ?? []).map((d) => ({
+    id: d.id,
+    label: d.name,
+    developmentType: d.developmentType,
+    stage: d.stage,
+    detailStage: d.detailStage,
+    certainty: d.certainty,
+    geometry: d.geometry,
+    relatedEntityIds: propertyIdsByArea.get(d.id) ?? [],
+    selected: d.id === input.selectedDevelopmentId,
+  }));
   // 개발영역 좌표도 fitBounds에 포함(구역이 화면에 들어오도록).
   const developmentPoints = (input.developments ?? []).flatMap((d) => geometryPoints(d.geometry));
 

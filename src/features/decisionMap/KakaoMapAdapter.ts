@@ -14,7 +14,6 @@ const KIND_DOT: Record<MapEntity["kind"], string> = {
   existing_home: "#2563eb",
   presale_home: "#7c3aed",
   area: "#0d9488",
-  development: "#f97316",
 };
 const KIND_TAG: Record<MapEntity["kind"], string> = {
   current_home: "현재",
@@ -22,7 +21,6 @@ const KIND_TAG: Record<MapEntity["kind"], string> = {
   existing_home: "기존",
   presale_home: "분양",
   area: "예정지",
-  development: "사업",
 };
 
 function createMarkerElement(e: MapEntity): HTMLElement {
@@ -69,8 +67,9 @@ function applyMarkerState(el: HTMLElement, e: MapEntity, selected: boolean): voi
 
 export class KakaoMapAdapter implements MapAdapter {
   private overlays = new Map<string, { overlay: KCustomOverlay; el: HTMLElement; entity: MapEntity; onClick: () => void }>();
-  private shapes: KShape[] = [];
+  private shapes: { shape: KShape; onClick?: (...a: unknown[]) => void }[] = [];
   private clickHandler?: (entityId: string) => void;
+  private developmentClickHandler?: (developmentId: string) => void;
   private idleListener?: (...args: unknown[]) => void;
 
   constructor(private api: KakaoMapsApi, private map: KMap) {}
@@ -100,6 +99,10 @@ export class KakaoMapAdapter implements MapAdapter {
 
   onEntityClick(handler: (entityId: string) => void): void {
     this.clickHandler = handler;
+  }
+
+  onDevelopmentClick(handler: (developmentId: string) => void): void {
+    this.developmentClickHandler = handler;
   }
 
   setSelected(entityId: string | null): void {
@@ -142,28 +145,34 @@ export class KakaoMapAdapter implements MapAdapter {
     for (const d of devs) {
       const color = DEV_COLOR[d.developmentType];
       const style = CERTAINTY_STYLE[d.certainty];
+      // 선택된 구역만 강조. 미선택은 옅은 보조 context(후보 주택/매물 마커가 주 시각 대상).
+      const strokeOpacity = d.selected ? Math.min(1, style.strokeOpacity + 0.3) : style.strokeOpacity;
+      const fillOpacity = d.selected ? style.fillOpacity + 0.12 : style.fillOpacity;
+      let shape: KShape | undefined;
       if (d.geometry.kind === "polygon") {
         const ring = d.geometry.rings[0] ?? [];
         if (ring.length < 3) continue;
-        const shape = new this.api.Polygon({
+        shape = new this.api.Polygon({
           path: ring.map((p) => new this.api.LatLng(p.lat, p.lng)),
-          strokeWeight: 2, strokeColor: color, strokeOpacity: style.strokeOpacity,
-          strokeStyle: style.strokeStyle, fillColor: color, fillOpacity: style.fillOpacity,
+          strokeWeight: d.selected ? 4 : 2, strokeColor: color, strokeOpacity,
+          strokeStyle: style.strokeStyle, fillColor: color, fillOpacity,
           zIndex: 1, // 마커(CustomOverlay)보다 아래
         });
-        shape.setMap(this.map);
-        this.shapes.push(shape);
       } else if (d.geometry.kind === "line") {
         if (d.geometry.path.length < 2) continue;
-        const shape = new this.api.Polyline({
+        shape = new this.api.Polyline({
           path: d.geometry.path.map((p) => new this.api.LatLng(p.lat, p.lng)),
-          strokeWeight: 4, strokeColor: color, strokeOpacity: style.strokeOpacity,
+          strokeWeight: d.selected ? 6 : 4, strokeColor: color, strokeOpacity,
           strokeStyle: style.strokeStyle, zIndex: 2,
         });
-        shape.setMap(this.map);
-        this.shapes.push(shape);
       }
       // point geometry는 MVP에서 shape 생략(마커 레이어에서 다룸).
+      if (!shape) continue;
+      shape.setMap(this.map);
+      // 폴리곤/라인 클릭 → onDevelopmentClick. Kakao 도형 클릭 리스너는 이 파일 내부에만.
+      const onClick = () => this.developmentClickHandler?.(d.id);
+      this.api.event.addListener(shape, "click", onClick);
+      this.shapes.push({ shape, onClick });
     }
   }
 
@@ -173,7 +182,10 @@ export class KakaoMapAdapter implements MapAdapter {
       o.overlay.setMap(null);
     }
     this.overlays.clear();
-    for (const s of this.shapes) s.setMap(null);
+    for (const s of this.shapes) {
+      if (s.onClick) this.api.event.removeListener(s.shape, "click", s.onClick);
+      s.shape.setMap(null);
+    }
     this.shapes = [];
   }
 }

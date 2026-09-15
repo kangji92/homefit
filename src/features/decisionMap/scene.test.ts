@@ -142,20 +142,19 @@ describe("buildDecisionMapScene", () => {
     expect(scene.boundsTargets.length).toBeGreaterThan(scene.entities.length);
   });
 
-  it("⑪ 개발구역마다 클릭용 대표 마커(kind=development, 경계 평균 좌표) — selectedDevelopmentId 강조", () => {
+  it("⑪ 개발구역은 point marker로 승격하지 않는다 — overlay만, selectedDevelopmentId는 overlay.selected로", () => {
     const area: DevelopmentArea = { id: "dev-x", name: "동측 재개발", developmentType: "redevelopment", stage: "in_progress", detailStage: "implementation", certainty: "confirmed", geometry: { kind: "polygon", rings: [[{ lat: 37.40, lng: 126.94 }, { lat: 37.42, lng: 126.96 }, { lat: 37.41, lng: 126.95 }]] } };
     const scene = buildDecisionMapScene({
       current, currentHome, workplaces: [],
       developments: [area], selectedDevelopmentId: "dev-x",
     });
-    const de = scene.entities.find((e) => e.id === "development:dev-x")!;
-    expect(de.kind).toBe("development");
-    expect(de.selected).toBe(true);
-    // 경계 좌표 평균이 마커 위치
-    expect(de.location.lat).toBeCloseTo(37.41, 5);
-    expect(de.location.lng).toBeCloseTo(126.95, 5);
+    // 개발구역용 fake marker entity가 없다(MapEntity로 승격 금지).
+    expect(scene.entities.some((e) => e.id.startsWith("development:"))).toBe(false);
+    // 선택은 overlay.selected로 표현
+    expect(scene.developments).toHaveLength(1);
+    expect(scene.developments![0].selected).toBe(true);
     // 미선택 구역은 강조되지 않는다
     const scene2 = buildDecisionMapScene({ current, currentHome, workplaces: [], developments: [area] });
-    expect(scene2.entities.find((e) => e.id === "development:dev-x")!.selected).toBe(false);
+    expect(scene2.developments![0].selected).toBe(false);
   });
 });

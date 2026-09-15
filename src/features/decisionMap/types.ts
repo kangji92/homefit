@@ -11,13 +11,14 @@ import type {
   RedevelopmentStage,
 } from "@/domain/development";
 
+// point entity(주택/직장/지역)만. 개발사업 구역은 MapDevelopmentOverlay(geometry)로 다루며
+// UI hit-target enum(MapEntityKind)으로 승격하지 않는다 — polygon click은 adapter가 직접 처리.
 export type MapEntityKind =
   | "current_home"
   | "workplace"
   | "existing_home"
   | "presale_home"
-  | "area"
-  | "development"; // 개발사업 구역(클릭 → 상세). 경계는 별도 overlay, 이건 선택용 대표 마커.
+  | "area";
 
 export interface MapEntity {
   id: string;
@@ -48,6 +49,8 @@ export interface MapDevelopmentOverlay {
   geometry: DevelopmentGeometry;
   /** 이 구역과 연관된 entity id들(구역 내부 매물 등). */
   relatedEntityIds: string[];
+  /** 선택된 구역(폴리곤 강조). selectedDevelopmentId와 일치할 때 true. */
+  selected?: boolean;
 }
 
 export type MapRelationKind = "move" | "commute";

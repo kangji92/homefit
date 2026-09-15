@@ -23,6 +23,8 @@ const shapes: { opts: unknown; map: unknown; type: "polygon" | "polyline" }[] = 
 class FakePolygon { map: unknown = null; type = "polygon" as const; constructor(public opts: unknown) { shapes.push(this); } setMap(m: unknown) { this.map = m; } }
 class FakePolyline { map: unknown = null; type = "polyline" as const; constructor(public opts: unknown) { shapes.push(this); } setMap(m: unknown) { this.map = m; } }
 const idle: { handlers: ((...a: unknown[]) => void)[] } = { handlers: [] };
+// 도형 click 리스너 추적(polygon/line 클릭 → onDevelopmentClick 검증용).
+const clickListeners: { target: unknown; handler: (...a: unknown[]) => void }[] = [];
 class FakeMap {
   bounds?: FakeBounds; center?: FakeLatLng; level?: number;
   setBounds(b: FakeBounds) { this.bounds = b; }
@@ -34,13 +36,23 @@ function makeApi(): { api: KakaoMapsApi; map: FakeMap } {
   overlays.length = 0;
   shapes.length = 0;
   idle.handlers = [];
+  clickListeners.length = 0;
   const map = new FakeMap();
   const api = {
     Map: FakeMap, LatLng: FakeLatLng, LatLngBounds: FakeBounds, CustomOverlay: FakeOverlay,
     Polygon: FakePolygon, Polyline: FakePolyline,
     event: {
-      addListener: (_t: unknown, type: string, h: (...a: unknown[]) => void) => { if (type === "idle") idle.handlers.push(h); },
-      removeListener: (_t: unknown, type: string, h: (...a: unknown[]) => void) => { if (type === "idle") idle.handlers = idle.handlers.filter((x) => x !== h); },
+      addListener: (t: unknown, type: string, h: (...a: unknown[]) => void) => {
+        if (type === "idle") idle.handlers.push(h);
+        else if (type === "click") clickListeners.push({ target: t, handler: h });
+      },
+      removeListener: (t: unknown, type: string, h: (...a: unknown[]) => void) => {
+        if (type === "idle") idle.handlers = idle.handlers.filter((x) => x !== h);
+        else if (type === "click") {
+          const i = clickListeners.findIndex((c) => c.target === t && c.handler === h);
+          if (i >= 0) clickListeners.splice(i, 1);
+        }
+      },
     },
   } as unknown as KakaoMapsApi;
   return { api, map: map as unknown as FakeMap };
@@ -123,6 +135,39 @@ describe("KakaoMapAdapter", () => {
     expect(poly.zIndex).toBeLessThan(20); // 마커(CustomOverlay zIndex 20/30)보다 아래
   });
 
+  it("개발구역 polygon/line 클릭 → onDevelopmentClick에 development id 전달(마커 승격 없이)", () => {
+    const { api, map } = makeApi();
+    const a = new KakaoMapAdapter(api, map as never);
+    const spy = vi.fn();
+    a.onDevelopmentClick(spy);
+    a.render({
+      ...scene,
+      developments: [
+        { id: "d1", label: "동측", developmentType: "redevelopment", stage: "in_progress", certainty: "confirmed", geometry: { kind: "polygon", rings: [[{ lat: 37.4, lng: 126.94 }, { lat: 37.41, lng: 126.95 }, { lat: 37.4, lng: 126.95 }]] }, relatedEntityIds: [] },
+        { id: "d2", label: "월판선", developmentType: "railway", stage: "in_progress", certainty: "confirmed", geometry: { kind: "line", path: [{ lat: 37.39, lng: 126.93 }, { lat: 37.4, lng: 126.95 }] }, relatedEntityIds: [] },
+      ],
+    });
+    // 도형마다 click 리스너 1개(내부에서만 등록). 마커 entity로는 승격되지 않는다.
+    expect(clickListeners).toHaveLength(2);
+    clickListeners[0].handler();
+    clickListeners[1].handler();
+    expect(spy).toHaveBeenNthCalledWith(1, "d1");
+    expect(spy).toHaveBeenNthCalledWith(2, "d2");
+  });
+
+  it("selected 구역 폴리곤은 더 강한 stroke로 강조된다", () => {
+    const { api, map } = makeApi();
+    const a = new KakaoMapAdapter(api, map as never);
+    const geometry = { kind: "polygon" as const, rings: [[{ lat: 37.4, lng: 126.94 }, { lat: 37.41, lng: 126.95 }, { lat: 37.4, lng: 126.95 }]] };
+    a.render({ ...scene, developments: [{ id: "d1", label: "동측", developmentType: "redevelopment", stage: "in_progress", certainty: "confirmed", geometry, relatedEntityIds: [], selected: true }] });
+    const sel = shapes.find((s) => s.type === "polygon")!.opts as { strokeWeight: number };
+    expect(sel.strokeWeight).toBe(4);
+    const { api: api2, map: map2 } = makeApi();
+    new KakaoMapAdapter(api2, map2 as never).render({ ...scene, developments: [{ id: "d1", label: "동측", developmentType: "redevelopment", stage: "in_progress", certainty: "confirmed", geometry, relatedEntityIds: [], selected: false }] });
+    const unsel = shapes.find((s) => s.type === "polygon")!.opts as { strokeWeight: number };
+    expect(unsel.strokeWeight).toBe(2);
+  });
+
   it("destroy가 오버레이와 idle 리스너를 정리한다(누수 방지)", () => {
     const { api, map } = makeApi();
     const a = new KakaoMapAdapter(api, map as never);
@@ -132,5 +177,6 @@ describe("KakaoMapAdapter", () => {
     expect(overlays.every((o) => o.map === null)).toBe(true);
     expect(shapes.every((s) => s.map === null)).toBe(true);
     expect(idle.handlers).toHaveLength(0);
+    expect(clickListeners).toHaveLength(0); // 도형 click 리스너도 정리
   });
 });

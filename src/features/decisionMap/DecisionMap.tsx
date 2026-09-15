@@ -13,6 +13,8 @@ export interface DecisionMapProps {
   selectedEntityId?: string | null;
   /** marker 클릭 시 entity id를 돌려준다(카드 동기화). */
   onSelectEntity?: (entityId: string) => void;
+  /** 개발구역(폴리곤/라인) 클릭 시 development id를 돌려준다. */
+  onSelectDevelopment?: (developmentId: string) => void;
   className?: string;
 }
 
@@ -20,7 +22,7 @@ export interface DecisionMapProps {
  * DecisionMapScene을 Kakao 지도에 렌더. 지도 실패/키없음/빈 scene은 DecisionMapFallback로
  * 강등(지도 실패가 Decision View 실패로 이어지지 않는다). 지도는 spatial explanation layer.
  */
-export function DecisionMap({ scene, selectedEntityId, onSelectEntity, className }: DecisionMapProps) {
+export function DecisionMap({ scene, selectedEntityId, onSelectEntity, onSelectDevelopment, className }: DecisionMapProps) {
   const loader = useKakaoLoader();
   const containerRef = useRef<HTMLDivElement>(null);
   const adapterRef = useRef<KakaoMapAdapter | null>(null);
@@ -29,10 +31,12 @@ export function DecisionMap({ scene, selectedEntityId, onSelectEntity, className
   const sceneRef = useRef(scene);
   const selectedRef = useRef(selectedEntityId);
   const handlerRef = useRef(onSelectEntity);
+  const devHandlerRef = useRef(onSelectDevelopment);
   useEffect(() => {
     sceneRef.current = scene;
     selectedRef.current = selectedEntityId;
     handlerRef.current = onSelectEntity;
+    devHandlerRef.current = onSelectDevelopment;
   });
 
   const hasEntities = scene.entities.length > 0;
@@ -50,6 +54,7 @@ export function DecisionMap({ scene, selectedEntityId, onSelectEntity, className
     const adapter = new KakaoMapAdapter(api, map);
     adapterRef.current = adapter;
     adapter.onEntityClick((id) => handlerRef.current?.(id));
+    adapter.onDevelopmentClick((id) => devHandlerRef.current?.(id));
     // 초기 render/fitBounds/setSelected는 아래 scene effect가 담당(중복 render 방지).
     return () => {
       adapter.destroy();

@@ -103,17 +103,12 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
     });
   }, [columns, targetOf, selected, currentHousing, currentHome, workplaces, developments, properties, selectedPropertyId, selectedDevelopmentId]);
 
-  // entity id → 선택 갱신. "property:*"는 매물(빌라), "development:*"는 개발구역, 그 외는 전략 target.
+  // entity(point marker) id → 선택 갱신. "property:*"는 매물(빌라), 그 외는 전략 target.
   const onSelectEntity = (entityId: string) => {
     const id = entityId.slice(entityId.indexOf(":") + 1);
     if (entityId.startsWith("property:")) {
       setSelectedPropertyId(id);
       setSelectedDevelopmentId(undefined);
-      return;
-    }
-    if (entityId.startsWith("development:")) {
-      setSelectedDevelopmentId(id);
-      setSelectedPropertyId(undefined);
       return;
     }
     const col = columns.find((c) => c.strategy.targetRef?.id === id);
@@ -123,6 +118,11 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
       setSelectedDevelopmentId(undefined);
     }
   };
+  // 개발구역 폴리곤 클릭 → 구역 단독 선택(매물/전략과 배타적).
+  const onSelectDevelopment = (developmentId: string) => {
+    setSelectedDevelopmentId(developmentId);
+    setSelectedPropertyId(undefined);
+  };
   const selectStrategyCard = (strategyId: string) => {
     setSelectedId(strategyId);
     setSelectedPropertyId(undefined);
@@ -130,10 +130,11 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
   };
 
   const selTargetId = selected ? selected.strategy.targetRef?.id : undefined;
+  // 개발구역 선택은 폴리곤 강조(scene overlay.selected)로 표현 — point marker 강조 없음.
   const selectedEntityId = selectedPropertyId
     ? `property:${selectedPropertyId}`
     : selectedDevelopment
-      ? `development:${selectedDevelopment.id}`
+      ? null
       : selTargetId
         ? `target:${selTargetId}`
         : null;
@@ -150,6 +151,7 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
           scene={scene}
           selectedEntityId={selectedEntityId}
           onSelectEntity={onSelectEntity}
+          onSelectDevelopment={onSelectDevelopment}
           className="border-border h-[45vh] overflow-hidden rounded-xl border md:sticky md:top-4 md:h-[70vh]"
         />
       </div>

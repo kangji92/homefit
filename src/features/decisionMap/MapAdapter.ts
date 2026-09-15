@@ -19,6 +19,12 @@ export interface MapAdapter {
   render(scene: DecisionMapScene): void;
   /** 엔티티(마커) 클릭 콜백 등록 — id를 돌려준다(카드 동기화용). */
   onEntityClick(handler: (entityId: string) => void): void;
+  /**
+   * 개발구역(polygon/line geometry) 클릭 콜백 등록 — development id를 돌려준다.
+   * 개발구역은 MapEntity가 아니라 overlay이므로 onEntityClick과 별도 경로.
+   * SDK별 도형 클릭 리스너는 구현체 내부에만 존재한다.
+   */
+  onDevelopmentClick(handler: (developmentId: string) => void): void;
   /** 선택 엔티티 강조(없으면 해제). */
   setSelected(entityId: string | null): void;
   /** 좌표들이 한 화면에 들어오도록 맞춘다. */
