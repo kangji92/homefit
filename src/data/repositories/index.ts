@@ -9,6 +9,7 @@ import { APPLYHOME_PRESALES } from "@/data/mock/applyhomePresales";
 import { withMockLocation } from "@/data/mock/coordinates";
 import { MOCK_DEVELOPMENTS, getMockDevelopment } from "@/data/mock/developments";
 import { REAL_DEVELOPMENTS, getRealDevelopment } from "@/data/real/developments.anyang";
+import { REAL_COMPLEXES, getRealComplex } from "@/data/real/complexes.anyang";
 import { MOCK_DEV_PROPERTIES } from "@/data/mock/villas";
 import type {
   AreaRepository,
@@ -48,10 +49,16 @@ export const homeRepository: HomeRepository = {
     const presales = params?.regionId
       ? allPresales.filter((p) => p.regionId === params.regionId)
       : allPresales;
+    // 안양권 실단지(공개 확인값) — mock 목록에 병합. 자체 좌표 보유(withMockLocation no-op).
+    const real = params?.regionId
+      ? REAL_COMPLEXES.filter((c) => c.regionId === params.regionId)
+      : REAL_COMPLEXES;
     // presale은 항상 mock이므로 큐레이션 좌표 병합. existing은 소스 repo가 좌표 담당.
-    return [...existing, ...presales.map(withMockLocation)];
+    return [...real, ...existing, ...presales.map(withMockLocation)];
   },
   async getById(id: string) {
+    const real = getRealComplex(id);
+    if (real) return real;
     const existing = await complexRepository.getById(id);
     if (existing) return existing;
     const presale = allPresales.find((p) => p.id === id);
