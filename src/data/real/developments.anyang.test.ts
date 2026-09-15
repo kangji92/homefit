@@ -47,13 +47,18 @@ describe("REAL 안양 재개발 fixture (official-backed)", () => {
     expect(initial.floorAreaRatioMax).toBe(280);
   });
 
-  it("[보정3] 조합원 예정분양가는 broker/미확인(공식 승격 금지)", () => {
-    const est = east.memberSaleEstimates![0];
+  it("[보정3] 조합원 예정분양가는 broker/미확인(공식 승격 금지), 근거 있는 평형만 가격", () => {
+    const est = east.memberSaleEstimates!.find((e) => e.id === "east-84")!;
     expect(est.sizeLabel).toBe("84㎡");
     expect(est.sourceType).toBe("broker");
     expect(est.verification).toBe("unverified");
-    expect(est.price.min.manwon).toBe(110000);
-    expect(est.price.max.manwon).toBe(115000);
+    expect(est.price!.min.manwon).toBe(110000);
+    expect(est.price!.max.manwon).toBe(115000);
+    // 근거 없는 평형은 price 미기입(예정가 미확보) — 임의 추정 금지.
+    const noPrice = east.memberSaleEstimates!.find((e) => e.id === "east-59")!;
+    expect(noPrice.price).toBeUndefined();
+    // 안정적 참조 id를 모든 평형이 가진다(희망 평형 저장·복원용).
+    expect(east.memberSaleEstimates!.every((e) => typeof e.id === "string" && e.id.length > 0)).toBe(true);
   });
 
   it("경계는 공식 NSDI SHP 좌표(official_boundary, 수도권 범위)", () => {

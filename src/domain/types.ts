@@ -171,16 +171,23 @@ export interface PropertyListingInfo {
 /** 입주권 상태 — 실제 상태 자체가 unknown일 수 있어 enum으로 유지(자동 판정 안 함). */
 export type OccupancyRightStatus = "unknown" | "expected" | "confirmed" | "excluded";
 
-/** 정비사업 구역 연계. inside=구역 내부 여부. */
+/** 정비사업 구역 연계. */
 export interface RedevelopmentLink {
   /** DevelopmentArea.id 참조 */
   areaId: string;
-  inside: boolean;
+  /**
+   * **공식 geometry 기준 구역 내부임이 확인됨**(true). 사용자가 사업을 고른 것만으로 true 단정
+   * 금지 → 수기 연결은 undefined(미확인). false는 공식 확인 결과 외부일 때만. 사업 연결 자체의
+   * provenance는 listing.sourceType으로 표현한다.
+   */
+  inside?: boolean;
   occupancyRightStatus?: OccupancyRightStatus;
   /** 추가분담금 — **임의 추정 금지**. 정보 없으면 undefined(UI "정보 없음"). */
   estimatedContribution?: Money;
   /** 사용자가 입력한 종전자산평가액(있으면 비용 시뮬레이터 seed). 자동 예측 아님. */
   previousAssetAppraisal?: Money;
+  /** 사용자가 고른 희망 신축 평형(MemberSaleEstimate.id 참조). 분양가 금액은 복사 저장 안 함. */
+  desiredMemberSaleEstimateId?: string;
 }
 
 /** 0~100 정성 지표 (측정 가능한 seed. AI 생성 아님) */

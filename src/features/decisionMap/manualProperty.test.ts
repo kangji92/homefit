@@ -8,6 +8,7 @@ describe("buildManualProperty", () => {
       askingPriceManwon: 93000, exclusiveAreaM2: 59.5, landShareM2: 33,
       redevelopmentAreaId: "dev-anyang-stadium-east",
       previousAssetAppraisalManwon: 70000,
+      desiredMemberSaleEstimateId: "east-84",
       sourceType: "broker", sourceLabel: "현장 중개사", verifiedAt: "2026-09-14",
     });
     expect(h.kind).toBe("existing");
@@ -16,8 +17,10 @@ describe("buildManualProperty", () => {
     expect(h.listing?.askingPrice?.manwon).toBe(93000);
     expect(h.listing?.sourceType).toBe("broker");
     expect(h.redevelopment?.areaId).toBe("dev-anyang-stadium-east");
-    expect(h.redevelopment?.inside).toBe(true);
+    // 사업 연결만으로 "구역 내부 확인"을 단정하지 않는다 → 미확인(undefined). 자동 true 금지.
+    expect(h.redevelopment?.inside).toBeUndefined();
     expect(h.redevelopment?.previousAssetAppraisal?.manwon).toBe(70000);
+    expect(h.redevelopment?.desiredMemberSaleEstimateId).toBe("east-84");
     expect(h.sizesPyeong[0]).toBeCloseTo(18, 0); // 59.5㎡ ≈ 18평
   });
 

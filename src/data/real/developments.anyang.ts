@@ -90,15 +90,22 @@ const EAST: DevelopmentArea = {
       effectiveDate: "2022-06-30",
     },
   ],
-  // ⚠️ broker/미확인 — 현장 중개사 자료 예시. official 취급 금지(공식/조합 확인 전).
+  // ⚠️ broker/미확인 — 현장 자료 평형 라인업. official 취급 금지(공식/조합 확인 전).
+  // 예정 조합원분양가는 근거 있는 평형만 기입. 나머지는 price 미기입(예정가 미확보) — 임의 추정 금지.
   memberSaleEstimates: [
+    { id: "east-59", sizeLabel: "59㎡", sourceType: "broker", sourceLabel: "현장 자료(가격 미확보)", verification: "unverified" },
+    { id: "east-77", sizeLabel: "77㎡", sourceType: "broker", sourceLabel: "현장 자료(가격 미확보)", verification: "unverified" },
     {
+      id: "east-84",
       sizeLabel: "84㎡",
       price: { min: won(110000), max: won(115000) }, // 11억~11.5억
       sourceType: "broker",
       sourceLabel: "현장 중개사(미확인)",
       verification: "unverified",
     },
+    { id: "east-104", sizeLabel: "104㎡", sourceType: "broker", sourceLabel: "현장 자료(가격 미확보)", verification: "unverified" },
+    { id: "east-109", sizeLabel: "109㎡", sourceType: "broker", sourceLabel: "현장 자료(가격 미확보)", verification: "unverified" },
+    { id: "east-124pent", sizeLabel: "124㎡ Pent", sourceType: "broker", sourceLabel: "현장 자료(가격 미확보)", verification: "unverified" },
   ],
 };
 

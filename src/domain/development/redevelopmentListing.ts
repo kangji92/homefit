@@ -30,7 +30,8 @@ export interface RedevelopmentListingSummary {
   premium?: ListingPremium;
   exclusiveAreaM2?: number;
   landShareM2?: number;
-  inside: boolean;
+  /** 공식 경계 기준 구역 내부 확인 여부. 미확인이면 undefined(사용자 연결≠내부 확인). */
+  inside?: boolean;
   /** 실제 상태 자체가 unknown일 수 있어 enum 유지. 미지정은 "unknown". */
   occupancyRightStatus: OccupancyRightStatus;
   /** 없으면 undefined → UI "정보 없음"(임의 추정 안 함). */
@@ -56,7 +57,7 @@ export function redevelopmentListingSummary(
     premium: listingPricePremium(listing),
     exclusiveAreaM2: listing?.exclusiveAreaM2,
     landShareM2: listing?.landShareM2,
-    inside: rd?.inside ?? false,
+    inside: rd?.inside,
     occupancyRightStatus: rd?.occupancyRightStatus ?? "unknown",
     estimatedContribution: rd?.estimatedContribution,
     area,

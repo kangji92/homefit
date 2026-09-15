@@ -37,6 +37,9 @@ export function RedevelopmentPanel({ home, area }: RedevelopmentPanelProps) {
   if (!s) return null;
 
   const money = (m?: { manwon: number }) => (m ? formatKoreanMoney(m.manwon) : "정보 없음");
+  // 사업 연결의 provenance(구역 내부 확인과 별개). 수기 매물은 "사용자 지정".
+  const st = home.listing?.sourceType;
+  const linkProvenance = st === "broker" ? "현장 확인·사용자 지정" : st === "user_input" ? "사용자 지정" : undefined;
   const stageText = area
     ? area.detailStage
       ? DETAIL_LABEL[area.detailStage]
@@ -66,11 +69,11 @@ export function RedevelopmentPanel({ home, area }: RedevelopmentPanelProps) {
         />
         {area && (
           <Row
-            label="정비사업"
-            value={`${area.name}${s.inside ? " 구역 내부" : ""}`}
+            label="사업 연결"
+            value={`${area.name}${s.inside === true ? " · 구역 내부(확인)" : linkProvenance ? ` · ${linkProvenance}` : ""}`}
             hint={`${TYPE_LABEL[area.developmentType]} · ${stageText ?? ""}${
               area.certainty !== "confirmed" ? ` · ${area.certainty === "likely" ? "가능성" : "장기검토"}` : ""
-            }`}
+            }${s.inside === true ? "" : " · 구역 내부 여부 미확인"}`}
           />
         )}
         <Row label="대지지분" value={s.landShareM2 != null ? `${s.landShareM2}㎡` : "정보 없음"} />

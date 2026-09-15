@@ -106,9 +106,12 @@ export interface DevelopmentPlan {
 
 /** 평형별 조합원 예정분양가(범위 가능). **공식 미확인이면 official 취급 금지.** */
 export interface MemberSaleEstimate {
+  /** 안정적 참조 키(희망 평형 저장·복원용). sizeLabel과 별개(라벨 바뀌어도 유지). */
+  id: string;
   /** 예: "84㎡", "59㎡A". */
   sizeLabel: string;
-  price: MoneyRange;
+  /** 근거 있는 평형만 가격. 없으면 undefined → "예정가 미확보"(임의 추정 금지). */
+  price?: MoneyRange;
   sourceType: DataSourceType;
   sourceLabel?: string;
   verification?: DevelopmentVerification;

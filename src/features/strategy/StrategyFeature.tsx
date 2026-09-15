@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { cn } from "@/lib/utils";
 import { useAreas, useHomes } from "@/hooks/queries";
@@ -32,7 +33,9 @@ export function StrategyFeature() {
   const profile = useHouseholdStore((s) => s.profile);
   const currentHousing = useLivingContextStore((s) => s.current);
   const regionPrefs = useLivingContextStore((s) => s.regionPrefs);
-  const [view, setView] = useState<ViewMode>("cards");
+  // 탐색의 "현장에서 본 매물 분석하기" CTA(/strategy?view=map) → 지도 뷰로 바로 진입.
+  const searchParams = useSearchParams();
+  const [view, setView] = useState<ViewMode>(searchParams?.get("view") === "map" ? "map" : "cards");
 
   const homesQuery = useHomes();
   const areasQuery = useAreas();
@@ -106,7 +109,7 @@ export function StrategyFeature() {
             </div>
           )}
 
-          {view === "map" && compareColumns.length >= 1 ? (
+          {view === "map" ? (
             <section>
               <p className="text-muted-foreground mb-3 text-xs">
                 현재 위치에서 각 전략이 공간적으로 어떤 변화인지 봅니다. 결정은 카드에서,

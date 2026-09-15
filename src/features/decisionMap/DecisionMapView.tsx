@@ -65,6 +65,8 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
   const developmentsData = useDevelopments().data;
   const propertiesData = useDevelopmentProperties().data;
   const manualProperties = useManualPropertyStore((s) => s.properties);
+  const addManual = useManualPropertyStore((s) => s.add);
+  const removeManual = useManualPropertyStore((s) => s.remove);
   const developments = useMemo(() => developmentsData ?? [], [developmentsData]);
   // 샘플 mock 빌라 + 사용자 수기 입력 매물(현장 확인/사용자).
   const properties = useMemo(() => [...(propertiesData ?? []), ...manualProperties], [propertiesData, manualProperties]);
@@ -72,6 +74,12 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
   const selectedPropertyArea = selectedProperty?.redevelopment
     ? developments.find((d) => d.id === selectedProperty.redevelopment!.areaId)
     : undefined;
+  // 희망 평형 변경을 수기 매물에 persist(재열람 복원). mock 매물은 저장 대상 아님.
+  const persistDesiredSize = (estimateId: string) => {
+    const p = manualProperties.find((m) => m.id === selectedPropertyId);
+    if (!p?.redevelopment) return;
+    addManual({ ...p, redevelopment: { ...p.redevelopment, desiredMemberSaleEstimateId: estimateId } });
+  };
   // 매물 선택이 없을 때만 개발구역 단독 선택 상세를 노출(매물이 우선).
   const selectedDevelopment =
     !selectedProperty && selectedDevelopmentId
@@ -168,6 +176,25 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
                 : ""}
         </p>
 
+        {/* 저장된 현장 매물(재열람·삭제) */}
+        {manualProperties.length > 0 && (
+          <div className="border-border rounded-lg border p-2">
+            <p className="text-muted-foreground mb-1 text-[11px] font-semibold">저장한 현장 매물</p>
+            <ul className="space-y-1">
+              {manualProperties.map((p) => (
+                <li key={p.id} className="flex items-center gap-2">
+                  <button type="button" onClick={() => setSelectedPropertyId(p.id)}
+                    className={cn("flex-1 truncate rounded-md px-2 py-1 text-left text-xs", selectedPropertyId === p.id ? "bg-primary/10 text-primary" : "text-foreground")}>
+                    {p.name} <span className="text-muted-foreground">· {propertySourceLabel(p)}</span>
+                  </button>
+                  <button type="button" aria-label={`${p.name} 삭제`} onClick={() => { removeManual(p.id); if (selectedPropertyId === p.id) setSelectedPropertyId(undefined); }}
+                    className="text-muted-foreground px-1.5 text-xs">삭제</button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* 현장 매물 수기 입력 */}
         <ManualPropertyForm onAdded={(id) => setSelectedPropertyId(id)} />
 
@@ -176,7 +203,7 @@ export function DecisionMapView({ board, homes, areas, workplaces, currentHousin
           <>
             <RedevelopmentPanel home={selectedProperty} area={selectedPropertyArea} />
             {selectedProperty.redevelopment && (
-              <RedevelopmentCostSimulator home={selectedProperty} area={selectedPropertyArea} />
+              <RedevelopmentCostSimulator home={selectedProperty} area={selectedPropertyArea} onChangeDesiredSize={persistDesiredSize} />
             )}
             {selectedPropertyArea && <DevelopmentDetailPanel area={selectedPropertyArea} />}
           </>

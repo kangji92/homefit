@@ -60,9 +60,9 @@ beforeEach(() => {
 describe("ExploreFeature", () => {
   it("집과 개발 예정지 그룹을 함께 보여준다", () => {
     render(<ExploreFeature />);
-    expect(screen.getByRole("region", { name: "집" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "검토할 집 후보" })).toBeInTheDocument();
     expect(
-      screen.getByRole("region", { name: "개발 예정지" }),
+      screen.getByRole("region", { name: "검토할 개발 예정지" }),
     ).toBeInTheDocument();
   });
 
@@ -70,9 +70,9 @@ describe("ExploreFeature", () => {
     const user = userEvent.setup();
     render(<ExploreFeature />);
     await user.click(screen.getByRole("tab", { name: "개발예정지" }));
-    expect(screen.queryByRole("region", { name: "집" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "검토할 집 후보" })).not.toBeInTheDocument();
     expect(
-      screen.getByRole("region", { name: "개발 예정지" }),
+      screen.getByRole("region", { name: "검토할 개발 예정지" }),
     ).toBeInTheDocument();
   });
 
@@ -82,6 +82,12 @@ describe("ExploreFeature", () => {
     const firstName = MOCK_COMPLEXES[0].name;
     await user.type(screen.getByLabelText("이름 검색"), firstName);
     expect(screen.getByText(firstName)).toBeInTheDocument();
+  });
+
+  it("'현장에서 본 매물 분석하기' CTA가 지도 뷰(/strategy?view=map)로 연결된다", () => {
+    render(<ExploreFeature />);
+    const cta = screen.getByRole("link", { name: /현장에서 본 매물 분석하기/ });
+    expect(cta).toHaveAttribute("href", "/strategy?view=map");
   });
 
   it("결과 카드에서 바로 관심 담기가 스토어에 반영된다", async () => {

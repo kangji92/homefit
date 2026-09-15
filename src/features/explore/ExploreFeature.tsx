@@ -27,7 +27,7 @@ const KIND_TABS: { value: ListingKindFilter; label: string }[] = [
 ];
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "fit", label: "적합도순" },
+  { value: "fit", label: "검토 우선순" },
   { value: "price", label: "가격순" },
   { value: "newest", label: "최신순" },
 ];
@@ -116,32 +116,50 @@ export function ExploreFeature() {
   }
 
   const total = results.homes.length + results.areas.length;
+  const primaryHomes = results.homes.slice(0, 6);
+  const extraHomes = results.homes.slice(6);
+  const primaryAreas = results.areas.slice(0, 3);
+  const extraAreas = results.areas.slice(3);
 
   return (
     <PageContainer className="max-w-2xl space-y-4">
       <div>
         <h1 className="text-2xl font-bold">탐색</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          조건을 걸어 직접 찾아보세요. 추천과 달리 조건에 안 맞는 매물도 배지로
-          함께 보여줘요.
+          결정에 넣어볼 후보와 검토 이유를 찾는 곳이에요. 조건에 안 맞는 항목도
+          확인할 점으로 함께 보여줘요.
         </p>
       </div>
 
       {!conditionsReady && (
         <p className="bg-surface-muted text-muted-foreground rounded-md p-3 text-xs">
-          우리 조건이 아직 완성되지 않아 적합도가 정확하지 않을 수 있어요.{" "}
+          우리 조건이 아직 완성되지 않아 검토 우선순위가 정확하지 않을 수 있어요.{" "}
           <Link href="/conditions" className="text-primary font-medium">
             조건 완성하기
           </Link>
         </p>
       )}
 
+      {/* 현장 매물 분석 진입 — 부동산에서 직접 본 재개발 매물의 총투입액 계산 */}
+      <Link
+        href="/strategy?view=map"
+        className="border-border bg-surface hover:border-primary flex items-center justify-between rounded-xl border p-3"
+      >
+        <span>
+          <span className="text-sm font-semibold">현장에서 본 매물 분석하기</span>
+          <span className="text-muted-foreground mt-0.5 block text-xs">
+            부동산에서 본 재개발 매물의 가격·권리 정보를 입력하면 신축 취득까지 예상 총투입액을 계산해요.
+          </span>
+        </span>
+        <span className="text-primary text-lg" aria-hidden>→</span>
+      </Link>
+
       {/* 필터 */}
       <div className="space-y-3">
         <input
           type="search"
           aria-label="이름 검색"
-          placeholder="단지·지역 이름 검색"
+          placeholder="단지·지역 이름으로 후보 찾기"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           className={`${controlCls} w-full`}
@@ -254,7 +272,7 @@ export function ExploreFeature() {
             }
             className={`${controlCls} w-full`}
           >
-            <option value="">취득경로 전체</option>
+            <option value="">검토 방식 전체</option>
             <option value="subscription">청약 가능</option>
             <option value="resale">분양권 거래 가능</option>
           </select>
@@ -281,22 +299,27 @@ export function ExploreFeature() {
       {total === 0 ? (
         <div className="py-10 text-center">
           <p className="text-muted-foreground text-sm">
-            조건에 맞는 매물이 없어요.
+            지금 조건으로 검토할 후보가 없어요.
           </p>
           <button
             type="button"
             onClick={resetFilters}
             className="text-primary mt-2 text-sm font-medium"
           >
-            필터 초기화
+            조건 다시 넓히기
           </button>
         </div>
       ) : (
         <div className="space-y-6">
           {results.homes.length > 0 && (
-            <section aria-label="집" className="space-y-3">
-              <h2 className="text-lg font-bold">집 ({results.homes.length})</h2>
-              {results.homes.map((r) => (
+            <section aria-label="검토할 집 후보" className="space-y-3">
+              <div>
+                <h2 className="text-lg font-bold">먼저 볼 집 후보</h2>
+                <p className="text-muted-foreground text-xs">
+                  현재 조건에서 검토 이유가 큰 후보부터 보여줘요. 전체 {results.homes.length}개는 접어두었습니다.
+                </p>
+              </div>
+              {primaryHomes.map((r) => (
                 <RecommendationCard
                   key={r.complex.id}
                   recommendation={r}
@@ -307,19 +330,37 @@ export function ExploreFeature() {
                   }
                 />
               ))}
+              {extraHomes.length > 0 && (
+                <details className="bg-surface-muted rounded-xl p-4">
+                  <summary className="cursor-pointer text-sm font-semibold">
+                    전체 집 후보 보기 ({results.homes.length})
+                  </summary>
+                  <div className="mt-3 space-y-3">
+                    {extraHomes.map((r) => (
+                      <RecommendationCard
+                        key={r.complex.id}
+                        recommendation={r}
+                        regionName={regionName.get(r.complex.regionId)}
+                        dealType={dealType}
+                        action={<CandidateToggleButton id={r.complex.id} kind={r.complex.kind} />}
+                      />
+                    ))}
+                  </div>
+                </details>
+              )}
             </section>
           )}
           {results.areas.length > 0 && (
-            <section aria-label="개발 예정지" className="space-y-3">
+            <section aria-label="검토할 개발 예정지" className="space-y-3">
               <div>
                 <h2 className="text-lg font-bold">
-                  개발 예정지 ({results.areas.length})
+                  검토할 개발 예정지
                 </h2>
                 <p className="text-muted-foreground text-xs">
-                  가격·평형·거래유형 필터는 집에만 적용돼요.
+                  기다릴지, 주변 선택지를 볼지 판단할 때 확인할 지역이에요.
                 </p>
               </div>
-              {results.areas.map(({ area, fit }) => (
+              {primaryAreas.map(({ area, fit }) => (
                 <AreaCard
                   key={area.id}
                   area={area}
@@ -327,6 +368,23 @@ export function ExploreFeature() {
                   action={<CandidateToggleButton id={area.id} kind="area" />}
                 />
               ))}
+              {extraAreas.length > 0 && (
+                <details className="bg-surface-muted rounded-xl p-4">
+                  <summary className="cursor-pointer text-sm font-semibold">
+                    전체 개발 예정지 보기 ({results.areas.length})
+                  </summary>
+                  <div className="mt-3 space-y-3">
+                    {extraAreas.map(({ area, fit }) => (
+                      <AreaCard
+                        key={area.id}
+                        area={area}
+                        fit={fit}
+                        action={<CandidateToggleButton id={area.id} kind="area" />}
+                      />
+                    ))}
+                  </div>
+                </details>
+              )}
             </section>
           )}
         </div>

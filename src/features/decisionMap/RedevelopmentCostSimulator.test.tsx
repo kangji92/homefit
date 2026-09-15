@@ -10,27 +10,65 @@ const villa = {
   ...makeComplex({ id: "v1", name: "A빌라" }),
   housingType: "villa",
   listing: { askingPrice: won(93000), recentTransactionPrice: won(78000) },
-  redevelopment: { areaId: "dev-east", inside: true, previousAssetAppraisal: won(70000) },
+  redevelopment: { areaId: "dev-east", previousAssetAppraisal: won(70000) },
+} as Home;
+// 종전자산평가액이 없는 매물(모름 상태 검증용).
+const villaNoAppraisal = {
+  ...makeComplex({ id: "v2", name: "B빌라" }),
+  housingType: "villa",
+  listing: { askingPrice: won(93000) },
+  redevelopment: { areaId: "dev-east" },
 } as Home;
 const area: DevelopmentArea = {
   id: "dev-east", name: "동측", developmentType: "redevelopment", stage: "in_progress",
   detailStage: "implementation", certainty: "confirmed", geometry: { kind: "point", at: { lat: 37.4, lng: 126.94 } },
   memberSaleEstimates: [
-    { sizeLabel: "84㎡", price: { min: won(110000), max: won(115000) }, sourceType: "broker", verification: "unverified" },
+    { id: "east-59", sizeLabel: "59㎡", sourceType: "broker", verification: "unverified" },
+    { id: "east-84", sizeLabel: "84㎡", price: { min: won(110000), max: won(115000) }, sourceType: "broker", verification: "unverified" },
   ],
 };
 
-describe("RedevelopmentCostSimulator (range)", () => {
-  it("84㎡ 11~11.5억 → 총투입액 13.3~13.8억 범위(seed: 종전 7억·비례율 100%)", () => {
+describe("RedevelopmentCostSimulator", () => {
+  it("비례율이 비어있으면 총투입액은 '계산 전' — 임의 기본값 주입 안 함", () => {
     render(<RedevelopmentCostSimulator home={villa} area={area} />);
-    expect(screen.getByText("예상 전체 총투입액 (기본 + 기타비용)")).toBeInTheDocument();
+    // 종전 7억은 매물에서 seed되지만 비례율은 비어있음(100% 주입 금지) → 권리가액/총투입 미계산.
+    expect(screen.getByText(/계산 전 — 아래 값을 입력하면/)).toBeInTheDocument();
+    expect(screen.getByText("종전자산평가액과 비례율을 입력해주세요")).toBeInTheDocument();
+  });
+
+  it("비례율 입력 시에만 84㎡ 11~11.5억 → 총투입액 13.3~13.8억", () => {
+    render(<RedevelopmentCostSimulator home={villa} area={area} />);
+    fireEvent.change(screen.getByLabelText("비례율(%)"), { target: { value: "100" } });
+    expect(screen.getByText("예상 총투입액 (신축 취득까지)")).toBeInTheDocument();
+    expect(screen.getByText("왜 이 금액인가요?")).toBeInTheDocument();
     expect(screen.getAllByText("13.3억 ~ 13.8억").length).toBeGreaterThan(0);
   });
 
-  it("연결 사업의 평형별 조합원분양가(미확인) 배지·경고를 표시", () => {
+  it("종전자산평가액이 없으면 권리가액 미계산 + 필요한 값 안내", () => {
+    render(<RedevelopmentCostSimulator home={villaNoAppraisal} area={area} />);
+    fireEvent.change(screen.getByLabelText("비례율(%)"), { target: { value: "100" } });
+    // 비례율은 있어도 종전자산이 없으면 권리가액 계산 불가 → 안내.
+    expect(screen.getByText("종전자산평가액과 비례율을 입력해주세요")).toBeInTheDocument();
+    expect(screen.getByText(/계산 전 — 아래 값을 입력하면/)).toBeInTheDocument();
+  });
+
+  it("가격 미확보 평형 선택 시 '예정가 미확보' 안내(직접 입력 유도)", () => {
+    render(<RedevelopmentCostSimulator home={villa} area={area} />);
+    fireEvent.click(screen.getByRole("button", { name: /59㎡/ }));
+    expect(screen.getByText(/예정분양가가 확보되지 않았어요/)).toBeInTheDocument();
+  });
+
+  it("가격 있는 평형(미확인 자료) 배지·경고 표시", () => {
     render(<RedevelopmentCostSimulator home={villa} area={area} />);
     expect(screen.getByRole("button", { name: /84㎡/ })).toBeInTheDocument();
-    expect(screen.getByText(/미확인/)).toBeInTheDocument();
+    expect(screen.getAllByText(/미확인/).length).toBeGreaterThan(0);
+  });
+
+  it("희망 평형 변경 시 onChangeDesiredSize로 상위에 반영(persist)", () => {
+    const seen: string[] = [];
+    render(<RedevelopmentCostSimulator home={villa} area={area} onChangeDesiredSize={(id) => seen.push(id)} />);
+    fireEvent.click(screen.getByRole("button", { name: /59㎡/ }));
+    expect(seen).toContain("east-59");
   });
 
   it("비례율 0 이하 경고", () => {

@@ -18,9 +18,12 @@ export interface ManualPropertyInput {
   builtYear?: number;
   floor?: number;
   redevelopmentAreaId?: string;
+  /** 공식 경계 내부 확인 여부. 수기 연결은 보통 undefined(미확인) — 자동 true 금지. */
   redevelopmentInside?: boolean;
   previousAssetAppraisalManwon?: number;
   occupancyRightStatus?: OccupancyRightStatus;
+  /** 사용자가 고른 희망 신축 평형(MemberSaleEstimate.id). */
+  desiredMemberSaleEstimateId?: string;
   sourceType: "broker" | "user_input";
   sourceLabel?: string;
   verifiedAt?: string;
@@ -60,9 +63,11 @@ export function buildManualProperty(input: ManualPropertyInput): Home {
     redevelopment: input.redevelopmentAreaId
       ? {
           areaId: input.redevelopmentAreaId,
-          inside: input.redevelopmentInside ?? true,
+          // 사용자가 사업을 고른 것만으로 "구역 내부 확인"을 단정하지 않는다 → 미확인(undefined).
+          inside: input.redevelopmentInside,
           occupancyRightStatus: input.occupancyRightStatus,
           previousAssetAppraisal: money(input.previousAssetAppraisalManwon),
+          desiredMemberSaleEstimateId: input.desiredMemberSaleEstimateId,
         }
       : undefined,
   };
