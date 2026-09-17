@@ -182,10 +182,15 @@ export function buildDecisionMapScene(input: DecisionMapInput): DecisionMapScene
     }
   }
 
+  // fitBounds는 "내 결정 대상(집·직장·타깃·매물)"에 맞춘다. 개발구역은 화면에 들어오면 보이는
+  // 컨텍스트일 뿐 — 전부 bounds에 넣으면 멀리 있는 구역 때문에 지도가 과도하게 줌아웃된다.
+  // 단, entity가 하나도 없는 구역-전용 scene(개발구역 상세 페이지)에서는 구역 좌표로 맞춘다.
+  const boundsTargets = entities.length > 0 ? entities.map((e) => e.location) : developmentPoints;
+
   return {
     entities,
     relations,
-    boundsTargets: [...entities.map((e) => e.location), ...developmentPoints],
+    boundsTargets,
     developments,
   };
 }

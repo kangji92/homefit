@@ -138,8 +138,16 @@ describe("buildDecisionMapScene", () => {
     expect(pe.selected).toBe(true);
     expect(scene.developments).toHaveLength(1);
     expect(scene.developments![0].relatedEntityIds).toContain("property:villa1");
-    // 개발영역 좌표도 fitBounds 대상에 포함
-    expect(scene.boundsTargets.length).toBeGreaterThan(scene.entities.length);
+    // fitBounds는 결정 대상(entity)에만 맞춘다 — 개발구역 좌표는 bounds를 넓히지 않는다(줌아웃 방지).
+    expect(scene.boundsTargets).toHaveLength(scene.entities.length);
+  });
+
+  it("⑩-b entity가 없는 구역-전용 scene은 개발구역 좌표로 bounds를 맞춘다", () => {
+    const area: DevelopmentArea = { id: "dev-x", name: "동측 재개발", developmentType: "redevelopment", stage: "in_progress", detailStage: "implementation", certainty: "confirmed", geometry: { kind: "polygon", rings: [[{ lat: 37.40, lng: 126.94 }, { lat: 37.41, lng: 126.95 }, { lat: 37.40, lng: 126.95 }]] } };
+    const scene = buildDecisionMapScene({ workplaces: [], developments: [area] });
+    expect(scene.entities).toHaveLength(0);
+    // 상세 페이지(구역만) — 구역 경계 좌표로 fitBounds
+    expect(scene.boundsTargets.length).toBe(3);
   });
 
   it("⑪ 개발구역은 point marker로 승격하지 않는다 — overlay만, selectedDevelopmentId는 overlay.selected로", () => {
