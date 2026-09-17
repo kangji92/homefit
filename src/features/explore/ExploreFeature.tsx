@@ -7,7 +7,8 @@ import { DEAL_TYPE_LABEL } from "@/domain/price";
 import type { DealType } from "@/domain/types";
 import type { AcquisitionPath } from "@/domain/types";
 import { useAreas, useDevelopments, useHomes, useRegions } from "@/hooks/queries";
-import { DevelopmentAreaCard } from "@/features/decisionMap";
+import { DevelopmentAreaCard, FieldPropertyCTA } from "@/features/decisionMap";
+import { sortDevelopmentsByProgress } from "@/domain/development";
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { isConditionsReady } from "@/lib/conditions";
 import { AreaCard } from "@/features/area/AreaCard";
@@ -104,10 +105,12 @@ export function ExploreFeature() {
   const developments = useMemo(() => developmentsQuery.data ?? [], [developmentsQuery.data]);
   const devResults = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return developments.filter(
-      (d) =>
-        (needle === "" || d.name.toLowerCase().includes(needle)) &&
-        (regionId === "all" || d.regionId === regionId),
+    return sortDevelopmentsByProgress(
+      developments.filter(
+        (d) =>
+          (needle === "" || d.name.toLowerCase().includes(needle)) &&
+          (regionId === "all" || d.regionId === regionId),
+      ),
     );
   }, [developments, q, regionId]);
   const showDev = kind === "all" || kind === "development";
@@ -156,18 +159,7 @@ export function ExploreFeature() {
       )}
 
       {/* 현장 매물 분석 진입 — 부동산에서 직접 본 재개발 매물의 총투입액 계산 */}
-      <Link
-        href="/strategy?view=map"
-        className="border-border bg-surface hover:border-primary flex items-center justify-between rounded-xl border p-3"
-      >
-        <span>
-          <span className="text-sm font-semibold">현장에서 본 매물 분석하기</span>
-          <span className="text-muted-foreground mt-0.5 block text-xs">
-            부동산에서 본 재개발 매물의 가격·권리 정보를 입력하면 신축 취득까지 예상 총투입액을 계산해요.
-          </span>
-        </span>
-        <span className="text-primary text-lg" aria-hidden>→</span>
-      </Link>
+      <FieldPropertyCTA />
 
       {/* 필터 */}
       <div className="space-y-3">

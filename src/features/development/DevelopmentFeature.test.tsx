@@ -27,6 +27,7 @@ vi.mock("@/features/decisionMap", () => ({
     entities: [], relations: [], boundsTargets: [],
     developments: (input.developments ?? []).map((d) => ({ id: d.id, selected: d.id === input.selectedDevelopmentId })),
   }),
+  FieldPropertyCTA: () => <div>cta</div>,
 }));
 
 import { DevelopmentFeature } from "./DevelopmentFeature";

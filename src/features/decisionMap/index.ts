@@ -16,6 +16,8 @@ export type { DevelopmentComparisonProps } from "./DevelopmentComparison";
 export { ManualPropertyForm } from "./ManualPropertyForm";
 export { DevelopmentAreaCard } from "./DevelopmentAreaCard";
 export type { DevelopmentAreaCardProps } from "./DevelopmentAreaCard";
+export { FieldPropertyCTA } from "./FieldPropertyCTA";
+export type { FieldPropertyCTAProps } from "./FieldPropertyCTA";
 export { buildManualProperty } from "./manualProperty";
 export type { ManualPropertyInput } from "./manualProperty";
 export { DecisionMapView } from "./DecisionMapView";

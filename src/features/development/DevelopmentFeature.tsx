@@ -5,9 +5,12 @@ import Link from "next/link";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useDevelopment } from "@/hooks/queries";
 import { formatKoreanMoney } from "@/lib/format";
-import { DecisionMap } from "@/features/decisionMap";
-import { DevelopmentDetailPanel } from "@/features/decisionMap";
-import { buildDecisionMapScene } from "@/features/decisionMap";
+import {
+  DecisionMap,
+  DevelopmentDetailPanel,
+  buildDecisionMapScene,
+  FieldPropertyCTA,
+} from "@/features/decisionMap";
 import type { MemberSaleEstimate } from "@/domain/development";
 
 const rangeText = (e: MemberSaleEstimate) =>
@@ -80,16 +83,7 @@ export function DevelopmentFeature({ id }: { id: string }) {
       )}
 
       {/* 현장 매물 분석 진입 */}
-      <Link
-        href="/strategy?view=map"
-        className="border-primary/40 bg-primary/5 hover:border-primary flex items-center justify-between rounded-xl border p-3"
-      >
-        <span>
-          <span className="text-sm font-semibold">현장에서 본 매물 분석하기</span>
-          <span className="text-muted-foreground mt-0.5 block text-xs">이 구역의 실제 매물을 입력해 신축 취득까지 총투입액을 계산해요.</span>
-        </span>
-        <span className="text-primary text-lg" aria-hidden>→</span>
-      </Link>
+      <FieldPropertyCTA variant="primary" description="이 구역의 실제 매물을 입력해 신축 취득까지 총투입액을 계산해요." />
 
       <p className="text-muted-foreground text-[11px]">
         정비사업 정보는 판단 보조용이며 적합도 점수에 반영되지 않아요. 값의 출처·검증상태는 위에 표기돼 있어요.

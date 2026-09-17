@@ -10,6 +10,7 @@ import { useAreas, useDevelopments, useHomes, useRegions } from "@/hooks/queries
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { AreaCard } from "@/features/area/AreaCard";
 import { DevelopmentAreaCard } from "@/features/decisionMap";
+import { sortDevelopmentsByProgress } from "@/domain/development";
 import { LoginButton } from "@/features/auth/LoginButton";
 import { StrategyHomeSection } from "@/features/strategy/StrategyHomeSection";
 import { ConditionsSummary } from "./ConditionsSummary";
@@ -43,7 +44,10 @@ export function HomeFeature() {
   const regionsQuery = useRegions();
   const areasQuery = useAreas();
   const developmentsQuery = useDevelopments();
-  const developments = useMemo(() => developmentsQuery.data ?? [], [developmentsQuery.data]);
+  const developments = useMemo(
+    () => sortDevelopmentsByProgress(developmentsQuery.data ?? []),
+    [developmentsQuery.data],
+  );
 
   const areaFits = useMemo(
     () =>
