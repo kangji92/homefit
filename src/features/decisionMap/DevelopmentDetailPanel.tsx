@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 
 export interface DevelopmentDetailPanelProps {
   area: DevelopmentArea;
+  /** 상위(페이지 헤더)에서 이름·유형·검증을 이미 보여줄 때 패널 헤더 중복 제거. */
+  hideHeader?: boolean;
 }
 
 const TYPE_LABEL: Record<DevelopmentType, string> = {
@@ -72,23 +74,27 @@ function VerifBadge({ v }: { v?: DevelopmentVerification }) {
  * 계획안(plan) 기준으로 표시하고, 출처가 다르면 **하나로 합치지 않고 나란히** 보여준다.
  * (docs/design 개발레이어 real-pilot §3,§4,§7)
  */
-export function DevelopmentDetailPanel({ area }: DevelopmentDetailPanelProps) {
+export function DevelopmentDetailPanel({ area, hideHeader = false }: DevelopmentDetailPanelProps) {
   const plans = area.plans ?? [];
   const rows = FIELDS.map((f) => ({ ...f, values: planFieldComparison(plans, f.field) })).filter((r) => r.values.length > 0);
 
   return (
     <section className="bg-surface border-border rounded-xl border p-4" aria-label="개발사업 상세">
-      <div className="flex items-center gap-2">
-        <span className="bg-surface-muted text-muted-foreground rounded px-1.5 py-0.5 text-[11px] font-medium">
-          {TYPE_LABEL[area.developmentType]}
-        </span>
-        <VerifBadge v={area.verification} />
-      </div>
-      <h3 className="mt-1 text-base font-bold">{area.name}</h3>
-      {area.verification && (
-        <p className="text-muted-foreground mt-0.5 text-[11px]">
-          ※ 위 검증은 <b>사업 존재·구역/사업명</b> 기준이에요. 세부 수치는 각 계획안 출처를 확인하세요.
-        </p>
+      {!hideHeader && (
+        <>
+          <div className="flex items-center gap-2">
+            <span className="bg-surface-muted text-muted-foreground rounded px-1.5 py-0.5 text-[11px] font-medium">
+              {TYPE_LABEL[area.developmentType]}
+            </span>
+            <VerifBadge v={area.verification} />
+          </div>
+          <h3 className="mt-1 text-base font-bold">{area.name}</h3>
+          {area.verification && (
+            <p className="text-muted-foreground mt-0.5 text-[11px]">
+              ※ 위 검증은 <b>사업 존재·구역/사업명</b> 기준이에요. 세부 수치는 각 계획안 출처를 확인하세요.
+            </p>
+          )}
+        </>
       )}
 
       {/* 주요 일정 (확정/예정 구분) */}

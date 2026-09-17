@@ -23,6 +23,7 @@ vi.mock("@/features/decisionMap", () => ({
     <div data-testid="map" data-devs={props.scene.developments?.map((d) => d.id).join(",") ?? ""} />
   ),
   DevelopmentDetailPanel: ({ area }: { area: DevelopmentArea }) => <div>detail:{area.name}</div>,
+  DevelopmentStageProgress: ({ area }: { area: DevelopmentArea }) => <div>stepper:{area.stage}</div>,
   buildDecisionMapScene: (input: { developments?: DevelopmentArea[]; selectedDevelopmentId?: string }) => ({
     entities: [], relations: [], boundsTargets: [],
     developments: (input.developments ?? []).map((d) => ({ id: d.id, selected: d.id === input.selectedDevelopmentId })),
