@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ListCardShell } from "@/components/ui/ListCardShell";
 import type { UpcomingSubscription } from "@/domain/subscription";
 
 function dLabel(d: number): string {
@@ -21,9 +21,9 @@ export function UpcomingSubscriptions({
       <ul className="space-y-2">
         {items.map(({ home, date, dDay }) => (
           <li key={home.id}>
-            <Link
+            <ListCardShell
               href={`/complex/${home.id}`}
-              className="bg-surface border-border flex items-center justify-between gap-3 rounded-xl border p-4"
+              className="flex items-center justify-between gap-3"
             >
               <div className="min-w-0">
                 <p className="truncate font-semibold">{home.name}</p>
@@ -43,7 +43,7 @@ export function UpcomingSubscriptions({
               >
                 {dLabel(dDay)}
               </span>
-            </Link>
+            </ListCardShell>
           </li>
         ))}
       </ul>
