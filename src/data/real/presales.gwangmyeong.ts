@@ -46,4 +46,30 @@ const CITY_PRADIUM_EDUHEIM: PresaleHome = {
   subscription: { announcementDate: "2026-09-18", scheduleNote: "견본주택 9/18 개관 · 분양가는 입주자모집공고 확인" },
 };
 
-export const REAL_PRESALES_GWANGMYEONG: PresaleHome[] = [CHEOLSAN_XI, CITY_PRADIUM_EDUHEIM];
+// 철산자이 더 헤리티지 (철산주공8·9 재건축) — 광명 철산동, 2025-05 준공. **무순위 4세대**.
+// 무순위 접수 2026-09-22(당첨발표 9/29). 분양가(공개): 59A 7.17~8.08억(3세대)·59C 7.57억(1세대).
+const CHEOLSAN_HERITAGE_UNRANKED: PresaleHome = {
+  kind: "presale",
+  id: "presale-gwangmyeong-cheolsan-heritage-unranked",
+  name: "철산자이 더 헤리티지",
+  regionId: "gwangmyeong",
+  price: { sale: { representative: 75700, min: 71700, max: 80800 } }, // 만원 · 59A/59C 공개 분양가
+  sizesPyeong: [25], // 전용 59
+  moveInYear: 2026, // 2025-05 준공, 입주 2026-10~11
+  commuteMinutes: COMMUTE_GWANGMYEONG,
+  metrics: { education: 74, infrastructure: 82, environment: 70, futurePotential: 82 }, // rubric seed
+  housingType: "apartment",
+  location: { lat: 37.3914, lng: 126.9228 }, // 철산동(대표점)
+  locationAccuracy: "area",
+  subscription: {
+    type: "unranked",
+    announcementDate: "2026-09-22",
+    scheduleNote: "무순위 4세대(59A 3·59C 1) · 당첨발표 9/29",
+  },
+};
+
+export const REAL_PRESALES_GWANGMYEONG: PresaleHome[] = [
+  CHEOLSAN_XI,
+  CITY_PRADIUM_EDUHEIM,
+  CHEOLSAN_HERITAGE_UNRANKED,
+];

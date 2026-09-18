@@ -240,13 +240,31 @@ export interface ExistingHome extends HomeBase {
 }
 
 /** 분양 단지 — 분양가·청약. 입주 전이라 일부 값 미확정(optional) */
+/**
+ * 청약 공급 유형 — "청약"은 우산이고 그 안에 여러 종류가 있다.
+ * general(일반공급 1·2순위) · special(특별공급: 신혼부부·생애최초·다자녀·노부모 등) ·
+ * unranked(무순위 줍줍) · remaining(잔여세대·임의공급) · cancelled_resale(취소후 재공급).
+ * 미지정은 general로 간주. 특공·1순위 등 세부 일정은 scheduleNote로 함께 표기.
+ */
+export type SubscriptionType =
+  | "general"
+  | "special"
+  | "unranked"
+  | "remaining"
+  | "cancelled_resale";
+
 export interface PresaleHome extends HomeBase {
   kind: "presale";
   /** 입주 예정연도 (연식 대체) */
   moveInYear: number;
   households?: number;
   stationDistanceM?: number;
-  subscription?: { announcementDate?: string; scheduleNote?: string };
+  subscription?: {
+    announcementDate?: string;
+    scheduleNote?: string;
+    /** 이 청약 이벤트의 공급 유형(무순위·특공 등). 미지정=general. */
+    type?: SubscriptionType;
+  };
   // ── 분양권/전매 (presale-rights.md) — 전부 선택(가산적) ──
   lifecycle?: PresaleLifecycle;
   transfer?: TransferInfo;

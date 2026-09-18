@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MOCK_PRESALES } from "@/data/mock/presales";
+import type { PresaleHome } from "@/domain/types";
 import { UpcomingSubscriptions } from "./UpcomingSubscriptions";
 
 describe("UpcomingSubscriptions", () => {
@@ -26,6 +27,12 @@ describe("UpcomingSubscriptions", () => {
       />,
     );
     expect(screen.getByText("마감")).toBeInTheDocument();
+  });
+
+  it("무순위 등 청약 유형은 배지로 구분 표시한다(일반공급은 배지 없음)", () => {
+    const unranked = { ...MOCK_PRESALES[0], subscription: { type: "unranked" as const } } as PresaleHome;
+    render(<UpcomingSubscriptions items={[{ home: unranked, date: "2026-09-22", dDay: 4 }]} />);
+    expect(screen.getByText("무순위")).toBeInTheDocument();
   });
 
   it("항목이 없으면 렌더하지 않는다", () => {
