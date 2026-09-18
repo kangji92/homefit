@@ -66,11 +66,16 @@ export function EligibilityPanel({ profile }: { profile: HouseholdProfile }) {
         })}
       </div>
 
-      {anyUnknown && (
-        <Link href="/profile" className="text-primary mt-3 inline-block text-sm font-medium">
-          가구 프로필 채우고 판정받기 →
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+        {anyUnknown && (
+          <Link href="/profile" className="text-primary inline-block text-sm font-medium">
+            가구 프로필 채우고 판정받기 →
+          </Link>
+        )}
+        <Link href="/subscription-guide" className="text-primary inline-block text-sm font-medium">
+          청약 자격 안내 자세히 →
         </Link>
-      )}
+      </div>
 
       <p className="text-muted-foreground mt-3 text-xs">
         {DEFAULT_SUBSCRIPTION_POLICY.source} 기준(적용 {asOf} · 정책 {policyVersion}). 실제 자격·순위는 청약 공고 기준으로 확인하세요.
