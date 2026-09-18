@@ -85,11 +85,10 @@ const CHEOLSAN_HERITAGE_UNRANKED: PresaleHome = {
     scheduleNote: "무순위 4세대(59A 3·59C 1) · 당첨발표 9/29",
     conditions: {
       regulatedArea: "adjustment",
-      homelessRequired: true, // 무순위 = 무주택 세대 대상
-      subscriptionAccount: { required: false }, // 무순위는 청약통장 불필요
-      localResidency: { required: false }, // 무순위 거주요건 완화
-      rewinLimit: false, // 무순위 재당첨 제한 미적용(통상)
-      note: "무순위(무주택 세대) · 청약통장 불필요 · 정확 기준 공고 확인",
+      homelessRequired: true, // 무순위 = 무주택 세대 대상(2024+ 강화)
+      subscriptionAccount: { required: false }, // 무순위는 청약통장 무관(규정상 안정)
+      // ⚠️ 거주요건·재당첨 제한은 시기별 규정 변동이 커 단정 금지 → undefined(공고 확인).
+      note: "무순위(무주택 세대) · 청약통장 무관 · 거주요건/재당첨 제한은 입주자모집공고 확인",
     },
   },
 };
