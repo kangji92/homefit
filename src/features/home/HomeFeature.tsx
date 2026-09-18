@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { computeAreaFit } from "@/domain/scoring";
-import { upcomingSubscriptions } from "@/domain/subscription";
+import { upcomingSubscriptions, subscriptionNotices } from "@/domain/subscription";
+import { SubscriptionNoticesPanel } from "@/features/subscription/SubscriptionNoticesPanel";
 import { useAreas, useDevelopments, useHomes, useRegions } from "@/hooks/queries";
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { AreaCard } from "@/features/area/AreaCard";
@@ -64,6 +65,10 @@ export function HomeFeature() {
     () => upcomingSubscriptions(complexesQuery.data ?? [], todayISO),
     [complexesQuery.data, todayISO],
   );
+  const notices = useMemo(
+    () => subscriptionNotices(complexesQuery.data ?? [], todayISO),
+    [complexesQuery.data, todayISO],
+  );
 
   const regionName = useMemo(
     () => new Map((regionsQuery.data ?? []).map((r) => [r.id, r.name])),
@@ -106,6 +111,8 @@ export function HomeFeature() {
       </header>
       {/* 상단 퀵메뉴 — 스크롤 아래 묻히던 하위 기능(청약·정비사업·현장매물·개발예정지) 바로 진입 */}
       <HomeQuickMenu />
+      {/* 청약 소식 — 최근/임박 모집공고 하이라이트(전체 일정은 아래 '청약 일정') */}
+      <SubscriptionNoticesPanel notices={notices} />
       <LoginButton />
       <ConditionsSummary conditions={conditions} />
       {/* 주인공: 주거 전략 Decision View */}
