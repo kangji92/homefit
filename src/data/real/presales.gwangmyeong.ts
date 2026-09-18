@@ -9,33 +9,14 @@ import { regulatoryConditions } from "@/domain/eligibility";
 // 광명 통근 — 7호선(철산)·1호선·신안산선. mock 추정.
 const COMMUTE_GWANGMYEONG = { gangnam: 35, pangyo: 50, yeouido: 30, gwanghwamun: 35, jamsil: 45, magok: 30, "guro-gasan": 15 };
 
-// 광명 = 조정대상지역·수도권 과밀억제권역 → 전매제한/재당첨/청약통장/해당지역 우선을 **법정 룰로 자동 도출**
-// (규제 룰: domain/eligibility/regulation). 실거주 의무·거주기간은 단지별이라 공고 확인.
+// ⚠️ 광명 = **비규제**(청약홈 공고 2025-11 기준 조정/투기 N) · 수도권 과밀억제권역.
+// → 전매 1년·재당첨 미적용·통장 12개월을 법정 룰로 자동 도출. (이전 '조정대상' 표기는 오류 정정.)
 const GM_GENERAL_CONDITIONS = {
-  ...regulatoryConditions("adjustment", { overcrowdedZone: true }),
-  note: "조정대상지역 법정 기준(전매 3년·재당첨 적용·통장 24개월↑) · 실거주/거주기간은 입주자모집공고 확인",
+  ...regulatoryConditions("none", { overcrowdedZone: true }),
+  note: "비규제·과밀억제권역(전매 1년) · 실거주/거주기간은 입주자모집공고 확인",
 };
 
-// 철산역자이 (광명뉴타운 12R) — GS건설, 철산동, 2,045세대, 지하7~지상29층 19개동, 입주 2029 상반기.
-// 분양가(공개): 59형 12억~ / 84형 15억~(최고 15.76억). 7호선 철산역 도보.
-const CHEOLSAN_XI: PresaleHome = {
-  kind: "presale",
-  id: "presale-gwangmyeong-cheolsan-xi",
-  name: "철산역자이 (광명12R)",
-  regionId: "gwangmyeong",
-  price: { sale: { representative: 150000, min: 120000, max: 157600 } }, // 만원 · 공개 분양가
-  sizesPyeong: [17, 20, 25, 30, 34], // 전용 39/49/59/74/84 공급 근사
-  moveInYear: 2029,
-  households: 2045,
-  commuteMinutes: COMMUTE_GWANGMYEONG,
-  metrics: { education: 72, infrastructure: 82, environment: 70, futurePotential: 84 }, // rubric seed
-  housingType: "apartment",
-  location: { lat: 37.4766, lng: 126.8676 }, // 철산역 인근(대표점)
-  locationAccuracy: "area",
-  // 청약 2025 종료(현재 분양권) → announcementDate 생략(‘다가오는 청약’에 마감으로 뜨지 않게).
-  // 조건은 참고용으로 보존.
-  subscription: { type: "general", conditions: GM_GENERAL_CONDITIONS },
-};
+// (철산역자이는 청약홈 CSV 실데이터로 대체 — presales.applyhome.ts)
 
 // 광명 시티프라디움 에듀하임 — 시티건설, 구름산지구 A6블록, 426세대, 지하2~지상22층 6개동,
 // 전용 59~84㎡, 입주 2029 상반기. **모집공고 2026-09-18, 분양가 미확정(공고 확인)**.
@@ -91,7 +72,6 @@ const CHEOLSAN_HERITAGE_UNRANKED: PresaleHome = {
 };
 
 export const REAL_PRESALES_GWANGMYEONG: PresaleHome[] = [
-  CHEOLSAN_XI,
   CITY_PRADIUM_EDUHEIM,
   CHEOLSAN_HERITAGE_UNRANKED,
 ];

@@ -11,6 +11,7 @@ import { MOCK_DEVELOPMENTS, getMockDevelopment } from "@/data/mock/developments"
 import { REAL_DEVELOPMENTS, getRealDevelopment } from "@/data/real/developments.anyang";
 import { REAL_COMPLEXES, getRealComplex } from "@/data/real/complexes.anyang";
 import { REAL_PRESALES_GWANGMYEONG } from "@/data/real/presales.gwangmyeong";
+import { APPLYHOME_REAL_PRESALES } from "@/data/real/presales.applyhome";
 import { MOCK_DEV_PROPERTIES } from "@/data/mock/villas";
 import type {
   AreaRepository,
@@ -40,8 +41,9 @@ export const regionRepository = useSupabase
 // (분양가·평형·lifecycle은 실데이터, metrics·통근은 placeholder라 기본 제외)
 const useApplyhome = process.env.NEXT_PUBLIC_APPLYHOME_PRESALES === "1";
 const allPresales = [
-  // 광명뉴타운 실분양(공개 확인값) — 항상 포함.
+  // 광명뉴타운 실분양(공개 확인값) + 청약홈 CSV 실분양(안양/광명권) — 항상 포함.
   ...REAL_PRESALES_GWANGMYEONG,
+  ...APPLYHOME_REAL_PRESALES,
   ...(useApplyhome ? [...MOCK_PRESALES, ...APPLYHOME_PRESALES] : MOCK_PRESALES),
 ];
 
