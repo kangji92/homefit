@@ -21,6 +21,13 @@ vi.mock("@/hooks/queries", () => ({
   useDevelopments: () => useDevelopmentsMock(),
 }));
 
+// 홈 퀵메뉴 → ?kind= 초기 탭. 기본은 빈 파라미터(=all).
+const { searchMock } = vi.hoisted(() => ({ searchMock: { value: new URLSearchParams() } }));
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
+  useSearchParams: () => searchMock.value,
+}));
+
 const DEV_AREA = {
   id: "dev-anyang-stadium-east", name: "종합운동장 동측일원 재개발", developmentType: "redevelopment",
   stage: "in_progress", detailStage: "implementation", certainty: "confirmed", regionId: "pyeongchon",
@@ -40,6 +47,7 @@ const READY = {
 };
 
 beforeEach(() => {
+  searchMock.value = new URLSearchParams();
   localStorage.clear();
   useConditionsStore.getState().reset();
   useConditionsStore.setState({
@@ -102,6 +110,13 @@ describe("ExploreFeature", () => {
     expect(screen.getByRole("heading", { name: "정비사업 구역" })).toBeInTheDocument();
     // 판단 보조(점수 미반영) 고지가 함께 보인다
     expect(screen.getAllByText(/적합도 점수에 반영되지 않아요/).length).toBeGreaterThan(0);
+  });
+
+  it("?kind=development로 진입하면 정비사업 탭이 초기 선택된다(퀵메뉴 진입)", () => {
+    searchMock.value = new URLSearchParams("kind=development");
+    render(<ExploreFeature />);
+    expect(screen.getByRole("tab", { name: "정비사업" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByText("종합운동장 동측일원 재개발")).toBeInTheDocument();
   });
 
   it("'현장에서 본 매물 분석하기' CTA가 지도 뷰(/strategy?view=map)로 연결된다", () => {

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { DEAL_TYPE_LABEL } from "@/domain/price";
 import type { DealType } from "@/domain/types";
@@ -49,10 +50,14 @@ export function ExploreFeature() {
   const regionsQuery = useRegions();
   const developmentsQuery = useDevelopments();
 
+  // 홈 퀵메뉴 등에서 ?kind=presale|development|area로 초기 탭 선택(‌/strategy?view=map과 동일 패턴).
+  const kindParam = useSearchParams()?.get("kind");
   const [q, setQ] = useState("");
   const [regionId, setRegionId] = useState<string>("all");
   const [dealType, setDealType] = useState<DealType>(conditions.dealType);
-  const [kind, setKind] = useState<ListingKindFilter>("all");
+  const [kind, setKind] = useState<ListingKindFilter>(
+    KIND_TABS.some((t) => t.value === kindParam) ? (kindParam as ListingKindFilter) : "all",
+  );
   const [priceMaxRaw, setPriceMaxRaw] = useState<number | null>(null);
   const [sizeMinRaw, setSizeMinRaw] = useState<number | null>(null);
   const [acquisitionPath, setAcquisitionPath] = useState<AcquisitionPath | "">("");

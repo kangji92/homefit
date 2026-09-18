@@ -16,6 +16,7 @@ import { StrategyHomeSection } from "@/features/strategy/StrategyHomeSection";
 import { ConditionsSummary } from "./ConditionsSummary";
 import { RecommendationCard } from "./RecommendationCard";
 import { UpcomingSubscriptions } from "./UpcomingSubscriptions";
+import { HomeQuickMenu } from "./HomeQuickMenu";
 import { isConditionsReady, recommendComplexes } from "./recommend";
 
 function Notice({
@@ -103,6 +104,8 @@ export function HomeFeature() {
           우리 가족이 지금 매수할지, 기다릴지, 다른 선택지를 볼지 정리해요.
         </p>
       </header>
+      {/* 상단 퀵메뉴 — 스크롤 아래 묻히던 하위 기능(청약·정비사업·현장매물·개발예정지) 바로 진입 */}
+      <HomeQuickMenu />
       <LoginButton />
       <ConditionsSummary conditions={conditions} />
       {/* 주인공: 주거 전략 Decision View */}
