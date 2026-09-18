@@ -19,11 +19,14 @@ export function EligibilityPanel({ profile }: { profile: HouseholdProfile }) {
   return (
     <section className="bg-surface border-border rounded-xl border p-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-semibold">청약 자격 · {e.program}</h2>
+        <h2 className="font-semibold">내 청약 자격 · {e.program}</h2>
         <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", badge.cls)}>
           {badge.text}
         </span>
       </div>
+      <p className="text-muted-foreground mt-0.5 text-[11px]">
+        내 가구 조건 기준(단지·공고와 무관). 이 단지의 신혼 특공 물량·소득기준은 공고를 확인하세요.
+      </p>
 
       <ul className="mt-2 space-y-1 text-sm">
         {e.requirements.map((r) => (

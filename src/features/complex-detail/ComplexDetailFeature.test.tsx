@@ -64,6 +64,31 @@ describe("ComplexDetailFeature", () => {
     expect(screen.getByText("가격")).toBeInTheDocument();
   });
 
+  it("무순위 청약 매물엔 신혼 특공 자격 패널 대신 안내를 보여준다(오해 방지)", () => {
+    const unranked = {
+      ...COMPLEX,
+      kind: "presale" as const,
+      moveInYear: 2026,
+      subscription: { type: "unranked" as const, announcementDate: "2026-09-22" },
+    };
+    useComplexMock.mockReturnValue({ data: unranked, isLoading: false, isError: false });
+    render(<ComplexDetailFeature id="misa-central" />);
+    expect(screen.queryByRole("heading", { name: /내 청약 자격/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/무순위·잔여·취소후재공급은 신혼부부 특별공급과 요건이 달라요/)).toBeInTheDocument();
+  });
+
+  it("일반분양(특공 맥락)엔 신혼 특공 자격 패널을 보여준다", () => {
+    const general = {
+      ...COMPLEX,
+      kind: "presale" as const,
+      moveInYear: 2028,
+      subscription: { type: "general" as const, announcementDate: "2026-10-15" },
+    };
+    useComplexMock.mockReturnValue({ data: general, isLoading: false, isError: false });
+    render(<ComplexDetailFeature id="misa-central" />);
+    expect(screen.getByRole("heading", { name: /내 청약 자격/ })).toBeInTheDocument();
+  });
+
   it("존재하지 않는 id면 안내를 표시한다", () => {
     useComplexMock.mockReturnValue({ data: null, isLoading: false, isError: false });
     render(<ComplexDetailFeature id="nope" />);

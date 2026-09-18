@@ -12,6 +12,7 @@ import { AxisScoreList } from "./AxisScoreList";
 import { CandidateActions } from "./CandidateActions";
 import { DealbreakerAlert } from "./DealbreakerAlert";
 import { EligibilityPanel } from "./EligibilityPanel";
+import { isSpecialSupplyContext } from "@/domain/eligibility";
 import { Hero } from "./Hero";
 import { NotesEditor } from "./NotesEditor";
 import { PresaleStatusPanel } from "./PresaleStatusPanel";
@@ -89,7 +90,15 @@ export function ComplexDetailFeature({ id }: { id: string }) {
       )}
 
       {complex.kind === "presale" && <PresaleStatusPanel home={complex} />}
-      {complex.kind === "presale" && <EligibilityPanel profile={profile} />}
+      {/* 신혼 특공 자격은 특공이 있는 청약(일반/특공)에만. 무순위·잔여·취소재공급엔 오해 방지 위해 숨김 */}
+      {complex.kind === "presale" && isSpecialSupplyContext(complex.subscription?.type) && (
+        <EligibilityPanel profile={profile} />
+      )}
+      {complex.kind === "presale" && !isSpecialSupplyContext(complex.subscription?.type) && (
+        <p className="bg-surface-muted text-muted-foreground rounded-xl p-3 text-xs">
+          무순위·잔여·취소후재공급은 신혼부부 특별공급과 요건이 달라요(보통 무주택·해당지역 거주). 자격·순위는 공고를 확인하세요.
+        </p>
+      )}
 
       <SchoolPanel regionId={complex.regionId} />
 
