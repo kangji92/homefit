@@ -18,7 +18,8 @@ describe("EligibilityOverview", () => {
       subscriptionMonths: 12,
     };
     render(<EligibilityOverview profile={profile} />);
-    expect(screen.getByText(/신혼부부 특별공급/)).toBeInTheDocument();
+    // 자격 프로그램 목록에 신혼부부 특공이 노출(what-if 공동노출 가능 → 최소 1개).
+    expect(screen.getAllByText(/신혼부부 특별공급/).length).toBeGreaterThan(0);
   });
 
   it("사실혼·유주택이면 '이렇게 하면 열려요'에 복합 시나리오를 보여준다", () => {
