@@ -12,6 +12,8 @@ export const MOCK_REGIONS: readonly Region[] = [
   { id: "uiwang", name: "의왕", summary: "인덕원 인접 신축, 판교 접근성" },
   { id: "gamil", name: "하남 감일지구", summary: "강남 접근성 좋은 하남 서부 택지지구" },
   { id: "hanam", name: "하남시", summary: "미사·감일·교산 등 하남 전역" },
+  // 광명뉴타운(재개발 신축 대량)·7호선/신안산선·서울(구로·여의도·강남) 접근
+  { id: "gwangmyeong", name: "광명", summary: "광명뉴타운 재개발 신축·7호선 서울 접근" },
   // 청약홈 공고 기반 분양(수도권) — regionId 미세분류 전 임시 그룹
   { id: "presale-capital", name: "수도권 분양(청약홈)", summary: "청약홈 공고 실시간 반영" },
 ];
