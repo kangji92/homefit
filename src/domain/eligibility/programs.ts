@@ -36,6 +36,7 @@ export const PROGRAM_KEYS = [
   "newlywed",
   "firstTime",
   "multiChild",
+  "oldParent",
   "newborn",
   "general",
   "unranked",
@@ -115,6 +116,28 @@ export function evaluatePrograms(
     policy,
   );
 
+  const oldParent = build(
+    "oldParent",
+    "노부모부양 특별공급",
+    [
+      {
+        key: "support",
+        label: "만 65세↑ 직계존속 3년↑ 계속 부양",
+        status:
+          profile.supportingElderlyParent === undefined
+            ? "unknown"
+            : profile.supportingElderlyParent
+              ? "pass"
+              : "fail",
+      },
+      housingRequirement(profile.housingStatus), // 무주택 세대주
+      subscriptionRequirement(profile, policy),
+      ...assetRequirements(profile, policy),
+    ],
+    { note: "무주택 세대주 · 소득기준(민영 가점제 등)은 공고 확인." },
+    policy,
+  );
+
   const newborn = build(
     "newborn",
     "신생아 특별공급",
@@ -166,5 +189,5 @@ export function evaluatePrograms(
     policy,
   );
 
-  return [newlywed, firstTime, multiChild, newborn, general, unranked];
+  return [newlywed, firstTime, multiChild, oldParent, newborn, general, unranked];
 }

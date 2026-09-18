@@ -459,6 +459,8 @@ export interface HouseholdProfile {
   carValueManwon?: number;
   /** 청약통장 가입기간(개월) — 신청자 기준(합산 아님) */
   subscriptionMonths?: number;
+  /** 만 65세 이상 직계존속을 3년 이상 계속 부양 중 — 노부모부양 특공 요건 */
+  supportingElderlyParent?: boolean;
 }
 
 // ===== 현재 주거 맥락 (Current Housing Context) =====
