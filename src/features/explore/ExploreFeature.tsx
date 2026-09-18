@@ -9,7 +9,8 @@ import type { DealType } from "@/domain/types";
 import type { AcquisitionPath } from "@/domain/types";
 import { useAreas, useDevelopments, useHomes, useRegions } from "@/hooks/queries";
 import { DevelopmentAreaCard, FieldPropertyCTA } from "@/features/decisionMap";
-import { sortDevelopmentsByProgress } from "@/domain/development";
+import { sortDevelopmentsByProgress, computeDevelopmentLocalFit } from "@/domain/development";
+import type { DevelopmentType } from "@/domain/development";
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { isConditionsReady } from "@/lib/conditions";
 import { AreaCard } from "@/features/area/AreaCard";
@@ -26,9 +27,24 @@ const KIND_TABS: { value: ListingKindFilter; label: string }[] = [
   { value: "all", label: "전체" },
   { value: "existing", label: "기존" },
   { value: "presale", label: "분양" },
-  { value: "area", label: "개발예정지" },
-  { value: "development", label: "정비사업" },
+  // 개발예정지 + 정비사업 + 철도를 "개발 호재"로 묶음(성격별 chip 필터). (development-catalyst.md §4)
+  { value: "development", label: "개발 호재" },
 ];
+
+// 개발 호재 카테고리 chip. 툴팁(title)로 뜻 설명.
+type CatalystCat = "all" | "redev" | "railway" | "new_town";
+const CATALYST_CHIPS: { value: CatalystCat; label: string; tip: string }[] = [
+  { value: "all", label: "전체", tip: "정비·철도·신도시 전부" },
+  { value: "redev", label: "정비·건설", tip: "재개발·재건축 등 정비사업" },
+  { value: "railway", label: "철도", tip: "철도·역세권 개발(접근성 정보)" },
+  { value: "new_town", label: "신도시", tip: "신도시·택지 개발예정지" },
+];
+function inCatalystCat(t: DevelopmentType, cat: CatalystCat): boolean {
+  if (cat === "all") return true;
+  if (cat === "redev") return t === "redevelopment" || t === "reconstruction";
+  if (cat === "railway") return t === "railway";
+  return t === "new_town"; // new_town
+}
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: "fit", label: "검토 우선순" },
@@ -119,6 +135,14 @@ export function ExploreFeature() {
     );
   }, [developments, q, regionId]);
   const showDev = kind === "all" || kind === "development";
+  // 개발 호재 카테고리(정비/철도/신도시) chip. 개발 호재 탭에서만 사용.
+  const [catalystCat, setCatalystCat] = useState<CatalystCat>("all");
+  const catalystDevs = useMemo(
+    () => devResults.filter((d) => inCatalystCat(d.developmentType, catalystCat)),
+    [devResults, catalystCat],
+  );
+  // 지역 적합도(위치·교통·학군) — 개발 성과가 아님. seed 있는 구역만 점수.
+  const localFitOf = (a: (typeof developments)[number]) => computeDevelopmentLocalFit(priorities, a)?.totalScore;
 
   function resetFilters() {
     setQ("");
@@ -362,7 +386,7 @@ export function ExploreFeature() {
               )}
             </section>
           )}
-          {results.areas.length > 0 && (
+          {kind !== "development" && results.areas.length > 0 && (
             <section aria-label="검토할 개발 예정지" className="space-y-3">
               <div>
                 <h2 className="text-lg font-bold">
@@ -399,18 +423,57 @@ export function ExploreFeature() {
               )}
             </section>
           )}
-          {/* 정비사업 구역 — 판단 보조(비점수) 레이어 */}
-          {showDev && devResults.length > 0 && (
+          {/* 전체 탭: 정비사업 구역 카드(지역 적합도 점수 + 개발 정보) */}
+          {kind === "all" && devResults.length > 0 && (
             <section aria-label="정비사업 구역" className="space-y-3">
               <div>
                 <h2 className="text-lg font-bold">정비사업 구역</h2>
                 <p className="text-muted-foreground text-xs">
-                  재개발·재건축 등 진행 사업이에요. 적합도 점수에 넣지 않는 판단 보조 정보예요.
+                  재개발·재건축 등. 지역 적합도(위치·교통·학군)만 점수이고 세대·분양가 등 개발 성과는 정보예요.
                 </p>
               </div>
               {devResults.map((area) => (
-                <DevelopmentAreaCard key={area.id} area={area} />
+                <DevelopmentAreaCard key={area.id} area={area} localFit={localFitOf(area)} />
               ))}
+            </section>
+          )}
+
+          {/* 개발 호재 탭: 카테고리 chip + 개발예정지(AreaFit) + 정비사업(지역 적합도) */}
+          {kind === "development" && (
+            <section aria-label="개발 호재" className="space-y-3">
+              <div>
+                <h2 className="text-lg font-bold">개발 호재</h2>
+                <p className="text-muted-foreground text-xs">
+                  주변 개발 계획 정보예요. 가격 예측·투자 추천이 아니라 판단 보조. 지역 적합도는 위치·교통·학군 기준(개발 성과 아님).
+                </p>
+              </div>
+              <div role="tablist" aria-label="개발 호재 분류" className="flex flex-wrap gap-1.5">
+                {CATALYST_CHIPS.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={catalystCat === c.value}
+                    title={c.tip}
+                    onClick={() => setCatalystCat(c.value)}
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${
+                      catalystCat === c.value ? "bg-primary text-primary-foreground" : "bg-surface-muted text-muted-foreground"
+                    }`}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+              {(catalystCat === "all" || catalystCat === "new_town") &&
+                results.areas.map(({ area, fit }) => (
+                  <AreaCard key={area.id} area={area} fit={fit} action={<CandidateToggleButton id={area.id} kind="area" />} />
+                ))}
+              {catalystDevs.map((area) => (
+                <DevelopmentAreaCard key={area.id} area={area} localFit={localFitOf(area)} />
+              ))}
+              {(catalystCat === "all" || catalystCat === "new_town" ? results.areas.length : 0) + catalystDevs.length === 0 && (
+                <p className="text-muted-foreground text-sm">이 분류에 해당하는 개발 정보가 없어요.</p>
+              )}
             </section>
           )}
         </div>

@@ -84,14 +84,12 @@ describe("ExploreFeature", () => {
     ).toBeInTheDocument();
   });
 
-  it("개발예정지 유형 필터를 선택하면 집 그룹이 사라진다", async () => {
+  it("개발 호재 탭을 선택하면 집 그룹이 사라지고 개발 호재(개발예정지 포함)가 보인다", async () => {
     const user = userEvent.setup();
     render(<ExploreFeature />);
-    await user.click(screen.getByRole("tab", { name: "개발예정지" }));
+    await user.click(screen.getByRole("tab", { name: "개발 호재" }));
     expect(screen.queryByRole("region", { name: "검토할 집 후보" })).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("region", { name: "검토할 개발 예정지" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "개발 호재" })).toBeInTheDocument();
   });
 
   it("이름 검색이 결과를 좁힌다", async () => {
@@ -102,21 +100,31 @@ describe("ExploreFeature", () => {
     expect(screen.getByText(firstName)).toBeInTheDocument();
   });
 
-  it("'정비사업' 탭에서 정비사업 구역(비점수 판단보조)을 카드로 보여준다", async () => {
+  it("'개발 호재' 탭에서 정비사업 구역 + 카테고리 chip을 보여준다", async () => {
     const user = userEvent.setup();
     render(<ExploreFeature />);
-    await user.click(screen.getByRole("tab", { name: "정비사업" }));
+    await user.click(screen.getByRole("tab", { name: "개발 호재" }));
     expect(screen.getByText("종합운동장 동측일원 재개발")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "정비사업 구역" })).toBeInTheDocument();
-    // 판단 보조(점수 미반영) 고지가 함께 보인다
-    expect(screen.getAllByText(/적합도 점수에 반영되지 않아요/).length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: "개발 호재" })).toBeInTheDocument();
+    // 카테고리 chip(정비·건설 등) + 판단보조 고지
+    expect(screen.getByRole("tab", { name: "정비·건설" })).toBeInTheDocument();
+    expect(screen.getByText(/가격 예측·투자 추천이 아니라 판단 보조/)).toBeInTheDocument();
   });
 
-  it("?kind=development로 진입하면 정비사업 탭이 초기 선택된다(퀵메뉴 진입)", () => {
+  it("?kind=development로 진입하면 개발 호재 탭이 초기 선택된다(퀵메뉴 진입)", () => {
     searchMock.value = new URLSearchParams("kind=development");
     render(<ExploreFeature />);
-    expect(screen.getByRole("tab", { name: "정비사업" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "개발 호재" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("종합운동장 동측일원 재개발")).toBeInTheDocument();
+  });
+
+  it("개발 호재 chip으로 카테고리 필터(철도 선택 시 재개발 구역은 숨김)", async () => {
+    const user = userEvent.setup();
+    render(<ExploreFeature />);
+    await user.click(screen.getByRole("tab", { name: "개발 호재" }));
+    await user.click(screen.getByRole("tab", { name: "철도" }));
+    // 동측(재개발)은 철도 필터에서 빠진다
+    expect(screen.queryByText("종합운동장 동측일원 재개발")).not.toBeInTheDocument();
   });
 
   it("'현장에서 본 매물 분석하기' CTA가 지도 뷰(/strategy?view=map)로 연결된다", () => {

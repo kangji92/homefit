@@ -10,7 +10,7 @@ import { useAreas, useDevelopments, useHomes, useRegions } from "@/hooks/queries
 import { useConditionsStore } from "@/stores/conditionsStore";
 import { AreaCard } from "@/features/area/AreaCard";
 import { DevelopmentAreaCard } from "@/features/decisionMap";
-import { sortDevelopmentsByProgress } from "@/domain/development";
+import { sortDevelopmentsByProgress, computeDevelopmentLocalFit } from "@/domain/development";
 import { LoginButton } from "@/features/auth/LoginButton";
 import { StrategyHomeSection } from "@/features/strategy/StrategyHomeSection";
 import { ConditionsSummary } from "./ConditionsSummary";
@@ -132,7 +132,7 @@ export function HomeFeature() {
             </p>
           </div>
           {developments.map((area) => (
-            <DevelopmentAreaCard key={area.id} area={area} />
+            <DevelopmentAreaCard key={area.id} area={area} localFit={computeDevelopmentLocalFit(priorities, area)?.totalScore} />
           ))}
         </section>
       </Supplement>

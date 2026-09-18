@@ -4,7 +4,7 @@
 // 주의: 구역 polygon 경계 좌표는 공개 수치 미확보 → point(centroid_only)로만 표현(임의 경계 금지).
 // (docs/design 개발레이어 real-pilot §1~7 / 확인일 2026-09-14)
 
-import type { DevelopmentArea } from "@/domain/development";
+import type { DevelopmentArea, DevelopmentLocalMetrics } from "@/domain/development";
 import type { Money } from "@/domain/types";
 import { EAST_RING, NORTH_RING } from "./geometry.anyang";
 import { ANYANG_DEVELOPMENTS_CSV } from "./developments.anyang.csv";
@@ -164,7 +164,19 @@ const NORTH: DevelopmentArea = {
   ],
 };
 
-export const REAL_DEVELOPMENTS: DevelopmentArea[] = [EAST, NORTH, ...ANYANG_DEVELOPMENTS_CSV];
+// 지역 축 seed(위치·교통·학군·인프라·환경, 0~100) — rubric seed(실측 아님). 미래 개발 성과와 무관.
+// 안양 주요 구역부터. seed 없는 구역은 지역 적합도 미산출(정보만). (development-catalyst.md §3,§5)
+const LOCAL_SEED: Record<string, DevelopmentLocalMetrics> = {
+  "dev-anyang-stadium-east": { education: 78, transit: 72, infrastructure: 80, environment: 74 },
+  "dev-anyang-stadium-north": { education: 78, transit: 74, infrastructure: 78, environment: 72 },
+  "dev-anyang-yeoksegwon": { education: 66, transit: 88, infrastructure: 82, environment: 66 }, // 안양역 초역세권
+  "dev-anyang-newtown-samho": { education: 80, transit: 78, infrastructure: 82, environment: 76 }, // 평촌 인접
+  "dev-anyang-gwanyang-hyundai": { education: 78, transit: 80, infrastructure: 78, environment: 74 }, // 인덕원 인근
+};
+const withLocalSeed = (d: DevelopmentArea): DevelopmentArea =>
+  LOCAL_SEED[d.id] ? { ...d, localMetrics: LOCAL_SEED[d.id] } : d;
+
+export const REAL_DEVELOPMENTS: DevelopmentArea[] = [EAST, NORTH, ...ANYANG_DEVELOPMENTS_CSV].map(withLocalSeed);
 
 export function getRealDevelopment(id: string): DevelopmentArea | undefined {
   return REAL_DEVELOPMENTS.find((d) => d.id === id);

@@ -188,4 +188,18 @@ export interface DevelopmentArea {
   plans?: DevelopmentPlan[];
   /** 평형별 조합원 예정분양가(있으면). broker/미확인 자료는 그대로 표기, official 승격 금지. */
   memberSaleEstimates?: MemberSaleEstimate[];
+  /**
+   * 지역 축 seed(0~100). **지금 확인 가능한 지역**(위치·교통·학군·인프라·환경) 기준의 rubric seed.
+   * 미래 개발 성과(세대·분양가·완성 후 가치)와 **무관** — 그건 절대 점수에 넣지 않는다.
+   * 미지정이면 지역 적합도 미산출(정보만). (docs/design/development-catalyst.md §3)
+   */
+  localMetrics?: DevelopmentLocalMetrics;
+}
+
+/** 지역 축 seed — 위치·교통·학군·인프라·환경(0~100). 미래 성과가 아니라 현재 지역 특성. */
+export interface DevelopmentLocalMetrics {
+  education: number;
+  transit: number;
+  infrastructure: number;
+  environment: number;
 }

@@ -7,8 +7,7 @@ describe("HomeQuickMenu", () => {
     render(<HomeQuickMenu />);
     const href = (name: RegExp) => screen.getByRole("link", { name }).getAttribute("href");
     expect(href(/청약/)).toBe("/explore?kind=presale");
-    expect(href(/정비사업/)).toBe("/explore?kind=development");
+    expect(href(/개발 호재/)).toBe("/explore?kind=development");
     expect(href(/현장매물/)).toBe("/strategy?view=map");
-    expect(href(/개발예정지/)).toBe("/explore?kind=area");
   });
 });

@@ -1,4 +1,5 @@
 import { ListCardShell } from "@/components/ui/ListCardShell";
+import { ScoreGauge } from "@/components/ui/ScoreGauge";
 import type {
   DevelopmentArea,
   DevelopmentStage,
@@ -10,6 +11,8 @@ export interface DevelopmentAreaCardProps {
   area: DevelopmentArea;
   /** 링크 목적지(기본 Decision Map). */
   href?: string;
+  /** 지역 적합도(위치·교통·학군 기준). 있으면 게이지 표시. 개발 성과 점수가 아님. */
+  localFit?: number;
 }
 
 const TYPE_LABEL: Record<DevelopmentType, string> = {
@@ -24,40 +27,46 @@ const DETAIL_LABEL: Record<RedevelopmentStage, string> = {
 };
 
 /**
- * 정비사업 구역(DevelopmentArea)을 **판단 보조 정보 카드**로 표시. AreaFit(개발 예정지)과
- * 달리 점수/순위가 없다 — fitScore 미반영. 클릭 시 전용 상세(/development/[id])로 이동.
+ * 정비사업 구역(DevelopmentArea) 카드. **지역 적합도(위치·교통·학군)**만 점수로 표시할 수 있고,
+ * 세대·분양가 등 **개발 성과는 점수에 넣지 않는다**(정보만). 클릭 시 전용 상세(/development/[id]).
  */
-export function DevelopmentAreaCard({ area, href }: DevelopmentAreaCardProps) {
+export function DevelopmentAreaCard({ area, href, localFit }: DevelopmentAreaCardProps) {
   const to = href ?? `/development/${area.id}`;
   const stage = area.detailStage ? DETAIL_LABEL[area.detailStage] : STAGE_LABEL[area.stage];
-  // 확정된 최신 사업단계 milestone(구역 내부·매물 provenance와 무관, 사업 자체의 공식 단계).
   const confirmed = (area.milestones ?? []).filter((m) => m.status === "confirmed");
   const latest = confirmed[confirmed.length - 1];
   const plan = area.plans?.find((p) => p.type === "official") ?? area.plans?.[0];
 
   return (
     <ListCardShell href={to} className="hover:border-primary">
-      <div className="flex items-center gap-2">
-        <span className="bg-warning/10 text-warning rounded-full px-2 py-0.5 text-[11px] font-semibold">
-          {TYPE_LABEL[area.developmentType]}
-        </span>
-        <span className="text-muted-foreground text-xs">
-          {stage}
-          {area.certainty !== "confirmed" && ` · ${area.certainty === "likely" ? "가능성" : "장기검토"}`}
-        </span>
+      <div className="flex items-start gap-3">
+        {localFit != null && <ScoreGauge score={localFit} size={56} label="지역" />}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="bg-warning/10 text-warning rounded-full px-2 py-0.5 text-[11px] font-semibold">
+              {TYPE_LABEL[area.developmentType]}
+            </span>
+            <span className="text-muted-foreground text-xs">
+              {stage}
+              {area.certainty !== "confirmed" && ` · ${area.certainty === "likely" ? "가능성" : "장기검토"}`}
+            </span>
+          </div>
+          <h3 className="mt-1 text-base font-bold">{area.name}</h3>
+          <dl className="text-muted-foreground mt-1.5 space-y-0.5 text-xs">
+            {latest?.label && (
+              <div>최근 확정: {latest.label}{latest.date ? ` (${latest.date})` : ""}</div>
+            )}
+            {plan?.totalUnits != null && (
+              <div>계획 세대수: {plan.totalUnits.toLocaleString("ko-KR")}세대</div>
+            )}
+          </dl>
+          <p className="text-muted-foreground mt-2 text-[11px]">
+            {localFit != null
+              ? "지역 적합도 = 위치·교통·학군 기준(개발 성과 아님). 자세히 보기 →"
+              : "판단 보조 정보 · 적합도 점수 없음. 자세히 보기 →"}
+          </p>
+        </div>
       </div>
-      <h3 className="mt-1 text-base font-bold">{area.name}</h3>
-      <dl className="text-muted-foreground mt-1.5 space-y-0.5 text-xs">
-        {latest?.label && (
-          <div>최근 확정: {latest.label}{latest.date ? ` (${latest.date})` : ""}</div>
-        )}
-        {plan?.totalUnits != null && (
-          <div>계획 세대수: {plan.totalUnits.toLocaleString("ko-KR")}세대</div>
-        )}
-      </dl>
-      <p className="text-muted-foreground mt-2 text-[11px]">
-        판단 보조 정보 · 적합도 점수에 반영되지 않아요. 자세히 보기 →
-      </p>
     </ListCardShell>
   );
 }

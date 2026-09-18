@@ -121,7 +121,8 @@ export function searchListings(
   // ── 개발 예정지 (가격/평형/거래유형 필터 미적용) ──────
   const areaResults = areas
     .filter((area) => {
-      if (params.kind !== "all" && params.kind !== "area") return false;
+      // 개발예정지는 전체 + '개발 호재'(development 탭)에서 노출.
+      if (params.kind !== "all" && params.kind !== "area" && params.kind !== "development") return false;
       if (params.acquisitionPath) return false; // 취득경로 필터 시 지역 제외
       if (!nameMatches(area.name, params.q)) return false;
       if (params.regionId !== "all" && area.regionId !== params.regionId)

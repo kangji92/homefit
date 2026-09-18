@@ -128,6 +128,13 @@ Quick menu (상단 아이콘 퀵메뉴):
 - 탐색 탭은 `?kind=` 쿼리로 초기 탭을 선택한다(‌`?view=map`과 동일 패턴).
 - 구현: `src/features/home/HomeQuickMenu.tsx`.
 
+개발 호재(탐색):
+
+- "개발예정지 + 정비사업"을 **"개발 호재" 한 탭 + 카테고리 chip**(정비·철도·신도시)으로 통합.
+  chip은 툴팁 + "가격 예측·투자 추천 아님 · 판단 보조" 고지.
+- 정비사업/개발예정지는 **지역 적합도(위치·교통·학군)** 만 점수, 개발 성과(세대·분양가)는 정보.
+  철도는 정보만. (설계: `docs/design/development-catalyst.md`)
+
 Reuse:
 
 - `src/features/home/HomeFeature.tsx`

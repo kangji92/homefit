@@ -5,3 +5,4 @@ export * from "./planComparison";
 export * from "./developmentSummary";
 export * from "./areaGeometry";
 export * from "./developmentSort";
+export * from "./localFit";
