@@ -253,6 +253,29 @@ export type SubscriptionType =
   | "remaining"
   | "cancelled_resale";
 
+/**
+ * 청약 공고의 자격·제한 조건. **각 값은 공고 소싱** — 확인 안 된 수치는 undefined(임의 추정 금지),
+ * UI는 "공고 확인"으로 표기. 무주택·청약통장 등 boolean은 적용 여부, 개월/연수는 확인값만.
+ */
+export interface SubscriptionConditions {
+  /** 규제지역 구분(전매·거주요건의 근거). */
+  regulatedArea?: "none" | "adjustment" | "speculation_overheated";
+  /** 무주택 세대 요건. */
+  homelessRequired?: boolean;
+  /** 청약통장 필요 + 최소 가입기간(개월, 확인 시). */
+  subscriptionAccount?: { required: boolean; minMonths?: number };
+  /** 해당지역(시) 거주 우선 + 요구 거주기간(개월, 확인 시). */
+  localResidency?: { required: boolean; months?: number };
+  /** 전매제한(개월). 미확인이면 undefined → "공고 확인". */
+  resaleRestrictionMonths?: number;
+  /** 실거주 의무(개월). 미확인이면 undefined. */
+  mandatoryResidenceMonths?: number;
+  /** 재당첨 제한 적용 여부. */
+  rewinLimit?: boolean;
+  /** 공고 특이사항·출처 메모. */
+  note?: string;
+}
+
 export interface PresaleHome extends HomeBase {
   kind: "presale";
   /** 입주 예정연도 (연식 대체) */
@@ -264,6 +287,8 @@ export interface PresaleHome extends HomeBase {
     scheduleNote?: string;
     /** 이 청약 이벤트의 공급 유형(무순위·특공 등). 미지정=general. */
     type?: SubscriptionType;
+    /** 공고 자격·제한 조건(무주택·전매·실거주·청약통장·거주요건 등). */
+    conditions?: SubscriptionConditions;
   };
   // ── 분양권/전매 (presale-rights.md) — 전부 선택(가산적) ──
   lifecycle?: PresaleLifecycle;

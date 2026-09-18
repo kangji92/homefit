@@ -12,6 +12,7 @@ import { AxisScoreList } from "./AxisScoreList";
 import { CandidateActions } from "./CandidateActions";
 import { DealbreakerAlert } from "./DealbreakerAlert";
 import { EligibilityPanel } from "./EligibilityPanel";
+import { SubscriptionConditionsPanel } from "./SubscriptionConditionsPanel";
 import { isSpecialSupplyContext } from "@/domain/eligibility";
 import { Hero } from "./Hero";
 import { NotesEditor } from "./NotesEditor";
@@ -90,6 +91,9 @@ export function ComplexDetailFeature({ id }: { id: string }) {
       )}
 
       {complex.kind === "presale" && <PresaleStatusPanel home={complex} />}
+      {complex.kind === "presale" && complex.subscription?.conditions && (
+        <SubscriptionConditionsPanel conditions={complex.subscription.conditions} />
+      )}
       {/* 신혼 특공 자격은 특공이 있는 청약(일반/특공)에만. 무순위·잔여·취소재공급엔 오해 방지 위해 숨김 */}
       {complex.kind === "presale" && isSpecialSupplyContext(complex.subscription?.type) && (
         <EligibilityPanel profile={profile} />
