@@ -3,20 +3,17 @@
 // commute=광명 mock 추정(실경로 아님). 좌표는 area 대표점(역/지구 근사).
 // 출처: 언론(한경·아시아경제·헤럴드·G밸리타임스) 단지별 공개 페이지.
 
-import type { PresaleHome, SubscriptionConditions } from "@/domain/types";
+import type { PresaleHome } from "@/domain/types";
+import { regulatoryConditions } from "@/domain/eligibility";
 
 // 광명 통근 — 7호선(철산)·1호선·신안산선. mock 추정.
 const COMMUTE_GWANGMYEONG = { gangnam: 35, pangyo: 50, yeouido: 30, gwanghwamun: 35, jamsil: 45, magok: 30, "guro-gasan": 15 };
 
-// 광명 = 조정대상지역(확인). 전매제한·거주요건 등 적용되나 **정확 개월/연수는 입주자모집공고 확인**
-// (임의 추정 금지 → undefined). 규제지역 통상 기준만 표기.
-const GM_GENERAL_CONDITIONS: SubscriptionConditions = {
-  regulatedArea: "adjustment",
-  homelessRequired: true, // 특공·1순위 무주택 세대
-  subscriptionAccount: { required: true, minMonths: 24 }, // 규제지역 통상 기준(공고 확인)
-  localResidency: { required: true }, // 광명 해당지역 우선(거주기간은 공고 확인)
-  rewinLimit: true, // 조정대상지역 재당첨 제한
-  note: "조정대상지역 · 전매제한/실거주/거주기간 정확 값은 입주자모집공고 확인",
+// 광명 = 조정대상지역·수도권 과밀억제권역 → 전매제한/재당첨/청약통장/해당지역 우선을 **법정 룰로 자동 도출**
+// (규제 룰: domain/eligibility/regulation). 실거주 의무·거주기간은 단지별이라 공고 확인.
+const GM_GENERAL_CONDITIONS = {
+  ...regulatoryConditions("adjustment", { overcrowdedZone: true }),
+  note: "조정대상지역 법정 기준(전매 3년·재당첨 적용·통장 24개월↑) · 실거주/거주기간은 입주자모집공고 확인",
 };
 
 // 철산역자이 (광명뉴타운 12R) — GS건설, 철산동, 2,045세대, 지하7~지상29층 19개동, 입주 2029 상반기.

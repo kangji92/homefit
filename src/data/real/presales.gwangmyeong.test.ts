@@ -14,14 +14,16 @@ describe("광명 실분양(공개 확인값)", () => {
     expect(city?.price.sale).toBeUndefined();
   });
 
-  it("청약 공고 조건(조정대상지역·무주택 등)을 담되 정확 수치는 미확인(공고 확인)", () => {
+  it("조정대상지역 조건은 법정 룰로 자동 도출(전매 36개월·재당첨·통장 24개월), 실거주는 공고 확인", () => {
     const city = REAL_PRESALES_GWANGMYEONG.find((p) => p.id === "presale-gwangmyeong-city-pradium");
     const c = city?.subscription?.conditions;
     expect(c?.regulatedArea).toBe("adjustment");
-    expect(c?.homelessRequired).toBe(true);
-    // 전매제한·실거주 정확 개월은 임의 추정 금지 → undefined
-    expect(c?.resaleRestrictionMonths).toBeUndefined();
-    // 무순위는 청약통장 불필요
+    expect(c?.resaleRestrictionMonths).toBe(36); // 규제지역 3년
+    expect(c?.rewinLimit).toBe(true);
+    expect(c?.subscriptionAccount?.minMonths).toBe(24);
+    // 실거주 의무는 분상제 의존 → 도출 안 함(공고 확인)
+    expect(c?.mandatoryResidenceMonths).toBeUndefined();
+    // 무순위는 청약통장 불필요(별도)
     const heritage = REAL_PRESALES_GWANGMYEONG.find((p) => p.id === "presale-gwangmyeong-cheolsan-heritage-unranked");
     expect(heritage?.subscription?.conditions?.subscriptionAccount?.required).toBe(false);
   });
