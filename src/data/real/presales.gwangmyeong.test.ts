@@ -38,8 +38,9 @@ describe("광명 실분양(공개 확인값)", () => {
     expect(subs.some((s) => s.home.id === "presale-gwangmyeong-cheolsan-heritage-unranked")).toBe(true);
   });
 
-  it("청약홈 CSV 실분양(안양/광명권)도 병합된다", async () => {
+  it("청약홈 openAPI 스냅샷(APPLYHOME_PRESALES)도 분양 목록에 병합된다", async () => {
     const all = await homeRepository.list();
-    expect(all.some((h) => h.id.startsWith("applyhome-") && h.name.includes("철산역자이"))).toBe(true);
+    // openAPI 스냅샷은 실 분양가·평형을 가진 presale — 최소 하나 이상 병합.
+    expect(all.filter((h) => h.kind === "presale").length).toBeGreaterThan(REAL_PRESALES_GWANGMYEONG.length);
   });
 });

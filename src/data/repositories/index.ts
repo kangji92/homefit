@@ -11,7 +11,6 @@ import { MOCK_DEVELOPMENTS, getMockDevelopment } from "@/data/mock/developments"
 import { REAL_DEVELOPMENTS, getRealDevelopment } from "@/data/real/developments.anyang";
 import { REAL_COMPLEXES, getRealComplex } from "@/data/real/complexes.anyang";
 import { REAL_PRESALES_GWANGMYEONG } from "@/data/real/presales.gwangmyeong";
-import { APPLYHOME_REAL_PRESALES } from "@/data/real/presales.applyhome";
 import { MOCK_DEV_PROPERTIES } from "@/data/mock/villas";
 import type {
   AreaRepository,
@@ -37,14 +36,12 @@ export const regionRepository = useSupabase
   ? supabaseRegionRepository
   : mockRegionRepository;
 
-// 청약홈 공고 기반 PresaleHome은 플래그(기본 off)일 때만 병합.
-// (분양가·평형·lifecycle은 실데이터, metrics·통근은 placeholder라 기본 제외)
-const useApplyhome = process.env.NEXT_PUBLIC_APPLYHOME_PRESALES === "1";
+// 분양 통합: 손 큐레이션(광명 2026) + 청약홈 openAPI 스냅샷(실 분양가·평형·일정·규제조건) + mock.
+// 청약홈 스냅샷은 `pnpm ingest:applyhome --write`로 갱신(지역 매핑·규제조건 포함). metrics만 placeholder.
 const allPresales = [
-  // 광명뉴타운 실분양(공개 확인값) + 청약홈 CSV 실분양(안양/광명권) — 항상 포함.
   ...REAL_PRESALES_GWANGMYEONG,
-  ...APPLYHOME_REAL_PRESALES,
-  ...(useApplyhome ? [...MOCK_PRESALES, ...APPLYHOME_PRESALES] : MOCK_PRESALES),
+  ...APPLYHOME_PRESALES,
+  ...MOCK_PRESALES,
 ];
 
 // 집 통합: 기존(활성 소스) + 분양(mock + 청약홈 스냅샷).

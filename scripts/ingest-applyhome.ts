@@ -12,6 +12,30 @@ import {
   adaptAptMdl,
   toPresaleHome,
 } from "../src/data/adapters/applyhome/adapt.ts";
+import { regulatoryConditions } from "../src/domain/eligibility/regulation.ts";
+import type { SubscriptionConditions } from "../src/domain/types.ts";
+
+// 주소 → 앱 region. 안양/광명권만 세분화, 나머지 수도권은 presale-capital.
+const KW: Record<string, string[]> = {
+  gwangmyeong: ["광명", "철산", "하안", "소하"],
+  pyeongchon: ["평촌", "비산", "관양", "호계", "인덕원"],
+  anyang: ["안양", "만안", "박달", "석수"],
+  gunpo: ["산본", "군포", "금정", "대야미"],
+  uiwang: ["의왕", "내손", "오전", "고천", "청계", "월암"],
+};
+function mapRegion(addr?: string, name?: string): string {
+  const s = (addr ?? "") + (name ?? "");
+  for (const [reg, kws] of Object.entries(KW)) if (kws.some((k) => s.includes(k))) return reg;
+  return "presale-capital";
+}
+// 청약홈 규제 플래그 → regulatoryConditions. 투기과열 > 조정대상 > 비규제.
+function conditionsFromRaw(raw: Record<string, unknown>): SubscriptionConditions {
+  const area = raw.SPECLT_RDN_EARTH_AT === "Y" ? "speculation_overheated" : raw.MDAT_TRGET_AREA_SECD === "Y" ? "adjustment" : "none";
+  return {
+    ...regulatoryConditions(area, { overcrowdedZone: true }),
+    note: "청약홈 공고 기준(규제·일정) · 실거주/거주기간은 공고 확인",
+  };
+}
 
 const args = process.argv.slice(2);
 const write = args.includes("--write");
@@ -24,21 +48,25 @@ const raws = await fetchAptDetail({ areaName: area, perPage: 100 });
 const anns = raws
   .map((r) => ({ raw: r, ann: adaptAptDetail(r, today) }))
   .filter(({ ann }) => ann.lifecycle.phase !== "occupied")
-  .slice(0, 15);
+  .slice(0, 40);
 
 const homes = [];
 for (const { raw, ann } of anns) {
   const mno = raw.HOUSE_MANAGE_NO;
   const mdl = mno ? adaptAptMdl(await fetchAptMdl(mno)) : undefined;
   const commuteMinutes = commuteFromAddress(raw.HSSPLY_ADRES, WORK_AREAS);
-  homes.push(
-    toPresaleHome(ann, {
-      regionId: "presale-capital",
-      fallbackMoveInYear,
-      mdl,
-      commuteMinutes,
-    }),
-  );
+  const home = toPresaleHome(ann, {
+    regionId: mapRegion(raw.HSSPLY_ADRES, raw.HOUSE_NM), // 안양/광명권 세분화
+    fallbackMoveInYear,
+    mdl,
+    commuteMinutes,
+  });
+  // 규제 플래그 → 청약 조건(전매·재당첨·통장) 주입.
+  const conditions = conditionsFromRaw(raw as unknown as Record<string, unknown>);
+  homes.push({
+    ...home,
+    subscription: home.subscription ? { ...home.subscription, conditions } : { conditions },
+  });
 }
 
 console.log(`■ 청약홈 ${area} → PresaleHome ${homes.length}건 (기준일 ${today})\n`);
